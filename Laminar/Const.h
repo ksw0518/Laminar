@@ -64,6 +64,12 @@ constexpr uint64_t BlackKingCastleEmpty = (1ULL << f8) | (1ULL << g8);
 constexpr uint64_t BlackQueenCastleEmpty = (1ULL << d8) | (1ULL << c8) | (1ULL << b8);
 constexpr uint64_t WhiteQueenCastleAttack = (1ULL << d1) | (1ULL << c1);
 constexpr uint64_t BlackQueenCastleAttack = (1ULL << d8) | (1ULL << c8);
+
+constexpr int MAXPLY = 256;
+constexpr int MAXSCORE = 50000;
+constexpr int64_t NOLIMIT = -1;
+constexpr int BENCHDEPTH = 4;
+
 inline int get_piece(int piece, int col)
 {
     return Get_Whitepiece[piece] + Side_value[col];

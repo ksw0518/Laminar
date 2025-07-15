@@ -1,5 +1,8 @@
 #include "Movegen.h"
 #include "Board.h"
+#include "Evaluation.h"
+#include "Search.h"
+#include "Bench.h"
 #include <string>
 #include <iostream>
 #include <chrono>
@@ -9,6 +12,7 @@ const std::string STARTPOS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq
 const std::string KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
 Board mainBoard;
 std::vector<std::string> position_commands = { "position", "startpos", "fen", "moves" };
+std::vector<std::string> go_commands = { "go", "movetime", "wtime", "btime", "winc", "binc", "movestogo" };
 
 std::string trim(const std::string& str) {
     const std::string whitespace = " \t\n\r\f\v";
@@ -65,7 +69,7 @@ int64_t TryGetLabelledValueInt(const std::string& text, const std::string& label
     {
         return std::stoll(firstPart);
     }
-    catch (const std::invalid_argument& e)
+    catch (const std::invalid_argument&)
     {
         // If conversion fails, return the default value
         return defaultValue;
@@ -76,6 +80,7 @@ static void InitAll()
     InitializeLeaper();
     init_sliders_attacks(1);
     init_sliders_attacks(0);
+    init_tables();
 }
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
@@ -95,7 +100,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
     {
         Move& move = move_list.moves[i];
         int lastEp = board.enpassent;
-        uint64_t lastCastle = board.castle;
+        uint8_t lastCastle = board.castle;
         bool lastside = board.side;
         int captured_piece = board.mailbox[move.To];
 
@@ -148,13 +153,116 @@ std::vector<std::string> splitStringBySpace(const std::string& str)
 
     return tokens;
 }
+int64_t CalculateHardLimit(int64_t time, int64_t incre)
+{
+    return time / 20 + incre / 2;
+}
+void PlayMoves(std::string& moves_string, Board& board)
+{
+    if (moves_string != "") // move is not empty
+    {
+        std::vector<std::string> moves_seperated = splitStringBySpace(moves_string);
+        MoveList moveList;
+        
+        for (size_t i = 0; i < moves_seperated.size(); i++)
+        {
+            std::string From = std::string(1, moves_seperated[i][0]) + std::string(1, moves_seperated[i][1]);
+            std::string To = std::string(1, moves_seperated[i][2]) + std::string(1, moves_seperated[i][3]);
+            std::string promo = "";
 
-void ProcessUCI(std::string input)
+            if (moves_seperated[i].size() > 4)
+            {
+                promo = std::string(1, (moves_seperated[i][4]));
+
+            }
+            Move move_to_play;
+            move_to_play.From = GetSquare(From);
+            move_to_play.To = GetSquare(To);
+
+            moveList.clear();
+            GeneratePseudoLegalMoves(moveList, board);
+
+            for (size_t j = 0; j < moveList.count; j++)
+            {
+                if ((move_to_play.From == moveList.moves[j].From) && (move_to_play.To == moveList.moves[j].To)) //found same move
+                {
+                    move_to_play = moveList.moves[j];
+
+                    if ((moveList.moves[j].Type & knight_promo) != 0) // promo
+                    {
+                        if (promo == "q")
+                        {
+                            if ((moveList.moves[j].Type == queen_promo) || (moveList.moves[j].Type == queen_promo_capture))
+                            {
+                                MakeMove(board, moveList.moves[j]);
+                                break;
+                            }
+                        }
+                        else if (promo == "r")
+                        {
+                            if ((moveList.moves[j].Type == rook_promo) || (moveList.moves[j].Type == rook_promo_capture))
+                            {
+                                MakeMove(board, moveList.moves[j]);
+                                break;
+                            }
+                        }
+                        else if (promo == "b")
+                        {
+                            if ((moveList.moves[j].Type == bishop_promo) || (moveList.moves[j].Type == bishop_promo_capture))
+                            {
+                                MakeMove(board, moveList.moves[j]);
+                                break;
+                            }
+                        }
+                        else if (promo == "n")
+                        {
+                            if ((moveList.moves[j].Type == knight_promo) || (moveList.moves[j].Type == knight_promo_capture))
+                            {
+                                MakeMove(board, moveList.moves[j]);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+
+                        MakeMove(board, moveList.moves[j]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 {
     std::vector<std::string> Commands = splitStringBySpace(input);
     std::string mainCommand = Commands[0];
+    if (mainCommand == "uci")
+    {
+        std::cout << "id name Laminar" << "\n";;
+        std::cout << "id author ksw0518" << "\n";;
+        std::cout << "\n";
+        std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+        std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
+        std::cout << "uciok" << "\n";
+    }
+    else if (mainCommand == "ucinewgame")
+    {
+        //do something later
+    }
+    else if (mainCommand == "isready")
+    {
+        std::cout << "readyok" << "\n";
+    }
+    else if (mainCommand == "quit")
+    {
+        delete data_heap;
+        exit(0);
+    }
     if (mainCommand == "go")
     {
+        SearchLimitations searchLimits = SearchLimitations();
         if (Commands[1] == "perft")
         {
             int perftDepth = stoi(Commands[2]);
@@ -163,35 +271,108 @@ void ProcessUCI(std::string input)
             uint64_t nodes = Perft(mainBoard, perftDepth, perftDepth);
             auto end = std::chrono::high_resolution_clock::now();
 
-            std::chrono::duration<double, std::milli> elapsedMS = end - start;
+            int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-            float second = elapsedMS.count() / 1000;
+            int64_t second = elapsedMS / 1000;
 
-            double nps = nodes / second;
+            uint64_t nps = nodes / second;
 
             std::cout << "nodes: "<<(nodes)<<" nps:"<<std::fixed << std::setprecision(0) <<nps;
             std::cout << "\n";
         }
+        else if (Commands[1] == "depth")
+        {
+            
+            int depth = std::stoi(Commands[2]);
+            IterativeDeepening(mainBoard, depth, searchLimits, data);
+        }
+        else if (Commands[1] == "movetime")
+        {
+            int64_t movetime = std::stoll(Commands[2]);
+            searchLimits.HardTimeLimit = movetime;
+            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+        }
+        else if (Commands[1] == "wtime")
+        {
+            int depth = (int)TryGetLabelledValueInt(input, "depth", go_commands);
+            int64_t wtime = TryGetLabelledValueInt(input, "wtime", go_commands);
+            int64_t btime = TryGetLabelledValueInt(input, "btime", go_commands);
+            int64_t winc = TryGetLabelledValueInt(input, "winc", go_commands);
+            int64_t binc = TryGetLabelledValueInt(input, "binc", go_commands);
+
+            int64_t hard_bound;
+
+
+            int64_t time = mainBoard.side == White ? wtime : btime;
+            int64_t incre = mainBoard.side == White ? winc : binc;
+
+            hard_bound = CalculateHardLimit(time, incre);
+
+            searchLimits.HardTimeLimit = hard_bound;
+            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+
+            
+        }
     }
     else if (mainCommand == "position")
     {
-        std::string fen = TryGetLabelledValue(input, "fen", position_commands);
-        parse_fen(fen, mainBoard);
+        if (Commands[1] == "startpos")
+        {
+            if (Commands.size() == 2)
+            {
+                parse_fen(STARTPOS, mainBoard);           
+            }
+            else
+            {
+                parse_fen(STARTPOS, mainBoard);
+
+                std::string moves_in_string = TryGetLabelledValue(input, "moves", position_commands);
+                PlayMoves(moves_in_string, mainBoard);
+            }
+
+        }
+        else if (Commands[1] == "fen")
+        {
+            std::string fen = TryGetLabelledValue(input, "fen", position_commands);
+            std::string moves = TryGetLabelledValue(input, "moves", position_commands);
+
+            if (moves == "")
+            {
+                parse_fen(fen, mainBoard);
+            }
+            else
+            {
+                parse_fen(fen, mainBoard);
+                std::string moves_in_string = TryGetLabelledValue(input, "moves", position_commands);
+                PlayMoves(moves_in_string, mainBoard);
+            }
+        }
+    }
+    else if (mainCommand == "bench")
+    {
+        bench();
+    }
+    else if (mainCommand == "show")
+    {
         PrintBoards(mainBoard);
+        print_mailbox(mainBoard.mailbox);
     }
 }
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc > 1) {
+        ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
+        ThreadData& data = *heapAllocated;
+        ProcessUCI(argv[0], data, heapAllocated);
+        delete heapAllocated;
+        return 0;
+    }
     InitAll();
     parse_fen(STARTPOS, mainBoard);
-    PrintBoards(mainBoard);
-    MoveList moves;
-    GeneratePseudoLegalMoves(moves, mainBoard);
-    for (int i = 0; i < moves.count; i++)
-    {
-        printMove(moves.moves[i]);
-        std::cout << "\n";
-    }
+
+    ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
+    ThreadData& data = *heapAllocated;
+
     while (true)
     {
         std::string input;
@@ -199,10 +380,8 @@ int main()
         std::getline(std::cin, input);
         if (input != "")
         {
-            ProcessUCI(input);
+            ProcessUCI(input, data, heapAllocated);
         }
     }
-    //MakeMove(mainBoard, moves.moves[0]);
-    //PrintBoards(mainBoard);
     return 0;
 }
