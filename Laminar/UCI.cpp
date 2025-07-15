@@ -360,19 +360,18 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 }
 int main(int argc, char* argv[])
 {
-    if (argc > 1) {
-        ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
-        ThreadData& data = *heapAllocated;
-        ProcessUCI(argv[0], data, heapAllocated);
-        delete heapAllocated;
-        return 0;
-    }
+ 
     InitAll();
     parse_fen(STARTPOS, mainBoard);
 
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
     ThreadData& data = *heapAllocated;
+    if (argc > 1) {
 
+        ProcessUCI(argv[1], data, heapAllocated);
+        delete heapAllocated;
+        return 0;
+    }
     while (true)
     {
         std::string input;

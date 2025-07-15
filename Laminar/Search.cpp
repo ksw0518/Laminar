@@ -6,7 +6,9 @@
 #include "Bit.h"
 #include <iostream>
 #include <chrono>
+#include <cmath>
 #include <limits>
+#include <cstring>
 inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
