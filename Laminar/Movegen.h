@@ -209,3 +209,5 @@ void printMove(Move move);
 void MakeMove(Board& board, Move move);
 void UnmakeMove(Board& board, Move move, int captured_piece);
 bool isLegal(Move& move, Board& board);
+bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupancy);
+int GetSquare(std::string squareName);

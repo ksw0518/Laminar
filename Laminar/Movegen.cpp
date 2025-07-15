@@ -18,6 +18,39 @@ Move::Move(unsigned char from, unsigned char to, unsigned char type, unsigned ch
 
 Move::Move() : From(0), To(0), Type(0), Piece(0) {
 }
+int GetSquare(std::string squareName)
+{
+    char file = squareName[0];
+    char rank = squareName[1];
+
+    int fileIndex = -1;
+    switch (file)
+    {
+    case 'a': fileIndex = 0; break;
+    case 'b': fileIndex = 1; break;
+    case 'c': fileIndex = 2; break;
+    case 'd': fileIndex = 3; break;
+    case 'e': fileIndex = 4; break;
+    case 'f': fileIndex = 5; break;
+    case 'g': fileIndex = 6; break;
+    case 'h': fileIndex = 7; break;
+    }
+
+    int rankIndex = -1;
+    switch (rank)
+    {
+    case '1': rankIndex = 7; break;
+    case '2': rankIndex = 6; break;
+    case '3': rankIndex = 5; break;
+    case '4': rankIndex = 4; break;
+    case '5': rankIndex = 3; break;
+    case '6': rankIndex = 2; break;
+    case '7': rankIndex = 1; break;
+    case '8': rankIndex = 0; break;
+    }
+
+    return rankIndex * 8 + fileIndex;
+}
 
 uint64_t MaskBishopAttack(int square)
 {
@@ -1891,14 +1924,16 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
 void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board)
 {
     MoveList.clear();
-    GeneratePawnMoves(MoveList, board);
+
+    GenerateQueenMoves(MoveList, board);
+    GenerateRookMoves(MoveList, board);
     GenerateKnightMoves(MoveList, board);
     GenerateBishopMoves(MoveList, board);
-    GenerateRookMoves(MoveList, board);
-    GenerateQueenMoves(MoveList, board);
+
+    GeneratePawnMoves(MoveList, board);
     GenerateKingMoves(MoveList, board);
 }
-bool is_square_attacked(int square, int side, const Board& board, uint64_t occupancy)
+bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupancy)
 {
     const int bishop = (side == White) ? B : b;
     const int rook = (side == White) ? R : r;
@@ -1999,7 +2034,7 @@ bool isLegal(Move& move, Board& board)
 
     if (move.Type != king_castle && move.Type != queen_castle)
     {
-        if (!is_square_attacked(get_ls1b(kingSquare), board.side, board, board.occupancies[Both]))
+        if (!IsSquareAttacked(get_ls1b(kingSquare), board.side, board, board.occupancies[Both]))
         {
             //std::cout << (1);
             return true;
