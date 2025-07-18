@@ -2,6 +2,7 @@
 #include "Evaluation.h"
 #include "Board.h"
 #include "Movegen.h"
+#include "Ordering.h"
 #include "Const.h"
 #include "Bit.h"
 #include <iostream>
@@ -9,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <cstring>
+
 inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
@@ -33,6 +35,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
 	MoveList moveList;
 	GeneratePseudoLegalMoves(moveList, board);
+    SortMoves(moveList, board);
 
     int searchedMoves = 0;
     for (int i = 0; i < moveList.count; ++i)

@@ -36,6 +36,9 @@
     <ClCompile Include="Bench.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Ordering.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Movegen.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Bench.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ordering.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
