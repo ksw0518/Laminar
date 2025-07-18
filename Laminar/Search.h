@@ -33,4 +33,4 @@ struct SearchLimitations
 		//HardNodeLimit(hardNode)
 	{}
 };
-std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data);
+std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data, bool isBench = false);

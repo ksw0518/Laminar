@@ -61,9 +61,6 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         MakeMove(board, move);
         data.ply++;
 
-        searchedMoves++;
-        data.searchNodeCount++;
-
         if (!isLegal(move, board))
         {
             UnmakeMove(board, move, captured_piece);
@@ -74,6 +71,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             data.ply--;
             continue;
         }
+        searchedMoves++;
+        data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
         score = -QuiescentSearch(board, data, -beta, -alpha);
@@ -141,9 +140,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         MakeMove(board, move);
         data.ply++;
 
-        searchedMoves++;
-        data.searchNodeCount++;
-
         if (!isLegal(move, board))
         {
             UnmakeMove(board, move, captured_piece);
@@ -154,6 +150,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             data.ply--;
             continue;
         }
+        searchedMoves++;
+        data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
         score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
@@ -230,7 +228,7 @@ void print_UCI(Move& bestmove, int score, float elapsedMS, float nps, ThreadData
     std::cout << "\n" << std::flush;;
 }
 
-std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data)
+std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data, bool isBench)
 {
     int64_t hardTimeLimit = searchLimits.HardTimeLimit;
     data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
@@ -270,7 +268,7 @@ std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitatio
 			bestScore = score;
 		}
 
-        if (!data.stopSearch)
+        if (!data.stopSearch && !isBench)
         {
             print_UCI(bestmove, score, elapsedMS, nps, data);
         }
