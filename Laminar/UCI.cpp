@@ -263,22 +263,9 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     if (mainCommand == "go")
     {
         SearchLimitations searchLimits = SearchLimitations();
-        if (Commands[1] == "perft")
+        if (Commands.size() == 1 || Commands[1] == "infinite")
         {
-            int perftDepth = stoi(Commands[2]);
-            auto start = std::chrono::high_resolution_clock::now();
-
-            uint64_t nodes = Perft(mainBoard, perftDepth, perftDepth);
-            auto end = std::chrono::high_resolution_clock::now();
-
-            int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-            int64_t second = elapsedMS / 1000;
-
-            uint64_t nps = nodes / second;
-
-            std::cout << "nodes: "<<(nodes)<<" nps:"<<std::fixed << std::setprecision(0) <<nps;
-            std::cout << "\n";
+            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
         else if (Commands[1] == "depth")
         {
@@ -313,6 +300,24 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 
             
         }
+        if (Commands[1] == "perft")
+        {
+            int perftDepth = stoi(Commands[2]);
+            auto start = std::chrono::high_resolution_clock::now();
+
+            uint64_t nodes = Perft(mainBoard, perftDepth, perftDepth);
+            auto end = std::chrono::high_resolution_clock::now();
+
+            int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+            int64_t second = elapsedMS / 1000;
+
+            uint64_t nps = nodes / second;
+
+            std::cout << "nodes: " << (nodes) << " nps:" << std::fixed << std::setprecision(0) << nps;
+            std::cout << "\n";
+        }
+
     }
     else if (mainCommand == "position")
     {
