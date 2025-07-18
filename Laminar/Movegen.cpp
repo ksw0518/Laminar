@@ -190,7 +190,7 @@ static uint64_t CalculateBishopAttack(int square, uint64_t block)
     }
     return attacks;
 }
-void init_sliders_attacks(int bishop)
+void Init_sliders_attacks(int bishop)
 {
     for (int square = 0; square < 64; square++)
     {

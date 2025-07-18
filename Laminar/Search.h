@@ -2,6 +2,7 @@
 #include "Const.h"
 #include <cstdint>
 #include <chrono>
+
 struct SearchData
 {
 	Move move;
@@ -34,3 +35,4 @@ struct SearchLimitations
 	{}
 };
 std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data);
+void InitializeLMRTable();

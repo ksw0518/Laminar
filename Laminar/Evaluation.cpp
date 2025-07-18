@@ -206,7 +206,7 @@ void print_tables() {
 }
 
 
-void init_tables()
+void Init_tables()
 {
     for (int piece = P; piece < K + 1; piece++)
     {

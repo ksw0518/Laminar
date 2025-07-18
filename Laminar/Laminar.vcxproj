@@ -149,6 +149,7 @@
     <ClInclude Include="Movegen.h" />
     <ClInclude Include="Ordering.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="Tuneables.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

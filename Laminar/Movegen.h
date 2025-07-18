@@ -202,7 +202,7 @@ inline int getRank(int square)
 {
     return (square) != 0 ? 7 - (square) / 8 : 7;
 }
-void init_sliders_attacks(int bishop);
+void Init_sliders_attacks(int bishop);
 void InitializeLeaper();
 void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board);
 void printMove(Move move);

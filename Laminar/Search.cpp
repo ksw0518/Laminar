@@ -5,11 +5,24 @@
 #include "Ordering.h"
 #include "Const.h"
 #include "Bit.h"
+#include "Tuneables.h"
 #include <iostream>
 #include <chrono>
 #include <cmath>
 #include <limits>
 #include <cstring>
+int lmrTable[MAXPLY][256];
+void InitializeLMRTable()
+{
+    for (int depth = 1; depth < MAXPLY; depth++)
+    {
+        for (int move = 1; move < 256; move++)
+        {
+            lmrTable[depth][move] = std::floor((float)LMR_OFFSET / 100 + log(move) * log(depth) / ((float)LMR_DIVISOR / 100));
+        }
+    }
+}
+
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
 
@@ -156,7 +169,36 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         data.searchStack[currentPly].move = move;
 
-        score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+        int reduction = 0;
+        if (depth > MIN_LMR_DEPTH && searchedMoves > 1)
+        {
+            reduction = lmrTable[depth][searchedMoves];
+        }
+        if (reduction < 0) reduction = 0;
+        bool isReduced = reduction > 0;
+        if (searchedMoves <= 1)
+        {
+            score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+        }
+        else
+        {
+            if (isReduced)
+            {
+                score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
+            }
+            else
+            {
+                score = alpha + 1;
+            }
+            if (score > alpha)
+            {
+                score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+            }
+            if (score > alpha && score < beta)
+            {
+                score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+            }
+        }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
 

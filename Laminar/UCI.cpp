@@ -78,9 +78,10 @@ int64_t TryGetLabelledValueInt(const std::string& text, const std::string& label
 static void InitAll()
 {
     InitializeLeaper();
-    init_sliders_attacks(1);
-    init_sliders_attacks(0);
-    init_tables();
+    Init_sliders_attacks(1);
+    Init_sliders_attacks(0);
+    Init_tables();
+    InitializeLMRTable();
 }
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {

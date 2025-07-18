@@ -1,4 +1,4 @@
 #pragma once
 #include "Board.h"
-void init_tables();
+void Init_tables();
 int Evaluate(Board& board);
