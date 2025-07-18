@@ -7,12 +7,17 @@ bool IsMoveCapture(Move& move)
 {
 	return (move.Type & captureFlag) != 0;
 }
+bool IsEpCapture(Move& move)
+{
+	return (move.Type & ep_capture) != 0;
+}
 int GetMoveScore(Move& move, Board& board)
 {
 	if (IsMoveCapture(move))
 	{
 		int attacker = get_piece(move.Piece, White);
-		int victim = get_piece(board.mailbox[move.To], White);
+
+		int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
 		int attackerValue = PieceValues[attacker];
 		int victimValue = PieceValues[victim];
 
