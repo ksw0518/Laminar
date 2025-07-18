@@ -10,7 +10,97 @@
 #include <cmath>
 #include <limits>
 #include <cstring>
+inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
+{
 
+    auto now = std::chrono::steady_clock::now();
+    int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
+    if (data.stopSearch || elapsedMS > data.SearchTime) {
+        data.stopSearch = true;
+        return 0;
+    }
+
+    bool isPvNode = beta - alpha > 1;
+
+    int staticEval = Evaluate(board);
+
+    int currentPly = data.ply;
+    data.selDepth = std::max(currentPly, data.selDepth);
+    if (currentPly >= MAXPLY - 1)
+    {
+        return staticEval;
+    }
+
+
+    
+    int score = -INFINITY;
+    int bestValue = staticEval;
+    if (bestValue >= beta)
+    {
+        return bestValue;
+    }
+    if (bestValue > alpha)
+    {
+        alpha = bestValue;
+    }
+
+    MoveList moveList;
+    GeneratePseudoLegalMoves(moveList, board);
+    SortNoisyMoves(moveList, board);
+
+    int searchedMoves = 0;
+    for (int i = 0; i < moveList.count; ++i)
+    {
+        Move& move = moveList.moves[i];
+        if (!isMoveNoisy(move)) continue;
+        int lastEp = board.enpassent;
+        uint8_t lastCastle = board.castle;
+        bool lastside = board.side;
+        int captured_piece = board.mailbox[move.To];
+
+        MakeMove(board, move);
+        data.ply++;
+
+        searchedMoves++;
+        data.searchNodeCount++;
+
+        if (!isLegal(move, board))
+        {
+            UnmakeMove(board, move, captured_piece);
+
+            board.enpassent = lastEp;
+            board.castle = lastCastle;
+            board.side = lastside;
+            data.ply--;
+            continue;
+        }
+        data.searchStack[currentPly].move = move;
+
+        score = -QuiescentSearch(board, data, -beta, -alpha);
+        UnmakeMove(board, move, captured_piece);
+        data.ply--;
+
+        board.enpassent = lastEp;
+        board.castle = lastCastle;
+        board.side = lastside;
+
+        bestValue = std::max(score, bestValue);
+        if (bestValue > alpha)
+        {
+            alpha = score;
+        }
+        if (alpha >= beta)
+        {
+            break;
+        }
+    }
+
+    if (searchedMoves == 0)
+    {
+        return staticEval;
+    }
+    return bestValue;
+}
 inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
@@ -25,13 +115,13 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 	int score = 0;
 	int bestValue = -MAXSCORE;
 
-    data.selDepth = std::max(data.ply, data.selDepth);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;
-    if (depth <= 0 || currentPly >= MAXPLY - 2)
+    if (depth <= 0 || currentPly >= MAXPLY - 1)
     {
-        return Evaluate(board);
+        score = -QuiescentSearch(board, data, alpha, beta);
+        return score;
     }
 	MoveList moveList;
 	GeneratePseudoLegalMoves(moveList, board);
