@@ -4,7 +4,7 @@
 #include "Movegen.h"
 #include "Board.h"
 #include "Bit.h"
-#include "const.h"
+#include "Const.h"
 
 #include <iostream>
 #include <iomanip>
