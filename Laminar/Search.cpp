@@ -171,7 +171,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int reduction = 0;
         if (depth > MIN_LMR_DEPTH && searchedMoves > 1)
         {
-            reduction = lmrTable[depth][searchedMoves];
+            reduction = lmrTable[depth][searchedMoves] - 1;
         }
         if (reduction < 0) reduction = 0;
         bool isReduced = reduction > 0;
@@ -271,7 +271,7 @@ void print_UCI(Move& bestmove, int score, float elapsedMS, float nps, ThreadData
     std::cout << "\n" << std::flush;;
 }
 
-std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data)
+std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitations& searchLimits, ThreadData& data, bool isBench)
 {
     int64_t hardTimeLimit = searchLimits.HardTimeLimit;
     data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
@@ -313,7 +313,11 @@ std::pair<Move, int> IterativeDeepening(Board& board, int depth, SearchLimitatio
 
         if (!data.stopSearch)
         {
-            print_UCI(bestmove, score, elapsedMS, nps, data);
+            if (!isBench)
+            {
+                print_UCI(bestmove, score, elapsedMS, nps, data);
+
+            }
         }
 		
 		

@@ -68,7 +68,7 @@ constexpr uint64_t BlackQueenCastleAttack = (1ULL << d8) | (1ULL << c8);
 constexpr int MAXPLY = 256;
 constexpr int MAXSCORE = 50000;
 constexpr int64_t NOLIMIT = -1;
-constexpr int BENCHDEPTH = 4;
+constexpr int BENCHDEPTH = 3;
 
 constexpr int PieceValues[12] = { 98, 280, 295, 479, 1064, 0, 0 };
 

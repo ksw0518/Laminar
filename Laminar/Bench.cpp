@@ -71,7 +71,7 @@ void bench()
 		parse_fen(benchFens[i], board);
 		//PrintBoards(board);
 		search_start = std::chrono::steady_clock::now();
-		IterativeDeepening(board, BENCHDEPTH, searchLimits, data);
+		IterativeDeepening(board, BENCHDEPTH, searchLimits, data, true);
 		search_end = std::chrono::steady_clock::now();
 
 		int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(search_end - search_start).count();
