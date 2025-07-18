@@ -74,9 +74,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         MakeMove(board, move);
         data.ply++;
 
-        searchedMoves++;
-        data.searchNodeCount++;
-
+    
         if (!isLegal(move, board))
         {
             UnmakeMove(board, move, captured_piece);
@@ -87,6 +85,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             data.ply--;
             continue;
         }
+        searchedMoves++;
+        data.searchNodeCount++;
+
         data.searchStack[currentPly].move = move;
 
         score = -QuiescentSearch(board, data, -beta, -alpha);
@@ -153,10 +154,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int childDepth = depth - 1;
         MakeMove(board, move);
         data.ply++;
-
-        searchedMoves++;
-        data.searchNodeCount++;
-
         if (!isLegal(move, board))
         {
             UnmakeMove(board, move, captured_piece);
@@ -167,6 +164,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             data.ply--;
             continue;
         }
+        searchedMoves++;
+        data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
         int reduction = 0;
