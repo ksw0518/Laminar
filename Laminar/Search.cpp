@@ -2,6 +2,8 @@
 #include "Evaluation.h"
 #include "Board.h"
 #include "Movegen.h"
+#include "History.h"
+#include "Tuneables.h"
 #include "Ordering.h"
 #include "Const.h"
 #include "Bit.h"
@@ -33,7 +35,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
 
     
-    int score = -INFINITY;
+    int score = -MAXSCORE;
     int bestValue = staticEval;
     if (bestValue >= beta)
     {
@@ -124,8 +126,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
 	MoveList moveList;
 	GeneratePseudoLegalMoves(moveList, board);
-    SortMoves(moveList, board);
+    SortMoves(moveList, board, data);
 
+    MoveList searchedQuietMoves;
     int searchedMoves = 0;
     for (int i = 0; i < moveList.count; ++i)
     {
@@ -137,6 +140,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int captured_piece = board.mailbox[move.To];
 
         int childDepth = depth - 1;
+
+        bool isCapture = IsMoveCapture(move);
         MakeMove(board, move);
         data.ply++;
 
@@ -149,6 +154,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.side = lastside;
             data.ply--;
             continue;
+        }
+        if (!isCapture)
+        {
+            searchedQuietMoves.add(move);
         }
         searchedMoves++;
         data.searchNodeCount++;
@@ -179,6 +188,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         if (alpha >= beta)
         {
+            int16_t mainHistBonus = std::min(MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+            int16_t mainHistMalus = std::min(MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
+            
+            UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus);
+            MalusMainHist(data, searchedQuietMoves, move, mainHistMalus);
+            
             break;
         }
     }
@@ -198,7 +213,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
     return bestValue;
 }
-void print_UCI(Move& bestmove, int score, float elapsedMS, float nps, ThreadData& data)
+void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data)
 {
     bestmove = data.pvTable[0][0];
     //int hashfull = get_hashfull();

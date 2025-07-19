@@ -135,6 +135,7 @@
     <ClCompile Include="Bit.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Evaluation.cpp" />
+    <ClCompile Include="History.cpp" />
     <ClCompile Include="Movegen.cpp" />
     <ClCompile Include="Ordering.cpp" />
     <ClCompile Include="Search.cpp" />
@@ -146,9 +147,11 @@
     <ClInclude Include="Board.h" />
     <ClInclude Include="Const.h" />
     <ClInclude Include="Evaluation.h" />
+    <ClInclude Include="History.h" />
     <ClInclude Include="Movegen.h" />
     <ClInclude Include="Ordering.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="Tuneables.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
