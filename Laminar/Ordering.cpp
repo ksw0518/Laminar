@@ -1,5 +1,6 @@
 #include "Ordering.h"
 #include "Movegen.h"
+#include "Search.h"
 #include "Const.h"
 #include "Board.h"
 #include <algorithm>
@@ -15,7 +16,7 @@ bool IsEpCapture(Move& move)
 {
 	return (move.Type & ep_capture) != 0;
 }
-int GetMoveScore(Move& move, Board& board)
+int GetMoveScore(Move& move, Board& board, ThreadData& data)
 {
 	if (IsMoveCapture(move))
 	{
@@ -26,11 +27,12 @@ int GetMoveScore(Move& move, Board& board)
 		int victimValue = PieceValues[victim];
 
 		int mvvlvaValue = victimValue * 10 - attackerValue;
-		return mvvlvaValue;
+		return mvvlvaValue + 900000;
 	}
 	else
 	{
-		return -90000;
+		int mainHistValue = data.histories.mainHist[board.side][move.From][move.To];
+		return mainHistValue;
 	}
 }
 int QsearchGetMoveScore(Move& move, Board& board)
@@ -51,13 +53,13 @@ int QsearchGetMoveScore(Move& move, Board& board)
 		return -90000;
 	}
 }
-void SortMoves(MoveList& ml, Board& board)
+void SortMoves(MoveList& ml, Board& board, ThreadData& data)
 {
 	ScoredMove scored[256];
 
 	for (int i = 0; i < ml.count; ++i)
 	{
-		scored[i].score = GetMoveScore(ml.moves[i], board);
+		scored[i].score = GetMoveScore(ml.moves[i], board, data);
 		scored[i].move = ml.moves[i];
 	}
 

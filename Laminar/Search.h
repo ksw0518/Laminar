@@ -1,3 +1,4 @@
+#pragma	once
 #include "Movegen.h"
 #include "Const.h"
 #include <cstdint>
@@ -6,6 +7,11 @@ struct SearchData
 {
 	Move move;
 	int staticEval = 0;
+};
+struct Histories
+{
+	//[stm][from][to]
+	int16_t mainHist[2][64][64];
 };
 struct ThreadData
 {
@@ -17,8 +23,9 @@ struct ThreadData
 	bool stopSearch = false;
 	int selDepth = 0;
 	SearchData searchStack[MAXPLY];
-	int pvLengths[MAXPLY] = {};
-	Move pvTable[MAXPLY][MAXPLY];
+	int pvLengths[MAXPLY + 1] = {};
+	Move pvTable[MAXPLY + 1][MAXPLY + 1];
+	Histories histories;
 };
 struct SearchLimitations
 {
