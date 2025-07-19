@@ -1,13 +1,71 @@
 #pragma once
-enum Square {
-    a8 = 0, b8, c8, d8, e8, f8, g8, h8,
-    a7 = 8, b7, c7, d7, e7, f7, g7, h7,
-    a6 = 16, b6, c6, d6, e6, f6, g6, h6,
-    a5 = 24, b5, c5, d5, e5, f5, g5, h5,
-    a4 = 32, b4, c4, d4, e4, f4, g4, h4,
-    a3 = 40, b3, c3, d3, e3, f3, g3, h3,
-    a2 = 48, b2, c2, d2, e2, f2, g2, h2,
-    a1 = 56, b1, c1, d1, e1, f1, g1, h1,
+#include <cstdint>
+enum Square
+{
+    a8 = 0,
+    b8,
+    c8,
+    d8,
+    e8,
+    f8,
+    g8,
+    h8,
+    a7 = 8,
+    b7,
+    c7,
+    d7,
+    e7,
+    f7,
+    g7,
+    h7,
+    a6 = 16,
+    b6,
+    c6,
+    d6,
+    e6,
+    f6,
+    g6,
+    h6,
+    a5 = 24,
+    b5,
+    c5,
+    d5,
+    e5,
+    f5,
+    g5,
+    h5,
+    a4 = 32,
+    b4,
+    c4,
+    d4,
+    e4,
+    f4,
+    g4,
+    h4,
+    a3 = 40,
+    b3,
+    c3,
+    d3,
+    e3,
+    f3,
+    g3,
+    h3,
+    a2 = 48,
+    b2,
+    c2,
+    d2,
+    e2,
+    f2,
+    g2,
+    h2,
+    a1 = 56,
+    b1,
+    c1,
+    d1,
+    e1,
+    f1,
+    g1,
+    h1,
 
     NO_SQ = 64
 };
@@ -54,9 +112,8 @@ constexpr uint8_t bishop_promo_capture = bishop_promo | capture;
 constexpr uint8_t rook_promo_capture = rook_promo | capture;
 constexpr uint8_t queen_promo_capture = queen_promo | capture;
 
-constexpr int Side_value[] = { 0, 6 };
-constexpr int Get_Whitepiece[] = { 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5 };
-
+constexpr int Side_value[] = {0, 6};
+constexpr int Get_Whitepiece[] = {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
 
 constexpr uint64_t WhiteKingCastleEmpty = (1ULL << f1) | (1ULL << g1);
 constexpr uint64_t WhiteQueenCastleEmpty = (1ULL << d1) | (1ULL << c1) | (1ULL << b1);
@@ -70,7 +127,7 @@ constexpr int MAXSCORE = 50000;
 constexpr int64_t NOLIMIT = -1;
 constexpr int BENCHDEPTH = 3;
 
-constexpr int PieceValues[12] = { 98, 280, 295, 479, 1064, 0, 0 };
+constexpr int PieceValues[12] = {98, 280, 295, 479, 1064, 0, 0};
 
 inline int get_piece(int piece, int col)
 {

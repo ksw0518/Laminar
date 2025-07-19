@@ -1,47 +1,58 @@
-#include "Movegen.h"
+#include "Bench.h"
 #include "Board.h"
 #include "Evaluation.h"
+#include "Movegen.h"
 #include "Search.h"
-#include "Bench.h"
-#include <string>
-#include <iostream>
 #include <chrono>
-#include <iomanip> 
+#include <iomanip>
+#include <iostream>
+#include <string>
 
 const std::string STARTPOS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
 Board mainBoard;
-std::vector<std::string> position_commands = { "position", "startpos", "fen", "moves" };
-std::vector<std::string> go_commands = { "go", "movetime", "wtime", "btime", "winc", "binc", "movestogo" };
+std::vector<std::string> position_commands = {"position", "startpos", "fen", "moves"};
+std::vector<std::string> go_commands = {"go", "movetime", "wtime", "btime", "winc", "binc", "movestogo"};
 
-std::string trim(const std::string& str) {
+std::string trim(const std::string& str)
+{
     const std::string whitespace = " \t\n\r\f\v";
     const auto start = str.find_first_not_of(whitespace);
     const auto end = str.find_last_not_of(whitespace);
 
-    if (start == std::string::npos || end == std::string::npos) {
+    if (start == std::string::npos || end == std::string::npos)
+    {
         return "";
     }
 
     return str.substr(start, end - start + 1);
 }
-std::string TryGetLabelledValue(const std::string& text, const std::string& label, const std::vector<std::string>& allLabels, const std::string& defaultValue = "") {
-
+std::string TryGetLabelledValue(
+    const std::string& text,
+    const std::string& label,
+    const std::vector<std::string>& allLabels,
+    const std::string& defaultValue = ""
+)
+{
     // Trim leading and trailing whitespace
     std::string trimmedText = trim(text);
 
     // Find the position of the label in the trimmed text
     size_t labelPos = trimmedText.find(label);
-    if (labelPos != std::string::npos) {
+    if (labelPos != std::string::npos)
+    {
         // Determine the start position of the value
         size_t valueStart = labelPos + label.length();
         size_t valueEnd = trimmedText.length();
 
         // Iterate through allLabels to find the next label position
-        for (const std::string& otherID : allLabels) {
-            if (otherID != label) {
+        for (const std::string& otherID : allLabels)
+        {
+            if (otherID != label)
+            {
                 size_t otherIDPos = trimmedText.find(otherID, valueStart);
-                if (otherIDPos != std::string::npos && otherIDPos < valueEnd) {
+                if (otherIDPos != std::string::npos && otherIDPos < valueEnd)
+                {
                     valueEnd = otherIDPos;
                 }
             }
@@ -54,7 +65,12 @@ std::string TryGetLabelledValue(const std::string& text, const std::string& labe
 
     return defaultValue;
 }
-int64_t TryGetLabelledValueInt(const std::string& text, const std::string& label, const std::vector<std::string>& allLabels, int64_t defaultValue = 0)
+int64_t TryGetLabelledValueInt(
+    const std::string& text,
+    const std::string& label,
+    const std::vector<std::string>& allLabels,
+    int64_t defaultValue = 0
+)
 {
     // Helper function TryGetLabelledValue should be implemented as shown earlier
     std::string valueString = TryGetLabelledValue(text, label, allLabels, std::to_string(defaultValue));
@@ -84,14 +100,12 @@ static void InitAll()
 }
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
-
     if (depth == 0)
     {
         return 1ULL;
     }
 
     MoveList move_list;
-
 
     uint64_t nodes = 0;
 
@@ -120,14 +134,12 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
                 std::cout << "\n";
             }
         }
-    
 
         UnmakeMove(board, move, captured_piece);
 
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
-
     }
     return nodes;
 }
@@ -163,7 +175,7 @@ void PlayMoves(std::string& moves_string, Board& board)
     {
         std::vector<std::string> moves_seperated = splitStringBySpace(moves_string);
         MoveList moveList;
-        
+
         for (size_t i = 0; i < moves_seperated.size(); i++)
         {
             std::string From = std::string(1, moves_seperated[i][0]) + std::string(1, moves_seperated[i][1]);
@@ -173,7 +185,6 @@ void PlayMoves(std::string& moves_string, Board& board)
             if (moves_seperated[i].size() > 4)
             {
                 promo = std::string(1, (moves_seperated[i][4]));
-
             }
             Move move_to_play;
             move_to_play.From = GetSquare(From);
@@ -184,7 +195,8 @@ void PlayMoves(std::string& moves_string, Board& board)
 
             for (size_t j = 0; j < moveList.count; j++)
             {
-                if ((move_to_play.From == moveList.moves[j].From) && (move_to_play.To == moveList.moves[j].To)) //found same move
+                if ((move_to_play.From == moveList.moves[j].From)
+                    && (move_to_play.To == moveList.moves[j].To)) //found same move
                 {
                     move_to_play = moveList.moves[j];
 
@@ -192,7 +204,8 @@ void PlayMoves(std::string& moves_string, Board& board)
                     {
                         if (promo == "q")
                         {
-                            if ((moveList.moves[j].Type == queen_promo) || (moveList.moves[j].Type == queen_promo_capture))
+                            if ((moveList.moves[j].Type == queen_promo)
+                                || (moveList.moves[j].Type == queen_promo_capture))
                             {
                                 MakeMove(board, moveList.moves[j]);
                                 break;
@@ -200,7 +213,8 @@ void PlayMoves(std::string& moves_string, Board& board)
                         }
                         else if (promo == "r")
                         {
-                            if ((moveList.moves[j].Type == rook_promo) || (moveList.moves[j].Type == rook_promo_capture))
+                            if ((moveList.moves[j].Type == rook_promo)
+                                || (moveList.moves[j].Type == rook_promo_capture))
                             {
                                 MakeMove(board, moveList.moves[j]);
                                 break;
@@ -208,7 +222,8 @@ void PlayMoves(std::string& moves_string, Board& board)
                         }
                         else if (promo == "b")
                         {
-                            if ((moveList.moves[j].Type == bishop_promo) || (moveList.moves[j].Type == bishop_promo_capture))
+                            if ((moveList.moves[j].Type == bishop_promo)
+                                || (moveList.moves[j].Type == bishop_promo_capture))
                             {
                                 MakeMove(board, moveList.moves[j]);
                                 break;
@@ -216,7 +231,8 @@ void PlayMoves(std::string& moves_string, Board& board)
                         }
                         else if (promo == "n")
                         {
-                            if ((moveList.moves[j].Type == knight_promo) || (moveList.moves[j].Type == knight_promo_capture))
+                            if ((moveList.moves[j].Type == knight_promo)
+                                || (moveList.moves[j].Type == knight_promo_capture))
                             {
                                 MakeMove(board, moveList.moves[j]);
                                 break;
@@ -225,7 +241,6 @@ void PlayMoves(std::string& moves_string, Board& board)
                     }
                     else
                     {
-
                         MakeMove(board, moveList.moves[j]);
                         break;
                     }
@@ -240,12 +255,17 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     std::string mainCommand = Commands[0];
     if (mainCommand == "uci")
     {
-        std::cout << "id name Laminar" << "\n";;
-        std::cout << "id author ksw0518" << "\n";;
+        std::cout << "id name Laminar"
+                  << "\n";
+        ;
+        std::cout << "id author ksw0518"
+                  << "\n";
+        ;
         std::cout << "\n";
         std::cout << "option name Threads type spin default 1 min 1 max 1\n";
         std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
-        std::cout << "uciok" << "\n";
+        std::cout << "uciok"
+                  << "\n";
     }
     else if (mainCommand == "ucinewgame")
     {
@@ -253,7 +273,8 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     }
     else if (mainCommand == "isready")
     {
-        std::cout << "readyok" << "\n";
+        std::cout << "readyok"
+                  << "\n";
     }
     else if (mainCommand == "quit")
     {
@@ -269,7 +290,6 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         }
         else if (Commands[1] == "depth")
         {
-            
             int depth = std::stoi(Commands[2]);
             IterativeDeepening(mainBoard, depth, searchLimits, data);
         }
@@ -289,7 +309,6 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 
             int64_t hard_bound;
 
-
             int64_t time = mainBoard.side == White ? wtime : btime;
             int64_t incre = mainBoard.side == White ? winc : binc;
 
@@ -297,8 +316,6 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 
             searchLimits.HardTimeLimit = hard_bound;
             IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
-
-            
         }
         if (Commands[1] == "perft")
         {
@@ -317,7 +334,6 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             std::cout << "nodes: " << (nodes) << " nps:" << std::fixed << std::setprecision(0) << nps;
             std::cout << "\n";
         }
-
     }
     else if (mainCommand == "position")
     {
@@ -325,7 +341,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         {
             if (Commands.size() == 2)
             {
-                parse_fen(STARTPOS, mainBoard);           
+                parse_fen(STARTPOS, mainBoard);
             }
             else
             {
@@ -334,7 +350,6 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
                 std::string moves_in_string = TryGetLabelledValue(input, "moves", position_commands);
                 PlayMoves(moves_in_string, mainBoard);
             }
-
         }
         else if (Commands[1] == "fen")
         {
@@ -365,14 +380,13 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 }
 int main(int argc, char* argv[])
 {
- 
     InitAll();
     parse_fen(STARTPOS, mainBoard);
 
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
     ThreadData& data = *heapAllocated;
-    if (argc > 1) {
-
+    if (argc > 1)
+    {
         ProcessUCI(argv[1], data, heapAllocated);
         delete heapAllocated;
         return 0;

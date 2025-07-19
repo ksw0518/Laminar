@@ -1,7 +1,7 @@
 #include "Movegen.h"
-#include "Const.h"
-#include "Board.h"
 #include "Bit.h"
+#include "Board.h"
+#include "Const.h"
 #include <cstring>
 #include <iostream>
 uint64_t bishop_masks[64] = {};
@@ -12,11 +12,14 @@ uint64_t pawn_attacks[2][64] = {};
 uint64_t knight_attacks[64] = {};
 uint64_t king_attacks[64] = {};
 // Move constructor
-Move::Move(unsigned char from, unsigned char to, unsigned char type, unsigned char piece)
-    : From(from), To(to), Type(type), Piece(piece) {
+Move::Move(unsigned char from, unsigned char to, unsigned char type, unsigned char piece) :
+        From(from), To(to), Type(type), Piece(piece)
+{
 }
 
-Move::Move() : From(0), To(0), Type(0), Piece(0) {
+Move::Move() :
+        From(0), To(0), Type(0), Piece(0)
+{
 }
 int GetSquare(std::string squareName)
 {
@@ -26,27 +29,59 @@ int GetSquare(std::string squareName)
     int fileIndex = -1;
     switch (file)
     {
-    case 'a': fileIndex = 0; break;
-    case 'b': fileIndex = 1; break;
-    case 'c': fileIndex = 2; break;
-    case 'd': fileIndex = 3; break;
-    case 'e': fileIndex = 4; break;
-    case 'f': fileIndex = 5; break;
-    case 'g': fileIndex = 6; break;
-    case 'h': fileIndex = 7; break;
+        case 'a':
+            fileIndex = 0;
+            break;
+        case 'b':
+            fileIndex = 1;
+            break;
+        case 'c':
+            fileIndex = 2;
+            break;
+        case 'd':
+            fileIndex = 3;
+            break;
+        case 'e':
+            fileIndex = 4;
+            break;
+        case 'f':
+            fileIndex = 5;
+            break;
+        case 'g':
+            fileIndex = 6;
+            break;
+        case 'h':
+            fileIndex = 7;
+            break;
     }
 
     int rankIndex = -1;
     switch (rank)
     {
-    case '1': rankIndex = 7; break;
-    case '2': rankIndex = 6; break;
-    case '3': rankIndex = 5; break;
-    case '4': rankIndex = 4; break;
-    case '5': rankIndex = 3; break;
-    case '6': rankIndex = 2; break;
-    case '7': rankIndex = 1; break;
-    case '8': rankIndex = 0; break;
+        case '1':
+            rankIndex = 7;
+            break;
+        case '2':
+            rankIndex = 6;
+            break;
+        case '3':
+            rankIndex = 5;
+            break;
+        case '4':
+            rankIndex = 4;
+            break;
+        case '5':
+            rankIndex = 3;
+            break;
+        case '6':
+            rankIndex = 2;
+            break;
+        case '7':
+            rankIndex = 1;
+            break;
+        case '8':
+            rankIndex = 0;
+            break;
     }
 
     return rankIndex * 8 + fileIndex;
@@ -207,7 +242,8 @@ void init_sliders_attacks(int bishop)
             {
                 uint64_t occupancy = set_occupancy(index, relevant_bits_count, attack_mask);
 
-                int magic_index = (int)((occupancy * bishop_magic_numbers[square]) >> (64 - bishop_relevant_bits[square]));
+                int magic_index =
+                    (int)((occupancy * bishop_magic_numbers[square]) >> (64 - bishop_relevant_bits[square]));
 
                 if (magic_index < 512)
                 {
@@ -234,7 +270,7 @@ uint64_t CalculatePawnAttack(int square, int side)
     uint64_t bitboard = 0UL;
     Set_bit(bitboard, square);
     //PrintBitboard(bitboard);
-    if (side == White)//white
+    if (side == White) //white
     {
         if (((bitboard >> 7) & NotAFile) != 0)
             attacks |= (bitboard >> 7);
@@ -319,7 +355,6 @@ void InitializeLeaper()
 }
 uint64_t get_bishop_attacks(int square, uint64_t occupancy)
 {
-
     occupancy &= bishop_masks[square];
     occupancy *= bishop_magic_numbers[square];
     occupancy >>= 64 - bishop_relevant_bits[square];
@@ -337,7 +372,6 @@ uint64_t get_rook_attacks(int square, uint64_t occupancy)
 }
 uint64_t get_queen_attacks(int square, uint64_t occupancy)
 {
-
     //Console.WriteLine(square);
     uint64_t queen_attacks;
     uint64_t bishop_occupancies = occupancy;
@@ -357,18 +391,25 @@ uint64_t get_queen_attacks(int square, uint64_t occupancy)
 }
 void printMove(Move move)
 {
-    std::cout << (CoordinatesToChessNotation(static_cast<uint8_t>(move.From)) + CoordinatesToChessNotation(static_cast<uint8_t>(move.To)));
-    if (move.Type == queen_promo || move.Type == queen_promo_capture) std::cout << ("q");
-    if (move.Type == rook_promo || move.Type == rook_promo_capture) std::cout << ("r");
-    if (move.Type == bishop_promo || move.Type == bishop_promo_capture) std::cout << ("b");
-    if (move.Type == knight_promo || move.Type == knight_promo_capture) std::cout << ("n");
+    std::cout
+        << (CoordinatesToChessNotation(static_cast<uint8_t>(move.From))
+            + CoordinatesToChessNotation(static_cast<uint8_t>(move.To)));
+    if (move.Type == queen_promo || move.Type == queen_promo_capture)
+        std::cout << ("q");
+    if (move.Type == rook_promo || move.Type == rook_promo_capture)
+        std::cout << ("r");
+    if (move.Type == bishop_promo || move.Type == bishop_promo_capture)
+        std::cout << ("b");
+    if (move.Type == knight_promo || move.Type == knight_promo_capture)
+        std::cout << ("n");
 
     //std::cout << ("")
 }
 void GeneratePawnMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
-    uint64_t pawnBB, pawn_capture_mask, pawn_capture, pawnOnePush, pawnTwoPush; uint64_t forward, doublePushSquare, promotionSquare, enpassent;
+    uint64_t pawnBB, pawn_capture_mask, pawn_capture, pawnOnePush, pawnTwoPush;
+    uint64_t forward, doublePushSquare, promotionSquare, enpassent;
     if (side == White)
     {
         pawnBB = board.bitboards[P];
@@ -410,12 +451,33 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                     while (true)
                     {
                         int To = get_ls1b(pawnPromo);
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), knight_promo, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), bishop_promo, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), rook_promo, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), queen_promo, static_cast<uint8_t>(get_piece(p, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            knight_promo,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            bishop_promo,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            rook_promo,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            queen_promo,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
                         Pop_bit(pawnPromo, To);
-                        if (pawnPromo == 0ULL) break;
+                        if (pawnPromo == 0ULL)
+                            break;
                     }
                 }
 
@@ -428,23 +490,40 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                     while (true)
                     {
                         int To = get_ls1b(pawn_capture);
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), knight_promo_capture, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), bishop_promo_capture, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), rook_promo_capture, static_cast<uint8_t>(get_piece(p, side))));
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), queen_promo_capture, static_cast<uint8_t>(get_piece(p, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            knight_promo_capture,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            bishop_promo_capture,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            rook_promo_capture,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            queen_promo_capture,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
                         Pop_bit(pawn_capture, To);
-                        if (pawn_capture == 0ULL) break;
+                        if (pawn_capture == 0ULL)
+                            break;
                     }
                 }
-
-
-
             }
             else
             {
                 // =======pawn one square push======= //
                 pawnOnePush = (forward & ~board.occupancies[Both]);
-
 
                 bool isPossible = pawnOnePush != 0;
 
@@ -453,23 +532,26 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                     while (true)
                     {
                         int To = get_ls1b(pawnOnePush);
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(p, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
                         Pop_bit(pawnOnePush, To);
-                        if (pawnOnePush == 0ULL) break;
+                        if (pawnOnePush == 0ULL)
+                            break;
                     }
                 }
-
 
                 // =======pawn two square push======= //
 
                 pawnTwoPush = 0;
                 if (isPossible)
                 {
-                    if ((doublePushSquare & currPawnBB) != 0)//pawn on second rank
+                    if ((doublePushSquare & currPawnBB) != 0) //pawn on second rank
                     {
-
                         pawnTwoPush = (twoForward & ~board.occupancies[Both]);
-
                     }
                 }
                 if (pawnTwoPush != 0)
@@ -477,9 +559,15 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                     while (true)
                     {
                         int To = get_ls1b(pawnTwoPush);
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), double_pawn_push, static_cast<uint8_t>(get_piece(p, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            double_pawn_push,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
                         Pop_bit(pawnTwoPush, To);
-                        if (pawnTwoPush == 0ULL) break;
+                        if (pawnTwoPush == 0ULL)
+                            break;
                     }
                 }
                 // =======pawn capture======= //
@@ -491,9 +579,15 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                     while (true)
                     {
                         int To = get_ls1b(pawn_capture);
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(p, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            capture,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
                         Pop_bit(pawn_capture, To);
-                        if (pawn_capture == 0ULL) break;
+                        if (pawn_capture == 0ULL)
+                            break;
                     }
                 }
 
@@ -507,18 +601,24 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board)
                         while (true)
                         {
                             int To = get_ls1b(enpassent);
-                            MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), ep_capture, static_cast<uint8_t>(get_piece(p, side))));
+                            MoveList.add(Move(
+                                static_cast<uint8_t>(From),
+                                static_cast<uint8_t>(To),
+                                ep_capture,
+                                static_cast<uint8_t>(get_piece(p, side))
+                            ));
                             Pop_bit(enpassent, To);
-                            if (enpassent == 0ULL) break;
+                            if (enpassent == 0ULL)
+                                break;
                         }
                     }
                 }
             }
             Pop_bit(pawnBB, From);
-            if (pawnBB == 0ULL) break;
+            if (pawnBB == 0ULL)
+                break;
         }
     }
-
 }
 void GenerateKnightMoves(MoveList& MoveList, Board& board)
 {
@@ -545,18 +645,30 @@ void GenerateKnightMoves(MoveList& MoveList, Board& board)
                     int To = get_ls1b(KnightMove);
                     if ((board.occupancies[1 - side] & (1ULL << To)) != 0)
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(n, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            capture,
+                            static_cast<uint8_t>(get_piece(n, side))
+                        ));
                     }
                     else
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(n, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(n, side))
+                        ));
                     }
                     Pop_bit(KnightMove, To);
-                    if (KnightMove == 0) break;
+                    if (KnightMove == 0)
+                        break;
                 }
             }
             Pop_bit(KnightBB, From);
-            if (KnightBB == 0) break;
+            if (KnightBB == 0)
+                break;
         }
     }
 }
@@ -585,23 +697,32 @@ void GenerateBishopMoves(MoveList& MoveList, Board& board)
                     int To = get_ls1b(BishopMove);
                     if ((board.occupancies[1 - side] & (1ULL << To)) != 0)
                     {
-
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(b, side))));
-
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            capture,
+                            static_cast<uint8_t>(get_piece(b, side))
+                        ));
                     }
                     else
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(b, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(b, side))
+                        ));
                     }
                     Pop_bit(BishopMove, To);
-                    if (BishopMove == 0) break;
+                    if (BishopMove == 0)
+                        break;
                 }
             }
             Pop_bit(BishopBB, From);
-            if (BishopBB == 0) break;
+            if (BishopBB == 0)
+                break;
         }
     }
-
 }
 void GenerateRookMoves(MoveList& MoveList, Board& board)
 {
@@ -621,7 +742,8 @@ void GenerateRookMoves(MoveList& MoveList, Board& board)
         while (true)
         {
             int From = get_ls1b(RookBB);
-            uint64_t RookMove = (get_rook_attacks(static_cast<uint8_t>(From), board.occupancies[Both]) & ~board.occupancies[side]);
+            uint64_t RookMove =
+                (get_rook_attacks(static_cast<uint8_t>(From), board.occupancies[Both]) & ~board.occupancies[side]);
             if (RookMove != 0)
             {
                 while (true)
@@ -629,21 +751,32 @@ void GenerateRookMoves(MoveList& MoveList, Board& board)
                     int To = get_ls1b(RookMove);
                     if ((board.occupancies[1 - side] & (1ULL << To)) != 0)
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(r, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            capture,
+                            static_cast<uint8_t>(get_piece(r, side))
+                        ));
                     }
                     else
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(r, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(r, side))
+                        ));
                     }
                     Pop_bit(RookMove, To);
-                    if (RookMove == 0) break;
+                    if (RookMove == 0)
+                        break;
                 }
             }
             Pop_bit(RookBB, From);
-            if (RookBB == 0) break;
+            if (RookBB == 0)
+                break;
         }
     }
-
 }
 void GenerateQueenMoves(MoveList& MoveList, Board& board)
 {
@@ -670,18 +803,30 @@ void GenerateQueenMoves(MoveList& MoveList, Board& board)
                     int To = get_ls1b(QueenMove);
                     if ((board.occupancies[1 - side] & (1ULL << To)) != 0)
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(q, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            capture,
+                            static_cast<uint8_t>(get_piece(q, side))
+                        ));
                     }
                     else
                     {
-                        MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(q, side))));
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(q, side))
+                        ));
                     }
                     Pop_bit(QueenMove, To);
-                    if (QueenMove == 0) break;
+                    if (QueenMove == 0)
+                        break;
                 }
             }
             Pop_bit(QueenBB, From);
-            if (QueenBB == 0) break;
+            if (QueenBB == 0)
+                break;
         }
     }
 }
@@ -708,20 +853,31 @@ void GenerateKingMoves(MoveList& MoveList, Board& board)
                 int To = get_ls1b(KingMove);
                 if ((board.occupancies[1 - side] & (1ULL << To)) != 0)
                 {
-                    MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), capture, static_cast<uint8_t>(get_piece(k, side))));
+                    MoveList.add(Move(
+                        static_cast<uint8_t>(From),
+                        static_cast<uint8_t>(To),
+                        capture,
+                        static_cast<uint8_t>(get_piece(k, side))
+                    ));
                 }
                 else
                 {
-                    MoveList.add(Move(static_cast<uint8_t>(From), static_cast<uint8_t>(To), quiet_move, static_cast<uint8_t>(get_piece(k, side))));
+                    MoveList.add(Move(
+                        static_cast<uint8_t>(From),
+                        static_cast<uint8_t>(To),
+                        quiet_move,
+                        static_cast<uint8_t>(get_piece(k, side))
+                    ));
                 }
                 Pop_bit(KingMove, To);
-                if (KingMove == 0) break;
+                if (KingMove == 0)
+                    break;
             }
-
         }
 
         Pop_bit(KingBB, From);
-        if (KingBB == 0) break;
+        if (KingBB == 0)
+            break;
     }
     if (side == White)
     {
@@ -729,15 +885,24 @@ void GenerateKingMoves(MoveList& MoveList, Board& board)
         {
             if ((board.occupancies[Both] & WhiteKingCastleEmpty) == 0)
             {
-                MoveList.add(Move(static_cast<uint8_t>(e1), static_cast<uint8_t>(g1), king_castle, static_cast<uint8_t>(get_piece(k, side))));
+                MoveList.add(Move(
+                    static_cast<uint8_t>(e1),
+                    static_cast<uint8_t>(g1),
+                    king_castle,
+                    static_cast<uint8_t>(get_piece(k, side))
+                ));
             }
-
         }
         if ((board.castle & WhiteQueenCastle) != 0)
         {
             if ((board.occupancies[Both] & WhiteQueenCastleEmpty) == 0)
             {
-                MoveList.add(Move(static_cast<uint8_t>(e1), static_cast<uint8_t>(c1), queen_castle, static_cast<uint8_t>(get_piece(k, side))));
+                MoveList.add(Move(
+                    static_cast<uint8_t>(e1),
+                    static_cast<uint8_t>(c1),
+                    queen_castle,
+                    static_cast<uint8_t>(get_piece(k, side))
+                ));
             }
         }
     }
@@ -747,31 +912,36 @@ void GenerateKingMoves(MoveList& MoveList, Board& board)
         {
             if ((board.occupancies[Both] & BlackKingCastleEmpty) == 0)
             {
-                MoveList.add(Move(static_cast<uint8_t>(e8), static_cast<uint8_t>(g8), king_castle, static_cast<uint8_t>(get_piece(k, side))));
+                MoveList.add(Move(
+                    static_cast<uint8_t>(e8),
+                    static_cast<uint8_t>(g8),
+                    king_castle,
+                    static_cast<uint8_t>(get_piece(k, side))
+                ));
             }
-
-
         }
 
         if ((board.castle & BlackQueenCastle) != 0)
         {
             if ((board.occupancies[Both] & BlackQueenCastleEmpty) == 0)
             {
-                MoveList.add(Move(static_cast<uint8_t>(e8), static_cast<uint8_t>(c8), queen_castle, static_cast<uint8_t>(get_piece(k, side))));
+                MoveList.add(Move(
+                    static_cast<uint8_t>(e8),
+                    static_cast<uint8_t>(c8),
+                    queen_castle,
+                    static_cast<uint8_t>(get_piece(k, side))
+                ));
             }
         }
     }
-    
-
-
 }
 bool is_move_irreversible(Move& move)
 {
-	if (((move.Type & captureFlag) != 0) || move.Piece == p || move.Piece == P)
-	{
-		return true;
-	}
-	return false;
+    if (((move.Type & captureFlag) != 0) || move.Piece == p || move.Piece == P)
+    {
+        return true;
+    }
+    return false;
 }
 void MakeMove(Board& board, Move move)
 {
@@ -846,7 +1016,6 @@ void MakeMove(Board& board, Move move)
         {
             if (getFile(move.To) >= 4)
             {
-
                 if (board.side == White)
                 {
                     flipWhite = true;
@@ -861,7 +1030,6 @@ void MakeMove(Board& board, Move move)
         {
             if (getFile(move.To) <= 3)
             {
-
                 if (board.side == White)
                 {
                     flipWhite = false;
@@ -922,660 +1090,631 @@ void MakeMove(Board& board, Move move)
     board.halfmove++;
     switch (move.Type)
     {
-    case double_pawn_push:
-    {
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = move.Piece;
-        if (side == White)
+        case double_pawn_push:
         {
-            board.enpassent = move.To + 8;
-        }
-        else
-        {
-            board.enpassent = move.To - 8;
-        }
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case quiet_move:
-    {
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
 
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
 
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
 
-        board.mailbox[move.From] = NO_PIECE;
+            board.mailbox[move.From] = NO_PIECE;
 
-        board.mailbox[move.To] = move.Piece;
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case capture:
-    {
-        if (board.mailbox[move.To] == get_piece(r, 1 - side))
-        {
-            if (getFile(move.To) == 0)
+            board.mailbox[move.To] = move.Piece;
+            if (side == White)
             {
-                if (side == White)
+                board.enpassent = move.To + 8;
+            }
+            else
+            {
+                board.enpassent = move.To - 8;
+            }
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case quiet_move:
+        {
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = move.Piece;
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case capture:
+        {
+            if (board.mailbox[move.To] == get_piece(r, 1 - side))
+            {
+                if (getFile(move.To) == 0)
                 {
-                    if (getRank(move.To) == 7)
+                    if (side == White)
                     {
-                        board.castle &= ~(BlackQueenCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackQueenCastle);
+                        }
+                    }
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteQueenCastle);
+                        }
                     }
                 }
-                else
+                else if (getFile(move.To) == 7)
                 {
-                    if (getRank(move.To) == 0)
+                    if (side == White)
                     {
-                        board.castle &= ~(WhiteQueenCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackKingCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteKingCastle);
+                        }
+                    }
                 }
             }
-            else if (getFile(move.To) == 7)
+            int captured_piece = board.mailbox[move.To];
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
+
+            board.bitboards[captured_piece] &= ~(1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[1 - side] &= ~(1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = move.Piece;
+
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
             {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case king_castle:
+        {
+            int rookSquare;
+            if (side == White)
+            {
+                rookSquare = h1;
+            }
+            else
+            {
+                rookSquare = h8;
+            }
 
-                if (side == White)
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
+
+            board.bitboards[get_piece(r, side)] &= ~(1ULL << rookSquare);
+            board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare - 2));
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << rookSquare);
+            board.occupancies[side] |= (1ULL << (rookSquare - 2));
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << rookSquare);
+            board.occupancies[Both] |= (1ULL << (rookSquare - 2));
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = move.Piece;
+
+            int rook = board.mailbox[rookSquare];
+
+            board.mailbox[rookSquare] = NO_PIECE;
+
+            board.mailbox[rookSquare - 2] = get_piece(r, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case queen_castle:
+        {
+            int rookSquare;
+            if (side == White)
+            {
+                rookSquare = a1;
+            }
+            else
+            {
+                rookSquare = a8;
+            }
+
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
+
+            board.bitboards[get_piece(r, side)] &= ~(1ULL << rookSquare);
+            board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare + 3));
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << rookSquare);
+            board.occupancies[side] |= (1ULL << (rookSquare + 3));
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << rookSquare);
+            board.occupancies[Both] |= (1ULL << (rookSquare + 3));
+
+            board.mailbox[move.From] = NO_PIECE;
+            board.mailbox[move.To] = move.Piece;
+
+            int rook = board.mailbox[rookSquare];
+
+            board.mailbox[rookSquare] = NO_PIECE;
+
+            board.mailbox[rookSquare + 3] = get_piece(r, side);
+
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case queen_promo:
+        {
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(q, side)] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(q, side);
+
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case rook_promo:
+        {
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(r, side)] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(r, side);
+
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case bishop_promo:
+        {
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(b, side)] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(b, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+
+            break;
+        }
+        case knight_promo:
+        {
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(n, side)] |= (1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(n, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case queen_promo_capture:
+        {
+            if (board.mailbox[move.To] == get_piece(r, 1 - side))
+            {
+                if (getFile(move.To) == 0)
                 {
-                    if (getRank(move.To) == 7)
+                    if (side == White)
                     {
-                        board.castle &= ~(BlackKingCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackQueenCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteQueenCastle);
+                        }
+                    }
                 }
-                else
+                else if (getFile(move.To) == 7)
                 {
-                    if (getRank(move.To) == 0)
+                    if (side == White)
                     {
-                        board.castle &= ~(WhiteKingCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackKingCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteKingCastle);
+                        }
+                    }
                 }
             }
-        }
-        int captured_piece = board.mailbox[move.To];
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
+            int captured_piece = board.mailbox[move.To];
 
-        board.bitboards[captured_piece] &= ~(1ULL << move.To);
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(q, side)] |= (1ULL << move.To);
 
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
+            board.bitboards[captured_piece] &= ~(1ULL << move.To);
 
-        board.occupancies[1 - side] &= ~(1ULL << move.To);
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
 
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
+            board.occupancies[1 - side] &= ~(1ULL << move.To);
 
-        board.mailbox[move.From] = NO_PIECE;
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
 
-        board.mailbox[move.To] = move.Piece;
+            board.mailbox[move.From] = NO_PIECE;
 
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case king_castle:
-    {
-        int rookSquare;
-        if (side == White)
-        {
-            rookSquare = h1;
-        }
-        else
-        {
-            rookSquare = h8;
-        }
+            board.mailbox[move.To] = get_piece(q, side);
 
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
-
-        board.bitboards[get_piece(r, side)] &= ~(1ULL << rookSquare);
-        board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare - 2));
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << rookSquare);
-        board.occupancies[side] |= (1ULL << (rookSquare - 2));
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << rookSquare);
-        board.occupancies[Both] |= (1ULL << (rookSquare - 2));
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = move.Piece;
-
-        int rook = board.mailbox[rookSquare];
-
-        board.mailbox[rookSquare] = NO_PIECE;
-
-        board.mailbox[rookSquare - 2] = get_piece(r, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case queen_castle:
-    {
-        int rookSquare;
-        if (side == White)
-        {
-            rookSquare = a1;
-
-        }
-        else
-        {
-            rookSquare = a8;
-
-        }
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
-
-        board.bitboards[get_piece(r, side)] &= ~(1ULL << rookSquare);
-        board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare + 3));
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << rookSquare);
-        board.occupancies[side] |= (1ULL << (rookSquare + 3));
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << rookSquare);
-        board.occupancies[Both] |= (1ULL << (rookSquare + 3));
-
-        board.mailbox[move.From] = NO_PIECE;
-        board.mailbox[move.To] = move.Piece;
-
-        int rook = board.mailbox[rookSquare];
-
-        board.mailbox[rookSquare] = NO_PIECE;
-
-        board.mailbox[rookSquare + 3] = get_piece(r, side);
-
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case queen_promo:
-    {
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(q, side)] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(q, side);
-
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case rook_promo:
-    {
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(r, side)] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(r, side);
-
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case bishop_promo:
-    {
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(b, side)] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(b, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-
-        break;
-    }
-    case knight_promo:
-    {
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(n, side)] |= (1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(n, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case queen_promo_capture:
-    {
-        if (board.mailbox[move.To] == get_piece(r, 1 - side))
-        {
-            if (getFile(move.To) == 0)
+            board.side = 1 - board.side;
+            if (is_move_irreversible(move))
             {
-                if (side == White)
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case rook_promo_capture:
+        {
+            if (board.mailbox[move.To] == get_piece(r, 1 - side))
+            {
+                if (getFile(move.To) == 0)
                 {
-                    if (getRank(move.To) == 7)
+                    if (side == White)
                     {
-                        board.castle &= ~(BlackQueenCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackQueenCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteQueenCastle);
+                        }
+                    }
                 }
-                else
+                else if (getFile(move.To) == 7)
                 {
-                    if (getRank(move.To) == 0)
+                    if (side == White)
                     {
-                        board.castle &= ~(WhiteQueenCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackKingCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteKingCastle);
+                        }
+                    }
                 }
             }
-            else if (getFile(move.To) == 7)
+            int captured_piece = board.mailbox[move.To];
+
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(r, side)] |= (1ULL << move.To);
+
+            board.bitboards[captured_piece] &= ~(1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[1 - side] &= ~(1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(r, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
             {
-
-                if (side == White)
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
+        case bishop_promo_capture:
+        {
+            if (board.mailbox[move.To] == get_piece(r, 1 - side))
+            {
+                if (getFile(move.To) == 0)
                 {
-                    if (getRank(move.To) == 7)
+                    if (side == White)
                     {
-                        board.castle &= ~(BlackKingCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackQueenCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteQueenCastle);
+                        }
+                    }
                 }
-                else
+                else if (getFile(move.To) == 7)
                 {
-                    if (getRank(move.To) == 0)
+                    if (side == White)
                     {
-                        board.castle &= ~(WhiteKingCastle);
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackKingCastle);
+                        }
                     }
-
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteKingCastle);
+                        }
+                    }
                 }
             }
+            int captured_piece = board.mailbox[move.To];
+
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(b, side)] |= (1ULL << move.To);
+
+            board.bitboards[captured_piece] &= ~(1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[1 - side] &= ~(1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(b, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
         }
-        int captured_piece = board.mailbox[move.To];
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(q, side)] |= (1ULL << move.To);
-
-        board.bitboards[captured_piece] &= ~(1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[1 - side] &= ~(1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(q, side);
-
-        board.side = 1 - board.side;
-        if (is_move_irreversible(move))
+        case knight_promo_capture:
         {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
+            if (board.mailbox[move.To] == get_piece(r, 1 - side))
+            {
+                if (getFile(move.To) == 0)
+                {
+                    if (side == White)
+                    {
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackQueenCastle);
+                        }
+                    }
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteQueenCastle);
+                        }
+                    }
+                }
+                else if (getFile(move.To) == 7)
+                {
+                    if (side == White)
+                    {
+                        if (getRank(move.To) == 7)
+                        {
+                            board.castle &= ~(BlackKingCastle);
+                        }
+                    }
+                    else
+                    {
+                        if (getRank(move.To) == 0)
+                        {
+                            board.castle &= ~(WhiteKingCastle);
+                        }
+                    }
+                }
+            }
+            int captured_piece = board.mailbox[move.To];
+
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[get_piece(n, side)] |= (1ULL << move.To);
+
+            board.bitboards[captured_piece] &= ~(1ULL << move.To);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[1 - side] &= ~(1ULL << move.To);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = get_piece(n, side);
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            board.history.push_back(board.zobristKey);
+            break;
         }
-        break;
+        case ep_capture:
+        {
+            int capture_square;
+            if (side == White)
+            {
+                capture_square = move.To + 8;
+            }
+            else
+            {
+                capture_square = move.To - 8;
+            }
+
+            int captured_piece = board.mailbox[capture_square];
+
+            board.bitboards[move.Piece] &= ~(1ULL << move.From);
+            board.bitboards[move.Piece] |= (1ULL << move.To);
+
+            board.bitboards[captured_piece] &= ~(1ULL << capture_square);
+
+            board.occupancies[side] &= ~(1ULL << move.From);
+            board.occupancies[side] |= (1ULL << move.To);
+
+            board.occupancies[1 - side] &= ~(1ULL << capture_square);
+
+            board.occupancies[Both] &= ~(1ULL << move.From);
+            board.occupancies[Both] &= ~(1ULL << capture_square);
+            board.occupancies[Both] |= (1ULL << move.To);
+
+            board.mailbox[move.From] = NO_PIECE;
+
+            board.mailbox[move.To] = move.Piece;
+
+            board.mailbox[capture_square] = NO_PIECE;
+
+            board.side = 1 - board.side;
+
+            if (is_move_irreversible(move))
+            {
+                board.halfmove = 0;
+                board.lastIrreversiblePly = board.history.size();
+            }
+            break;
+        }
     }
-    case rook_promo_capture:
-    {
-        if (board.mailbox[move.To] == get_piece(r, 1 - side))
-        {
-            if (getFile(move.To) == 0)
-            {
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackQueenCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteQueenCastle);
-                    }
-
-                }
-            }
-            else if (getFile(move.To) == 7)
-            {
-
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackKingCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteKingCastle);
-                    }
-
-                }
-            }
-        }
-        int captured_piece = board.mailbox[move.To];
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(r, side)] |= (1ULL << move.To);
-
-        board.bitboards[captured_piece] &= ~(1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[1 - side] &= ~(1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(r, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case bishop_promo_capture:
-    {
-        if (board.mailbox[move.To] == get_piece(r, 1 - side))
-        {
-            if (getFile(move.To) == 0)
-            {
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackQueenCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteQueenCastle);
-                    }
-
-                }
-            }
-            else if (getFile(move.To) == 7)
-            {
-
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackKingCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteKingCastle);
-                    }
-
-                }
-            }
-        }
-        int captured_piece = board.mailbox[move.To];
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(b, side)] |= (1ULL << move.To);
-
-        board.bitboards[captured_piece] &= ~(1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[1 - side] &= ~(1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(b, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    case knight_promo_capture:
-    {
-        if (board.mailbox[move.To] == get_piece(r, 1 - side))
-        {
-            if (getFile(move.To) == 0)
-            {
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackQueenCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteQueenCastle);
-                    }
-
-                }
-            }
-            else if (getFile(move.To) == 7)
-            {
-
-                if (side == White)
-                {
-                    if (getRank(move.To) == 7)
-                    {
-                        board.castle &= ~(BlackKingCastle);
-                    }
-
-                }
-                else
-                {
-                    if (getRank(move.To) == 0)
-                    {
-                        board.castle &= ~(WhiteKingCastle);
-                    }
-
-                }
-            }
-        }
-        int captured_piece = board.mailbox[move.To];
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[get_piece(n, side)] |= (1ULL << move.To);
-
-        board.bitboards[captured_piece] &= ~(1ULL << move.To);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[1 - side] &= ~(1ULL << move.To);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = get_piece(n, side);
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        board.history.push_back(board.zobristKey);
-        break;
-    }
-    case ep_capture:
-    {
-        int capture_square;
-        if (side == White)
-        {
-            capture_square = move.To + 8;
-        }
-        else
-        {
-            capture_square = move.To - 8;
-        }
-
-        int captured_piece = board.mailbox[capture_square];
-
-        board.bitboards[move.Piece] &= ~(1ULL << move.From);
-        board.bitboards[move.Piece] |= (1ULL << move.To);
-
-        board.bitboards[captured_piece] &= ~(1ULL << capture_square);
-
-        board.occupancies[side] &= ~(1ULL << move.From);
-        board.occupancies[side] |= (1ULL << move.To);
-
-        board.occupancies[1 - side] &= ~(1ULL << capture_square);
-
-        board.occupancies[Both] &= ~(1ULL << move.From);
-        board.occupancies[Both] &= ~(1ULL << capture_square);
-        board.occupancies[Both] |= (1ULL << move.To);
-
-        board.mailbox[move.From] = NO_PIECE;
-
-        board.mailbox[move.To] = move.Piece;
-
-        board.mailbox[capture_square] = NO_PIECE;
-
-        board.side = 1 - board.side;
-
-        if (is_move_irreversible(move))
-        {
-            board.halfmove = 0;
-            board.lastIrreversiblePly = board.history.size();
-        }
-        break;
-    }
-    }
-
 }
 
 void UnmakeMove(Board& board, Move move, int captured_piece)
 {
-
     int side = 1 - board.side;
     // change castling flag
 
@@ -1597,11 +1736,9 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         //update mailbox
         board.mailbox[move.To] = NO_PIECE;
         board.mailbox[move.From] = move.Piece;
-
     }
     else if (move.Type == capture)
     {
-
         //update piece bitboard
         //int captured_piece = board.mailbox[move.To];
         board.bitboards[move.Piece] &= ~(1ULL << move.To);
@@ -1622,12 +1759,10 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         //update mailbox
         board.mailbox[move.To] = captured_piece;
         board.mailbox[move.From] = move.Piece;
-
     }
     else if (move.Type == king_castle)
     {
         //update castling right & find rook square
-
 
         int rookSquare;
         if (side == White)
@@ -1639,16 +1774,13 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         {
             rookSquare = h8;
             //board.castle &= ~BlackKingCastle;
-
         }
-
 
         board.bitboards[move.Piece] &= ~(1ULL << move.To);
         board.bitboards[move.Piece] |= (1ULL << move.From);
 
         board.bitboards[get_piece(r, side)] &= ~(1ULL << (rookSquare - 2));
         board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare));
-
 
         //update moved piece occupancy
         board.occupancies[side] &= ~(1ULL << move.To);
@@ -1669,13 +1801,10 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
 
         board.mailbox[rookSquare - 2] = NO_PIECE;
         board.mailbox[rookSquare] = get_piece(r, side);
-
-
     }
     else if (move.Type == queen_castle)
     {
         //update castling right & find rook square
-
 
         int rookSquare;
         if (side == White)
@@ -1687,7 +1816,6 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         {
             rookSquare = a8;
             //board.castle &= ~BlackKingCastle;
-
         }
         //Console.WriteLine(CoordinatesToChessNotation(rookSquare));
 
@@ -1696,7 +1824,6 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
 
         board.bitboards[get_piece(r, side)] &= ~(1ULL << (rookSquare + 3));
         board.bitboards[get_piece(r, side)] |= (1ULL << (rookSquare));
-
 
         //update moved piece occupancy
         board.occupancies[side] &= ~(1ULL << move.To);
@@ -1734,7 +1861,6 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         //update mailbox
         board.mailbox[move.To] = NO_PIECE;
         board.mailbox[move.From] = move.Piece;
-
     }
     else if (move.Type == rook_promo)
     {
@@ -1783,13 +1909,11 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         //update mailbox
         board.mailbox[move.To] = NO_PIECE;
         board.mailbox[move.From] = move.Piece;
-
     }
     else if (move.Type == queen_promo_capture)
     {
         //int captured_piece = board.mailbox[move.To];
         //update piece bitboard
-
 
         board.bitboards[move.Piece] |= (1ULL << move.From);
         board.bitboards[get_piece(q, side)] &= ~(1ULL << move.To);
@@ -1890,7 +2014,6 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
             capture_square = move.To - 8;
         }
 
-
         //int captured_piece = board.mailbox[capture_square];
         //update piece bitboard
         board.bitboards[move.Piece] &= ~(1ULL << move.To);
@@ -1915,8 +2038,6 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
         board.mailbox[move.To] = NO_PIECE;
         board.mailbox[capture_square] = captured_pawn;
     }
-
-
 
     board.side = 1 - board.side;
 }
@@ -2026,10 +2147,8 @@ uint64_t get_attacked_squares(int side, Board& board, uint64_t occupancy)
     return attack_map;
 }
 
-
 bool isLegal(Move& move, Board& board)
 {
-
     uint64_t kingSquare = (board.bitboards[get_piece(K, 1 - board.side)]);
 
     if (move.Type != king_castle && move.Type != queen_castle)
@@ -2043,7 +2162,6 @@ bool isLegal(Move& move, Board& board)
     }
     else
     {
-
         uint64_t attacked_squares = get_attacked_squares(board.side, board, board.occupancies[Both]);
         if (move.Type == king_castle)
         {
@@ -2062,7 +2180,7 @@ bool isLegal(Move& move, Board& board)
             }
             return false;
         }
-        else// queen castle
+        else // queen castle
         {
             uint64_t NoAttackArea;
             if (1 - board.side == White)
@@ -2079,7 +2197,6 @@ bool isLegal(Move& move, Board& board)
             }
             return false;
         }
-
 
         return false;
     }
