@@ -119,7 +119,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     data.pvLengths[currentPly] = currentPly;
     if (depth <= 0 || currentPly >= MAXPLY - 1)
     {
-        score = -QuiescentSearch(board, data, alpha, beta);
+        score = QuiescentSearch(board, data, alpha, beta);
         return score;
     }
 	MoveList moveList;
