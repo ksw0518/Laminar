@@ -23,7 +23,7 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
         Move& searchedMove = searchedQuietMoves.moves[i];
         if (searchedMove != bonus_move)
         {
-            UpdateMainHist(data, stm, searchedMove.From, searchedMove.To, malus);
+            UpdateMainHist(data, stm, searchedMove.From, searchedMove.To, -malus);
         }
 
     }
