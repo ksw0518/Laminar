@@ -1,5 +1,7 @@
 #include "Transpositions.h"
 #include <cstdint>
+#include <stddef.h>
+
 size_t TTSize = 1; //initial value
 TranspositionEntry* TranspositionTable = nullptr;
 void Initialize_TT(int size)

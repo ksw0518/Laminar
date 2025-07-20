@@ -1,5 +1,8 @@
 #pragma once
+
 #include <cstdint>
+#include <stddef.h>
+
 enum Square
 {
     a8 = 0,
