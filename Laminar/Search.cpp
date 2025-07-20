@@ -313,7 +313,14 @@ std::pair<Move, int> IterativeDeepening(
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
         }
-
+        if (data.currDepth == 1)
+        {
+            data.SearchTime = std::numeric_limits<int64_t>::max();
+        }
+        else
+        {
+            data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
+        }
         score = AlphaBeta(board, data, data.currDepth, -MAXSCORE, MAXSCORE);
 
         auto end = std::chrono::steady_clock::now();
