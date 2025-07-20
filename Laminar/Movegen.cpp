@@ -2534,3 +2534,16 @@ bool isLegal(Move& move, Board& board)
         return false;
     }
 }
+bool is_in_check(Board& board)
+{
+    if (IsSquareAttacked(
+            get_ls1b(board.side == White ? board.bitboards[K] : board.bitboards[k]),
+            1 - board.side,
+            board,
+            board.occupancies[Both]
+        ))
+    {
+        return true;
+    }
+    return false;
+}
