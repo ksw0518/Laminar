@@ -133,6 +133,7 @@ constexpr int BENCHDEPTH = 4;
 constexpr int PieceValues[12] = {98, 280, 295, 479, 1064, 0, 0};
 
 extern size_t TTSize;
+constexpr int MATESCORE = 49000;
 inline int get_piece(int piece, int col)
 {
     return Get_Whitepiece[piece] + Side_value[col];

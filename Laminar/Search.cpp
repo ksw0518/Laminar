@@ -132,7 +132,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     bool isInCheck = is_in_check(board);
 
     bool canPrune = !isInCheck && !isPvNode;
-    if (canPrune) //do whole node pruining
+    bool notMated = beta >= -MATESCORE + MAXPLY;
+    if (canPrune && notMated) //do whole node pruining
     {
         if (depth <= RFP_MAX_DEPTH) //rfp
         {
