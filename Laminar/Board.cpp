@@ -1,6 +1,7 @@
 #include "Board.h"
 #include "Bit.h"
 #include "Const.h"
+#include "Movegen.h"
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -104,120 +105,7 @@ int get_castle(uint8_t castle)
 
     return number;
 }
-void parse_fen(std::string fen, Board& board)
-{
-    for (int i = 0; i < 64; i++)
-    {
-        board.mailbox[i] = NO_PIECE;
-    }
-    //board.mailbox
-    for (int i = 0; i < 12; i++)
-    {
-        board.bitboards[i] = 0;
-    }
-    for (int i = 0; i < 3; i++)
-    {
-        board.occupancies[i] = 0;
-    }
-    board.side = 0;
-    board.enpassent = NO_SQ;
-    int square = 0;
-    size_t index = 0;
-    for (size_t i = 0; i < fen.length(); i++)
-    {
-        char text = fen[i];
-        if (text == ' ')
-        {
-            index = i + 1;
-            break;
-        }
-        if (text == '/')
-        {
-            continue;
-        }
-        if (std::isdigit(text))
-        {
-            square += text - '0';
-        }
-        if (std::isalpha(text))
-        {
-            int piece = getPieceFromChar(text);
-            board.mailbox[square] = piece;
-            Set_bit(board.bitboards[piece], square);
-            square++;
-        }
-    }
-    if (fen[index] == 'w')
-        board.side = White;
-    else
-        board.side = Black;
 
-    index += 2;
-
-    board.castle = 0;
-    for (int i = 0; i < 4; i++)
-    {
-        if (fen[index] == 'K')
-            board.castle |= WhiteKingCastle;
-        if (fen[index] == 'Q')
-            board.castle |= WhiteQueenCastle;
-        if (fen[index] == 'k')
-            board.castle |= BlackKingCastle;
-        if (fen[index] == 'q')
-            board.castle |= BlackQueenCastle;
-        if (fen[index] == ' ')
-            break;
-        if (fen[index] == '-')
-        {
-            board.castle = 0;
-            break;
-        }
-
-        index++;
-    }
-    index++;
-    if (fen[index] == ' ')
-        index++;
-    if (fen[index] != '-')
-    {
-        int file = fen[index] - 'a';
-        int rank = 8 - (fen[index + 1] - '0');
-
-        board.enpassent = rank * 8 + file;
-    }
-    else
-    {
-        board.enpassent = NO_SQ;
-    }
-
-    if (index + 2 >= fen.length())
-    {
-        board.halfmove = 0;
-    }
-    else
-    {
-        std::string halfmoves_str = "";
-        index += 2;
-        halfmoves_str += fen[index];
-        if (fen[index + 1] != ' ')
-        {
-            halfmoves_str += fen[index + 1];
-        }
-
-        int halfmoves = std::stoi(halfmoves_str);
-        board.halfmove = halfmoves;
-    }
-    for (int piece = P; piece <= K; piece++)
-    {
-        board.occupancies[White] |= board.bitboards[piece];
-    }
-    for (int piece = p; piece <= k; piece++)
-    {
-        board.occupancies[Black] |= board.bitboards[piece];
-    }
-    board.occupancies[Both] |= board.occupancies[Black];
-    board.occupancies[Both] |= board.occupancies[White];
-}
 void PrintBoards(Board board)
 {
     std::cout << ("\n");
@@ -255,6 +143,9 @@ void PrintBoards(Board board)
               << (((board.castle & BlackQueenCastle) != 0) ? 'q' : '-');
 
     std::cout << "\n\n";
+
+    std::cout << std::hex << "    Zobrist key:     " << generate_hash_key(board) << std::hex << "\n";
+    std::cout << std::hex << "    Zobrist key_incremental:     " << board.zobristKey << std::dec << "\n";
     std::cout << "    Castle_key:     " << get_castle(board.castle) << "\n";
     std::cout << ("\n");
 }

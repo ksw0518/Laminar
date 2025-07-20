@@ -3,6 +3,7 @@
 #include "Evaluation.h"
 #include "Movegen.h"
 #include "Search.h"
+#include "Transpositions.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -13,6 +14,7 @@ const std::string KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/
 Board mainBoard;
 std::vector<std::string> position_commands = {"position", "startpos", "fen", "moves"};
 std::vector<std::string> go_commands = {"go", "movetime", "wtime", "btime", "winc", "binc", "movestogo"};
+std::vector<std::string> option_commands = {"setoption", "name", "value"};
 
 std::string trim(const std::string& str)
 {
@@ -97,6 +99,7 @@ static void InitAll()
     init_sliders_attacks(1);
     init_sliders_attacks(0);
     init_tables();
+    init_random_keys();
 }
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
@@ -121,7 +124,6 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
         uint64_t last_zobrist = board.zobristKey;
 
         MakeMove(board, move);
-
         if (isLegal(move, board))
         {
             uint64_t nodes_added = Perft(board, depth - 1, perftDepth);
@@ -137,6 +139,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
 
         UnmakeMove(board, move, captured_piece);
 
+        board.zobristKey = last_zobrist;
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
@@ -276,6 +279,16 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::cout << "readyok"
                   << "\n";
     }
+    else if (mainCommand == "setoption")
+    {
+        std::string option = TryGetLabelledValue(input, "name", option_commands);
+        int value = TryGetLabelledValueInt(input, "value", option_commands);
+
+        if (option == "Hash")
+        {
+            Initialize_TT(value);
+        }
+    }
     else if (mainCommand == "quit")
     {
         delete data_heap;
@@ -327,9 +340,9 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 
             int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-            int64_t second = elapsedMS / 1000;
+            float second = (float)(elapsedMS) / 1000;
 
-            uint64_t nps = nodes / second;
+            uint64_t nps = nodes / second + 1;
 
             std::cout << "nodes: " << (nodes) << " nps:" << std::fixed << std::setprecision(0) << nps;
             std::cout << "\n";
@@ -377,6 +390,11 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         PrintBoards(mainBoard);
         print_mailbox(mainBoard.mailbox);
     }
+    else if (mainCommand == "moves")
+    {
+        std::string moves_in_string = TryGetLabelledValue(input, "moves", position_commands);
+        PlayMoves(moves_in_string, mainBoard);
+    }
 }
 int main(int argc, char* argv[])
 {
@@ -385,6 +403,7 @@ int main(int argc, char* argv[])
 
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
     ThreadData& data = *heapAllocated;
+    Initialize_TT(32); //set initial TT size as 32mb
     if (argc > 1)
     {
         ProcessUCI(argv[1], data, heapAllocated);

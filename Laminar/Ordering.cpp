@@ -3,6 +3,8 @@
 #include "Const.h"
 #include "Movegen.h"
 #include "Search.h"
+#include "Transpositions.h"
+#include "Tuneables.h"
 #include <algorithm>
 bool isMoveNoisy(Move& move)
 {
@@ -16,9 +18,13 @@ bool IsEpCapture(Move& move)
 {
     return (move.Type & ep_capture) != 0;
 }
-int GetMoveScore(Move& move, Board& board, ThreadData& data)
+int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry)
 {
-    if (IsMoveCapture(move))
+    if (move == entry.bestMove)
+    {
+        return 900000000;
+    }
+    else if (IsMoveCapture(move))
     {
         int attacker = get_piece(move.Piece, White);
 
@@ -26,13 +32,13 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data)
         int attackerValue = PieceValues[attacker];
         int victimValue = PieceValues[victim];
 
-        int mvvlvaValue = victimValue * 10 - attackerValue;
-        return mvvlvaValue + 900000;
+        int mvvlvaValue = victimValue * 100 - attackerValue;
+        return mvvlvaValue;
     }
     else
     {
         int mainHistValue = data.histories.mainHist[board.side][move.From][move.To];
-        return mainHistValue;
+        return mainHistValue - MAX_HISTORY; //set the range to -maxhist ~ 0
     }
 }
 int QsearchGetMoveScore(Move& move, Board& board)
@@ -53,13 +59,13 @@ int QsearchGetMoveScore(Move& move, Board& board)
         return -90000;
     }
 }
-void SortMoves(MoveList& ml, Board& board, ThreadData& data)
+void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry)
 {
     ScoredMove scored[256];
 
     for (int i = 0; i < ml.count; ++i)
     {
-        scored[i].score = GetMoveScore(ml.moves[i], board, data);
+        scored[i].score = GetMoveScore(ml.moves[i], board, data, entry);
         scored[i].move = ml.moves[i];
     }
 

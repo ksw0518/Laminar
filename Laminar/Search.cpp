@@ -6,12 +6,14 @@
 #include "History.h"
 #include "Movegen.h"
 #include "Ordering.h"
+#include "Transpositions.h"
 #include "Tuneables.h"
 #include <chrono>
 #include <cmath>
 #include <cstring>
 #include <iostream>
 #include <limits>
+
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
@@ -58,6 +60,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         uint8_t lastCastle = board.castle;
         bool lastside = board.side;
         int captured_piece = board.mailbox[move.To];
+        uint64_t last_zobrist = board.zobristKey;
 
         MakeMove(board, move);
         data.ply++;
@@ -69,6 +72,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.enpassent = lastEp;
             board.castle = lastCastle;
             board.side = lastside;
+            board.zobristKey = last_zobrist;
             data.ply--;
             continue;
         }
@@ -83,6 +87,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
+        board.zobristKey = last_zobrist;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -116,6 +121,14 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int score = 0;
     int bestValue = -MAXSCORE;
 
+    int ttFlag = HFUPPER;
+    bool ttHit = false;
+    TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
+    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
+    {
+        ttHit = true;
+    }
+
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;
@@ -126,10 +139,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
-    SortMoves(moveList, board, data);
+    SortMoves(moveList, board, data, ttEntry);
 
     MoveList searchedQuietMoves;
     int searchedMoves = 0;
+
+    Move bestMove;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -138,6 +153,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         uint8_t lastCastle = board.castle;
         bool lastside = board.side;
         int captured_piece = board.mailbox[move.To];
+        uint64_t last_zobrist = board.zobristKey;
 
         int childDepth = depth - 1;
 
@@ -152,6 +168,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.enpassent = lastEp;
             board.castle = lastCastle;
             board.side = lastside;
+            board.zobristKey = last_zobrist;
             data.ply--;
             continue;
         }
@@ -170,11 +187,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
+        board.zobristKey = last_zobrist;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
         {
+            ttFlag = HFEXACT;
             alpha = score;
+
+            bestMove = move;
 
             if (isPvNode)
             {
@@ -188,6 +209,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         if (alpha >= beta)
         {
+            ttFlag = HFLOWER;
             int16_t mainHistBonus = std::min(MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
             int16_t mainHistMalus = std::min(MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
 
@@ -216,6 +238,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             return 0;
         }
     }
+    if (ttFlag == HFUPPER && ttHit)
+    {
+        bestMove = ttEntry.bestMove;
+    }
+    ttEntry.bestMove = bestMove;
+    ttEntry.bound = ttFlag;
+    ttEntry.depth = depth;
+    ttEntry.zobristKey = board.zobristKey;
+    ttStore(ttEntry, board);
     return bestValue;
 }
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data)
@@ -238,9 +269,10 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
     {
         std::cout << " score cp " << score;
     }
-
+    int hashfull = get_hashfull();
     std::cout << " time " << static_cast<int>(std::round(elapsedMS)) << " nodes " << data.searchNodeCount << " nps "
-              << static_cast<int>(std::round(nps)) << " pv " << std::flush;
+              << static_cast<int>(std::round(nps)) << " hashfull " << hashfull << " pv " << std::flush;
+
     for (int count = 0; count < data.pvLengths[0]; count++)
     {
         printMove(data.pvTable[0][count]);
@@ -314,4 +346,3 @@ std::pair<Move, int> IterativeDeepening(
 
     return std::pair<Move, int>(bestmove, bestScore);
 }
-

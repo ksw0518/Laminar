@@ -1,5 +1,8 @@
 #pragma once
+
 #include <cstdint>
+#include <stddef.h>
+
 enum Square
 {
     a8 = 0,
@@ -125,10 +128,11 @@ constexpr uint64_t BlackQueenCastleAttack = (1ULL << d8) | (1ULL << c8);
 constexpr int MAXPLY = 256;
 constexpr int MAXSCORE = 50000;
 constexpr int64_t NOLIMIT = -1;
-constexpr int BENCHDEPTH = 3;
+constexpr int BENCHDEPTH = 4;
 
 constexpr int PieceValues[12] = {98, 280, 295, 479, 1064, 0, 0};
 
+extern size_t TTSize;
 inline int get_piece(int piece, int col)
 {
     return Get_Whitepiece[piece] + Side_value[col];
