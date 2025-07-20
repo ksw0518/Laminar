@@ -127,6 +127,17 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
     {
         ttHit = true;
+        // Valid TT entry found
+        if (!isPvNode && data.ply != 0 && ttEntry.depth >= depth)
+        {
+            bool exact = (ttEntry.bound == HFEXACT);
+            bool lower = (ttEntry.bound == HFLOWER && ttEntry.score >= beta);
+            bool upper = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
+            if (exact || lower || upper)
+            {
+                return ttEntry.score;
+            }
+        }
     }
 
     int currentPly = data.ply;
@@ -246,6 +257,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     ttEntry.bound = ttFlag;
     ttEntry.depth = depth;
     ttEntry.zobristKey = board.zobristKey;
+    ttEntry.score = bestValue;
     ttStore(ttEntry, board);
     return bestValue;
 }
