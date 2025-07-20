@@ -3,6 +3,9 @@
 
 #include <string>
 #include <vector>
+int getPieceFromChar(char pieceChar);
+
+char getCharFromPiece(int piece);
 class Board
 {
 public:
@@ -19,7 +22,7 @@ public:
     int lastIrreversiblePly = 0;
     Board();
 };
-void parse_fen(std::string fen, Board& board);
 void PrintBoards(Board board);
 void print_mailbox(int mailbox[]);
+int get_castle(uint8_t castle);
 std::string CoordinatesToChessNotation(int square);

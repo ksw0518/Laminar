@@ -62,8 +62,11 @@ struct Move
     bool operator==(const Move& other) const
     {
         return From == other.From && To == other.To && Type == other.Type && Piece == other.Piece;
-    } //bool operator==(const Move& other) const;
-    //bool Equals(Move other);
+    }
+    bool operator!=(const Move& other) const
+    {
+        return !(*this == other);
+    }
 };
 struct MoveList
 {
@@ -89,6 +92,8 @@ inline int getRank(int square)
 {
     return (square) != 0 ? 7 - (square) / 8 : 7;
 }
+uint64_t generate_hash_key(Board& board);
+void init_random_keys();
 void init_sliders_attacks(int bishop);
 void InitializeLeaper();
 void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board);
@@ -98,3 +103,4 @@ void UnmakeMove(Board& board, Move move, int captured_piece);
 bool isLegal(Move& move, Board& board);
 bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupancy);
 int GetSquare(std::string squareName);
+void parse_fen(std::string fen, Board& board);

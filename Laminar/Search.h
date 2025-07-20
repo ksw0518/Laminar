@@ -3,6 +3,7 @@
 #include "Movegen.h"
 #include <chrono>
 #include <cstdint>
+
 struct SearchData
 {
     Move move;
@@ -41,6 +42,7 @@ struct SearchLimitations
     {
     }
 };
+
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
@@ -48,3 +50,4 @@ std::pair<Move, int> IterativeDeepening(
     ThreadData& data,
     bool isBench = false
 );
+void Initialize_TT(int size);

@@ -11,6 +11,215 @@ uint64_t rook_attacks[64][4096] = {};
 uint64_t pawn_attacks[2][64] = {};
 uint64_t knight_attacks[64] = {};
 uint64_t king_attacks[64] = {};
+
+uint64_t piece_keys[12][64];
+uint64_t enpassant_keys[64];
+uint64_t castle_keys[16];
+uint64_t side_key;
+uint32_t random_state;
+void parse_fen(std::string fen, Board& board)
+{
+    for (int i = 0; i < 64; i++)
+    {
+        board.mailbox[i] = NO_PIECE;
+    }
+    //board.mailbox
+    for (int i = 0; i < 12; i++)
+    {
+        board.bitboards[i] = 0;
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        board.occupancies[i] = 0;
+    }
+    board.side = 0;
+    board.enpassent = NO_SQ;
+    int square = 0;
+    size_t index = 0;
+    for (size_t i = 0; i < fen.length(); i++)
+    {
+        char text = fen[i];
+        if (text == ' ')
+        {
+            index = i + 1;
+            break;
+        }
+        if (text == '/')
+        {
+            continue;
+        }
+        if (std::isdigit(text))
+        {
+            square += text - '0';
+        }
+        if (std::isalpha(text))
+        {
+            int piece = getPieceFromChar(text);
+            board.mailbox[square] = piece;
+            Set_bit(board.bitboards[piece], square);
+            square++;
+        }
+    }
+    if (fen[index] == 'w')
+        board.side = White;
+    else
+        board.side = Black;
+
+    index += 2;
+
+    board.castle = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if (fen[index] == 'K')
+            board.castle |= WhiteKingCastle;
+        if (fen[index] == 'Q')
+            board.castle |= WhiteQueenCastle;
+        if (fen[index] == 'k')
+            board.castle |= BlackKingCastle;
+        if (fen[index] == 'q')
+            board.castle |= BlackQueenCastle;
+        if (fen[index] == ' ')
+            break;
+        if (fen[index] == '-')
+        {
+            board.castle = 0;
+            break;
+        }
+
+        index++;
+    }
+    index++;
+    if (fen[index] == ' ')
+        index++;
+    if (fen[index] != '-')
+    {
+        int file = fen[index] - 'a';
+        int rank = 8 - (fen[index + 1] - '0');
+
+        board.enpassent = rank * 8 + file;
+    }
+    else
+    {
+        board.enpassent = NO_SQ;
+    }
+
+    if (index + 2 >= fen.length())
+    {
+        board.halfmove = 0;
+    }
+    else
+    {
+        std::string halfmoves_str = "";
+        index += 2;
+        halfmoves_str += fen[index];
+        if (fen[index + 1] != ' ')
+        {
+            halfmoves_str += fen[index + 1];
+        }
+
+        int halfmoves = std::stoi(halfmoves_str);
+        board.halfmove = halfmoves;
+    }
+    for (int piece = P; piece <= K; piece++)
+    {
+        board.occupancies[White] |= board.bitboards[piece];
+    }
+    for (int piece = p; piece <= k; piece++)
+    {
+        board.occupancies[Black] |= board.bitboards[piece];
+    }
+    board.occupancies[Both] |= board.occupancies[Black];
+    board.occupancies[Both] |= board.occupancies[White];
+    board.zobristKey = generate_hash_key(board);
+}
+uint32_t get_random_U32_number()
+{
+    // get current state
+    uint32_t number = random_state;
+
+    // XOR shift algorithm
+    number ^= number << 13;
+    number ^= number >> 17;
+    number ^= number << 5;
+
+    // update random number state
+    random_state = number;
+
+    // return random number
+    return number;
+}
+
+// generate 64-bit pseudo legal numbers
+uint64_t get_random_U64_number()
+{
+    // define 4 random numbers
+    uint64_t n1, n2, n3, n4;
+
+    // init random numbers slicing 16 bits from MS1B side
+    n1 = (uint64_t)(get_random_U32_number()) & 0xFFFF;
+    n2 = (uint64_t)(get_random_U32_number()) & 0xFFFF;
+    n3 = (uint64_t)(get_random_U32_number()) & 0xFFFF;
+    n4 = (uint64_t)(get_random_U32_number()) & 0xFFFF;
+
+    // return random number
+    return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
+}
+void init_random_keys()
+{
+    random_state = 1804289383;
+
+    for (int piece = P; piece <= k; piece++)
+    {
+        for (int square = 0; square < 64; square++)
+        {
+            piece_keys[piece][square] = get_random_U64_number();
+        }
+    }
+
+    for (int square = 0; square < 64; square++)
+    {
+        enpassant_keys[square] = get_random_U64_number();
+    }
+
+    for (int castle = 0; castle < 16; castle++)
+    {
+        castle_keys[castle] = get_random_U64_number();
+    }
+
+    side_key = get_random_U64_number();
+}
+
+uint64_t generate_hash_key(Board& board)
+{
+    uint64_t final_key = 0ULL;
+
+    uint64_t bitboard;
+
+    for (int piece = P; piece <= k; piece++)
+    {
+        bitboard = board.bitboards[piece];
+
+        while (bitboard)
+        {
+            int square = get_ls1b(bitboard);
+
+            final_key ^= piece_keys[piece][square];
+            Pop_bit(bitboard, square);
+        }
+    }
+
+    if (board.enpassent != NO_SQ)
+    {
+        final_key ^= enpassant_keys[board.enpassent];
+    }
+    final_key ^= castle_keys[get_castle(board.castle)];
+
+    if (board.side == Black)
+    {
+        final_key ^= side_key;
+    }
+    return final_key;
+}
 // Move constructor
 Move::Move(unsigned char from, unsigned char to, unsigned char type, unsigned char piece) :
         From(from), To(to), Type(type), Piece(piece)
@@ -943,104 +1152,229 @@ bool is_move_irreversible(Move& move)
     }
     return false;
 }
+void XORZobrist(uint64_t& zobrist, uint64_t key)
+{
+    zobrist ^= key;
+}
+void XORPieceZobrist(uint64_t& zobrist, int piece, int square)
+{
+    XORZobrist(zobrist, piece_keys[piece][square]);
+}
+int GetPromotingPiece(Move& move)
+{
+    int type = move.Type;
+    int side = move.Piece >= 6;
+    if (type == queen_promo || type == queen_promo_capture)
+    {
+        return get_piece(Q, side);
+    }
+    else if (type == rook_promo || type == rook_promo_capture)
+    {
+        return get_piece(R, side);
+    }
+    else if (type == knight_promo || type == knight_promo_capture)
+    {
+        return get_piece(N, side);
+    }
+    else if (type == bishop_promo || type == bishop_promo_capture)
+    {
+        return get_piece(B, side);
+    }
+    else
+    {
+        return NO_PIECE;
+    }
+}
+void UpdateZobrist(Board& board, Move& move) //have to call before doing anything to board
+{
+    bool isEP = (move.Type == ep_capture);
+    bool isCapture = (move.Type & captureFlag) != 0;
+    bool isKingCastle = (move.Type == king_castle);
+    bool isQueenCastle = (move.Type == queen_castle);
+    bool isPromo = (move.Type & promotionFlag) != 0;
+    bool isDoublePush = (move.Type == double_pawn_push);
+
+    int castle_change = board.castle;
+    if (get_piece(move.Piece, White) == K) //if king moved
+    {
+        if (board.side == White)
+        {
+            board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            castle_change &= ~WhiteKingCastle;
+            castle_change &= ~WhiteQueenCastle;
+            board.zobristKey ^= castle_keys[get_castle(castle_change)];
+        }
+        else
+        {
+            board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            castle_change &= ~BlackKingCastle;
+            castle_change &= ~BlackQueenCastle;
+            board.zobristKey ^= castle_keys[get_castle(castle_change)];
+        }
+    }
+    else if (get_piece(move.Piece, White) == R) //if rook moved
+    {
+        if (board.side == White)
+        {
+            if ((board.castle & WhiteQueenCastle) != 0 && move.From == a1) // no q castle
+            {
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                castle_change &= ~WhiteQueenCastle;
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            }
+            //DO FROM HERE FUCKER
+            else if ((board.castle & WhiteKingCastle) != 0 && move.From == h1) // no k castle
+            {
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                castle_change &= ~WhiteKingCastle;
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            }
+        }
+        else
+        {
+            if ((board.castle & BlackQueenCastle) != 0 && move.From == a8) // no q castle
+            {
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                castle_change &= ~BlackQueenCastle;
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            }
+            else if ((board.castle & BlackKingCastle) != 0 && move.From == h8) // no k castle
+            {
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                castle_change &= ~BlackKingCastle;
+                board.zobristKey ^= castle_keys[get_castle(castle_change)];
+            }
+        }
+    }
+    if (board.enpassent != NO_SQ)
+    {
+        XORZobrist(board.zobristKey, enpassant_keys[board.enpassent]);
+    }
+    XORZobrist(board.zobristKey, side_key); //flip side
+
+    XORPieceZobrist(board.zobristKey, move.Piece, move.From); //remove piece in from square
+    XORPieceZobrist(board.zobristKey, move.Piece, move.To);   //add piece in to square
+    if (isDoublePush)
+    {
+        if (board.side == White)
+        {
+            XORZobrist(board.zobristKey, enpassant_keys[move.To + 8]);
+        }
+        else
+        {
+            XORZobrist(board.zobristKey, enpassant_keys[move.To - 8]);
+        }
+    }
+    if (isCapture)
+    {
+        if (board.mailbox[move.To] == get_piece(r, 1 - board.side))
+        {
+            if (getFile(move.To) == 0) // a file rook captured; delete queen castle
+            {
+                if (board.side == White) // have to delete black queen castle
+                {
+                    if (getRank(move.To) == 7)
+                    {
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                        castle_change &= ~BlackQueenCastle;
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                    }
+                }
+                else
+                {
+                    if (getRank(move.To) == 0)
+                    {
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                        castle_change &= ~WhiteQueenCastle;
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                    }
+                }
+            }
+            else if (getFile(move.To) == 7) // h file rook captured; delete king castle
+            {
+                if (board.side == White) // have to delete black king castle
+                {
+                    if (getRank(move.To) == 7)
+                    {
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                        castle_change &= ~BlackKingCastle;
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                    }
+                }
+                else
+                {
+                    if (getRank(move.To) == 0)
+                    {
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                        castle_change &= ~WhiteKingCastle;
+                        board.zobristKey ^= castle_keys[get_castle(castle_change)];
+                    }
+                }
+            }
+        }
+        int capture_square;
+        if (isEP)
+        {
+            if (board.side == White)
+            {
+                capture_square = move.To + 8;
+            }
+            else
+            {
+                capture_square = move.To - 8;
+            }
+        }
+        else
+        {
+            capture_square = move.To;
+        }
+        int captured_piece = board.mailbox[capture_square];
+        XORPieceZobrist(board.zobristKey, captured_piece, capture_square); //remove captured piece in to square
+    }
+
+    if (isKingCastle)
+    {
+        int rookSquare;
+        if (board.side == White)
+        {
+            rookSquare = h1;
+        }
+        else
+        {
+            rookSquare = h8;
+        }
+
+        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare);     //remove castling rook
+        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare - 2); //add castling rook
+    }
+    else if (isQueenCastle)
+    {
+        int rookSquare;
+        if (board.side == White)
+        {
+            rookSquare = a1;
+        }
+        else
+        {
+            rookSquare = a8;
+        }
+
+        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare);     //remove castling rook
+        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare + 3); //add castling rook
+    }
+    if (isPromo)
+    {
+        XORPieceZobrist(board.zobristKey, move.Piece, move.To); //remove pawn in to square
+
+        int promoPiece = GetPromotingPiece(move);
+        XORPieceZobrist(board.zobristKey, promoPiece, move.To); //add promoting piece in to square
+    }
+}
+
 void MakeMove(Board& board, Move move)
 {
-    bool flipWhite = false;
-    bool flipBlack = false;
-
-    int whiteKingFile = getFile(get_ls1b(board.bitboards[K]));
-    int blackKingFile = getFile(get_ls1b(board.bitboards[k]));
-
-    int stmKingFile, nstmKingFile;
-
-    if (board.side == White)
-    {
-        stmKingFile = whiteKingFile;
-        nstmKingFile = blackKingFile;
-    }
-    else
-    {
-        stmKingFile = blackKingFile;
-        nstmKingFile = whiteKingFile;
-    }
-
-    if (stmKingFile >= 4)
-    {
-        if (board.side == White)
-        {
-            flipWhite = true;
-        }
-        else
-        {
-            flipBlack = true;
-        }
-    }
-    else
-    {
-        if (board.side == White)
-        {
-            flipWhite = false;
-        }
-        else
-        {
-            flipBlack = false;
-        }
-    }
-
-    if (nstmKingFile >= 4)
-    {
-        if (board.side == White)
-        {
-            flipBlack = true;
-        }
-        else
-        {
-            flipWhite = true;
-        }
-    }
-    else
-    {
-        if (board.side == White)
-        {
-            flipBlack = false;
-        }
-        else
-        {
-            flipWhite = false;
-        }
-    }
-
-    if (get_piece(move.Piece, White) == K)
-    {
-        if (getFile(move.From) <= 3)
-        {
-            if (getFile(move.To) >= 4)
-            {
-                if (board.side == White)
-                {
-                    flipWhite = true;
-                }
-                else
-                {
-                    flipBlack = true;
-                }
-            }
-        }
-        else
-        {
-            if (getFile(move.To) <= 3)
-            {
-                if (board.side == White)
-                {
-                    flipWhite = false;
-                }
-                else
-                {
-                    flipBlack = false;
-                }
-            }
-        }
-    }
+    UpdateZobrist(board, move);
+    //uint64_t lzobrist = board.zobristKey;
 
     if (board.enpassent != NO_SQ)
     {
@@ -1664,7 +1998,6 @@ void MakeMove(Board& board, Move move)
                 board.halfmove = 0;
                 board.lastIrreversiblePly = board.history.size();
             }
-            board.history.push_back(board.zobristKey);
             break;
         }
         case ep_capture:
