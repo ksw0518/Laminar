@@ -329,6 +329,7 @@ std::pair<Move, int> IterativeDeepening(
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
         }
+        //ensure depth 1 search always finishes
         if (data.currDepth == 1)
         {
             data.SearchTime = std::numeric_limits<int64_t>::max();
@@ -337,7 +338,50 @@ std::pair<Move, int> IterativeDeepening(
         {
             data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
         }
-        score = AlphaBeta(board, data, data.currDepth, -MAXSCORE, MAXSCORE);
+
+        int delta = ASP_WINDOW_INITIAL;
+        int adjustedAlpha = std::max(-MAXSCORE, score - delta);
+        int adjustedBeta = std::min(MAXSCORE, score + delta);
+
+        //aspiration window
+        //start with small window and gradually widen to allow more cutoffs
+        while (true)
+        {
+            auto end = std::chrono::steady_clock::now();
+            int64_t MS = static_cast<int64_t>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
+            );
+            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit))
+            {
+                break;
+            }
+
+            score = AlphaBeta(board, data, data.currDepth, adjustedAlpha, adjustedBeta);
+
+            delta += delta;
+            if (score <= adjustedAlpha)
+            {
+                //aspiration window failed low, give wider alpha
+                adjustedAlpha = std::max(-MAXSCORE, score - delta);
+            }
+            else if (score >= adjustedBeta)
+            {
+                //aspiration window failed high, give wider beta
+                adjustedBeta = std::min(MAXSCORE, score + delta);
+            }
+            else
+            {
+                //score is inside the window, so we can safely use it
+                break;
+            }
+
+            if (delta >= ASP_WINDOW_MAX)
+            {
+                //asp window failed multiple times - change to full window
+                //(mostly for mate finding)
+                delta = MAXSCORE;
+            }
+        }
 
         auto end = std::chrono::steady_clock::now();
         int64_t elapsedMS =
