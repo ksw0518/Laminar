@@ -209,7 +209,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.searchStack[currentPly].move = move;
 
         int reduction = 0;
-        if (depth > MIN_LMR_DEPTH && searchedMoves > 1)
+
+        bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
+        if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
         }
@@ -217,30 +219,21 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction = 0;
         bool isReduced = reduction > 0;
 
-        if (searchedMoves == 1)
+        if (doLmr)
         {
-            //search with full window
-            score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
-        }
-        else
-        {
-            //zero window search
-            if (isReduced)
-            {
-                score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
-            }
-            else
-            {
-                score = alpha + 1;
-            }
-            if (score > alpha)
+            score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
+            if (score > alpha && isReduced)
             {
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
             }
-            if (score > alpha && score < beta)
-            {
-                score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
-            }
+        }
+        else
+        {
+            score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+        }
+        if (isPvNode && (searchedMoves == 1 || score > alpha))
+        {
+            score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
         }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
