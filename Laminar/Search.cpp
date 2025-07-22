@@ -128,7 +128,23 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         ttHit = true;
     }
+    int eval = Evaluate(board);
+    int rawEval = Evaluate(board);
+    bool isInCheck = is_in_check(board);
 
+    bool canPrune = !isInCheck;
+    bool notMated = beta >= -MATESCORE + MAXPLY;
+    if (canPrune && notMated) //do whole node pruining
+    {
+        if (depth <= RFP_MAX_DEPTH) //rfp
+        {
+            int rfpMargin = RFP_MULTIPLIER * depth;
+            if (rawEval - rfpMargin >= beta)
+            {
+                return rawEval;
+            }
+        }
+    }
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;
