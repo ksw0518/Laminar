@@ -132,7 +132,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int rawEval = Evaluate(board);
     bool isInCheck = is_in_check(board);
 
-    bool canPrune = !isInCheck;
+    bool canPrune = !isInCheck && !isPvNode;
     bool notMated = beta >= -MATESCORE + MAXPLY;
     if (canPrune && notMated) //do whole node pruining
     {
@@ -196,7 +196,20 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
-        score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+        if (searchedMoves == 1)
+        {
+            //search with full window
+            score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+        }
+        else
+        {
+            //zero window search
+            score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+            if (isPvNode && score > alpha)
+            {
+                score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+            }
+        }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
 
