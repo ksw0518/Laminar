@@ -132,7 +132,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int rawEval = Evaluate(board);
     bool isInCheck = is_in_check(board);
 
-    bool canPrune = !isInCheck && !isPvNode;
+    bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
     if (canPrune && notMated) //do whole node pruining
     {
