@@ -14,6 +14,18 @@
 #include <iostream>
 #include <limits>
 
+int lmrTable[MAXPLY][256];
+void InitializeLMRTable()
+{
+    for (int depth = 1; depth < MAXPLY; depth++)
+    {
+        for (int move = 1; move < 256; move++)
+        {
+            lmrTable[depth][move] =
+                std::floor((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100));
+        }
+    }
+}
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
@@ -196,6 +208,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
+        int reduction = 0;
+        if (depth > MIN_LMR_DEPTH && searchedMoves > 1)
+        {
+            reduction = lmrTable[depth][searchedMoves];
+        }
+        if (reduction < 0)
+            reduction = 0;
+        bool isReduced = reduction > 0;
+
         if (searchedMoves == 1)
         {
             //search with full window
@@ -204,8 +225,19 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         else
         {
             //zero window search
-            score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
-            if (isPvNode && score > alpha)
+            if (isReduced)
+            {
+                score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
+            }
+            else
+            {
+                score = alpha + 1;
+            }
+            if (score > alpha)
+            {
+                score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+            }
+            if (score > alpha && score < beta)
             {
                 score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
             }
