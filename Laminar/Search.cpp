@@ -140,6 +140,16 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         ttHit = true;
     }
+
+    int currentPly = data.ply;
+    data.selDepth = std::max(currentPly, data.selDepth);
+    data.pvLengths[currentPly] = currentPly;
+    if (depth <= 0 || currentPly >= MAXPLY - 1)
+    {
+        score = QuiescentSearch(board, data, alpha, beta);
+        return score;
+    }
+
     int eval = Evaluate(board);
     int rawEval = Evaluate(board);
     bool isInCheck = is_in_check(board);
@@ -165,8 +175,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
-        if (data.ply >= data.minNmpPly && !isRoot && depth >= NMP_MIN_DEPTH && rawEval >= beta
-            && !IsOnlyKingPawn(board))
+        if (data.ply >= data.minNmpPly && !isRoot && depth >= NMP_MIN_DEPTH && rawEval >= beta && !IsOnlyKingPawn(board)
+            && !isPvNode)
         {
             int lastEp = board.enpassent;
             uint64_t last_zobrist = board.zobristKey;
@@ -185,15 +195,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 return score > 49000 ? beta : score;
             }
         }
-    }
-
-    int currentPly = data.ply;
-    data.selDepth = std::max(currentPly, data.selDepth);
-    data.pvLengths[currentPly] = currentPly;
-    if (depth <= 0 || currentPly >= MAXPLY - 1)
-    {
-        score = QuiescentSearch(board, data, alpha, beta);
-        return score;
     }
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
