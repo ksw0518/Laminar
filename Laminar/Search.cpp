@@ -146,8 +146,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
+
+    bool isRoot = data.ply == 0;
     if (canPrune && notMated) //do whole node pruining
     {
+        //RFP
+        //if the static eval is high, fail high is likely
         if (depth <= RFP_MAX_DEPTH) //rfp
         {
             int rfpMargin = RFP_MULTIPLIER * depth;
@@ -156,7 +160,33 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 return rawEval;
             }
         }
+        //NMP
+        //The null move skips our turn without making move,
+        //which allows opponent to make two moves in a row
+        //if a null move returns a score>= beta, we assume the current position is too strong
+        //so prune the rest of the moves
+        if (data.ply >= data.minNmpPly && !isRoot && depth >= NMP_MIN_DEPTH && rawEval >= beta && !IsOnlyKingPawn(board)
+            && !isPvNode)
+        {
+            int lastEp = board.enpassent;
+            uint64_t last_zobrist = board.zobristKey;
+
+            data.ply++;
+            MakeNullMove(board);
+            int reduction = 3;
+            int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
+            UnmakeNullmove(board);
+            board.enpassent = lastEp;
+            board.zobristKey = last_zobrist;
+            data.ply--;
+
+            if (score >= beta)
+            {
+                return score;
+            }
+        }
     }
+
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;

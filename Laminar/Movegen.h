@@ -105,3 +105,6 @@ bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupan
 int GetSquare(std::string squareName);
 void parse_fen(std::string fen, Board& board);
 bool is_in_check(Board& board);
+bool IsOnlyKingPawn(Board& board);
+void MakeNullMove(Board& board);
+void UnmakeNullmove(Board& board);
