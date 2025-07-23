@@ -17,3 +17,8 @@ constexpr int RFP_MAX_DEPTH = 4;
 
 constexpr int ASP_WINDOW_INITIAL = 30;
 constexpr int ASP_WINDOW_MAX = 300;
+
+constexpr int LMR_DIVISOR = 236;
+constexpr int LMR_OFFSET = 77;
+
+constexpr int MIN_LMR_DEPTH = 3;

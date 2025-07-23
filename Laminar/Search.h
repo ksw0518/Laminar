@@ -51,3 +51,4 @@ std::pair<Move, int> IterativeDeepening(
     bool isBench = false
 );
 void Initialize_TT(int size);
+void InitializeLMRTable();
