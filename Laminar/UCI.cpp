@@ -100,6 +100,7 @@ static void InitAll()
     init_sliders_attacks(0);
     init_tables();
     init_random_keys();
+    InitializeLMRTable();
 }
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {

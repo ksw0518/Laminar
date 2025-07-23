@@ -213,7 +213,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
         {
-            reduction = lmrTable[depth][searchedMoves] + 1;
+            reduction = lmrTable[depth][searchedMoves];
         }
         if (reduction < 0)
             reduction = 0;
