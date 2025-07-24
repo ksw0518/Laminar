@@ -45,6 +45,9 @@
     <ClCompile Include="Transpositions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SEE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Movegen.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Transpositions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SEE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
