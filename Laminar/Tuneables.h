@@ -23,3 +23,11 @@ constexpr int LMR_OFFSET = 77;
 
 constexpr int MIN_LMR_DEPTH = 3;
 constexpr int SEEPieceValues[] = {98, 280, 295, 479, 1064, 0, 0};
+
+constexpr int QS_SEE_MARGIN = 0;
+
+constexpr int PVS_QUIET_BASE = 0;
+constexpr int PVS_QUIET_MULTIPLIER = 60;
+
+constexpr int PVS_NOISY_BASE = -10;
+constexpr int PVS_NOISY_MULTIPLIER = 20;
