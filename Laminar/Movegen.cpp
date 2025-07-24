@@ -2547,3 +2547,20 @@ bool is_in_check(Board& board)
     }
     return false;
 }
+uint64_t all_attackers_to_square(Board& board, uint64_t occupied, int sq)
+{
+    // When performing a static exchange evaluation we need to find all
+    // attacks to a given square, but we also are given an updated occupied
+    // bitboard, which will likely not match the actual board, as pieces are
+    // removed during the iterations in the static exchange evaluation
+
+    return (pawn_attacks[White][sq] & board.bitboards[p]) | (pawn_attacks[Black][sq] & board.bitboards[P])
+         | (knight_attacks[sq] & (board.bitboards[n] | board.bitboards[N]))
+         | (get_bishop_attacks(sq, occupied)
+            & ((board.bitboards[b] | board.bitboards[B]) | (board.bitboards[q] | board.bitboards[Q])))
+         | (get_rook_attacks(sq, occupied)
+            & ((board.bitboards[r] | board.bitboards[R]) | (board.bitboards[q] | board.bitboards[Q])))
+         | (king_attacks[sq] & (board.bitboards[k] | board.bitboards[K]));
+
+    return 0ULL;
+}

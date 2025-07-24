@@ -6,6 +6,7 @@
 #include "History.h"
 #include "Movegen.h"
 #include "Ordering.h"
+#include "SEE.h"
 #include "Transpositions.h"
 #include "Tuneables.h"
 #include <chrono>
@@ -68,6 +69,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         Move& move = moveList.moves[i];
         if (!isMoveNoisy(move))
             continue;
+
+        if (!SEE(board, move, 0))
+        {
+            continue;
+        }
         int lastEp = board.enpassent;
         uint8_t lastCastle = board.castle;
         bool lastside = board.side;
