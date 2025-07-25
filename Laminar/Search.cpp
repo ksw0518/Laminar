@@ -299,12 +299,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     if (searchedMoves == 0)
     {
-        if (IsSquareAttacked(
-                get_ls1b(board.side == White ? board.bitboards[K] : board.bitboards[k]),
-                1 - board.side,
-                board,
-                board.occupancies[Both]
-            ))
+        if (isInCheck)
         {
             //checkmate
             return -49000 + data.ply;
