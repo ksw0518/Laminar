@@ -1,4 +1,5 @@
 #include "Movegen.h"
+#include "Accumulator.h"
 #include "Bit.h"
 #include "Board.h"
 #include "Const.h"
@@ -131,6 +132,28 @@ void parse_fen(std::string fen, Board& board)
     board.occupancies[Both] |= board.occupancies[Black];
     board.occupancies[Both] |= board.occupancies[White];
     board.zobristKey = generate_hash_key(board);
+
+    resetAccumulators(board, board.accumulator);
+
+    int whiteKingFile = getFile(get_ls1b(board.bitboards[K]));
+    if (whiteKingFile >= 4) //king is on right now, have to flip
+    {
+        resetWhiteAccumulator(board, board.accumulator, true);
+    }
+    if (whiteKingFile <= 3) //king is on left now, have to flip
+    {
+        resetWhiteAccumulator(board, board.accumulator, false);
+    }
+
+    int blackKingFile = getFile(get_ls1b(board.bitboards[k]));
+    if (blackKingFile >= 4) //king is on right now, have to flip
+    {
+        resetBlackAccumulator(board, board.accumulator, true);
+    }
+    if (blackKingFile <= 3) //king is on left now, have to flip
+    {
+        resetBlackAccumulator(board, board.accumulator, false);
+    }
 }
 uint32_t get_random_U32_number()
 {
@@ -1156,9 +1179,51 @@ void XORZobrist(uint64_t& zobrist, uint64_t key)
 {
     zobrist ^= key;
 }
-void XORPieceZobrist(uint64_t& zobrist, int piece, int square)
+void XORPieceZobrist(uint64_t& zobrist, int piece, int square, Board& board, bool flipWhite, bool flipBlack)
 {
     XORZobrist(zobrist, piece_keys[piece][square]);
+    bool side = piece <= 5 ? White : Black;
+    Accumulator& accumulator = ((side == White) ? board.accumulator.white : board.accumulator.black);
+
+    if (board.mailbox[square] == NO_PIECE) //adding piece
+    {
+        /*       std::cout << "adding"
+                  << "\n"
+                  << "flipwhite:" << flipWhite << "\n"
+                  << "flipblack: " << flipBlack << "\n"
+                  << "piece :" << getCharFromPiece(get_piece(piece, White)) << "\nside" << side << "\nsquare"
+                  << CoordinatesToChessNotation(square) << "\n";*/
+
+        accumulatorAdd(
+            &EvalNetwork,
+            &board.accumulator.white,
+            calculateIndex(White, square, get_piece(piece, White), side, flipWhite)
+        );
+        accumulatorAdd(
+            &EvalNetwork,
+            &board.accumulator.black,
+            calculateIndex(Black, square, get_piece(piece, White), side, flipBlack)
+        );
+    }
+    else
+    {
+        /*  std::cout << "removing"
+                  << "\n"
+                  << "flipwhite:" << flipWhite << "\n"
+                  << "flipblack: " << flipBlack << "\n"
+                  << "piece :" << getCharFromPiece(get_piece(piece, White)) << "\nside" << side << "\nsquare"
+                  << CoordinatesToChessNotation(square) << "\n";*/
+        accumulatorSub(
+            &EvalNetwork,
+            &board.accumulator.white,
+            calculateIndex(White, square, get_piece(piece, White), side, flipWhite)
+        );
+        accumulatorSub(
+            &EvalNetwork,
+            &board.accumulator.black,
+            calculateIndex(Black, square, get_piece(piece, White), side, flipBlack)
+        );
+    }
 }
 int GetPromotingPiece(Move& move)
 {
@@ -1185,7 +1250,12 @@ int GetPromotingPiece(Move& move)
         return NO_PIECE;
     }
 }
-void UpdateZobrist(Board& board, Move& move) //have to call before doing anything to board
+void UpdateZobrist(
+    Board& board,
+    Move& move,
+    bool flipWhite,
+    bool flipBlack
+) //have to call before doing anything to board
 {
     bool isEP = (move.Type == ep_capture);
     bool isCapture = (move.Type & captureFlag) != 0;
@@ -1252,8 +1322,8 @@ void UpdateZobrist(Board& board, Move& move) //have to call before doing anythin
     }
     XORZobrist(board.zobristKey, side_key); //flip side
 
-    XORPieceZobrist(board.zobristKey, move.Piece, move.From); //remove piece in from square
-    XORPieceZobrist(board.zobristKey, move.Piece, move.To);   //add piece in to square
+    XORPieceZobrist(board.zobristKey, move.Piece, move.From, board, flipWhite, flipBlack); //remove piece in from square
+    XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack);   //add piece in to square
     if (isDoublePush)
     {
         if (board.side == White)
@@ -1329,7 +1399,14 @@ void UpdateZobrist(Board& board, Move& move) //have to call before doing anythin
             capture_square = move.To;
         }
         int captured_piece = board.mailbox[capture_square];
-        XORPieceZobrist(board.zobristKey, captured_piece, capture_square); //remove captured piece in to square
+        XORPieceZobrist(
+            board.zobristKey,
+            captured_piece,
+            capture_square,
+            board,
+            flipWhite,
+            flipBlack
+        ); //remove captured piece in to square
     }
 
     if (isKingCastle)
@@ -1344,8 +1421,22 @@ void UpdateZobrist(Board& board, Move& move) //have to call before doing anythin
             rookSquare = h8;
         }
 
-        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare);     //remove castling rook
-        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare - 2); //add castling rook
+        XORPieceZobrist(
+            board.zobristKey,
+            board.mailbox[rookSquare],
+            rookSquare,
+            board,
+            flipWhite,
+            flipBlack
+        ); //remove castling rook
+        XORPieceZobrist(
+            board.zobristKey,
+            board.mailbox[rookSquare],
+            rookSquare - 2,
+            board,
+            flipWhite,
+            flipBlack
+        ); //add castling rook
     }
     else if (isQueenCastle)
     {
@@ -1359,15 +1450,36 @@ void UpdateZobrist(Board& board, Move& move) //have to call before doing anythin
             rookSquare = a8;
         }
 
-        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare);     //remove castling rook
-        XORPieceZobrist(board.zobristKey, board.mailbox[rookSquare], rookSquare + 3); //add castling rook
+        XORPieceZobrist(
+            board.zobristKey,
+            board.mailbox[rookSquare],
+            rookSquare,
+            board,
+            flipWhite,
+            flipBlack
+        ); //remove castling rook
+        XORPieceZobrist(
+            board.zobristKey,
+            board.mailbox[rookSquare],
+            rookSquare + 3,
+            board,
+            flipWhite,
+            flipBlack
+        ); //add castling rook
     }
     if (isPromo)
     {
-        XORPieceZobrist(board.zobristKey, move.Piece, move.To); //remove pawn in to square
+        XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack); //remove pawn in to square
 
         int promoPiece = GetPromotingPiece(move);
-        XORPieceZobrist(board.zobristKey, promoPiece, move.To); //add promoting piece in to square
+        XORPieceZobrist(
+            board.zobristKey,
+            promoPiece,
+            move.To,
+            board,
+            flipWhite,
+            flipBlack
+        ); //add promoting piece in to square
     }
 }
 void MakeNullMove(Board& board)
@@ -1387,7 +1499,105 @@ void UnmakeNullmove(Board& board)
 }
 void MakeMove(Board& board, Move move)
 {
-    UpdateZobrist(board, move);
+    bool flipWhite = false;
+    bool flipBlack = false;
+
+    int whiteKingFile = getFile(get_ls1b(board.bitboards[K]));
+    int blackKingFile = getFile(get_ls1b(board.bitboards[k]));
+
+    int stmKingFile, nstmKingFile;
+
+    if (board.side == White)
+    {
+        stmKingFile = whiteKingFile;
+        nstmKingFile = blackKingFile;
+    }
+    else
+    {
+        stmKingFile = blackKingFile;
+        nstmKingFile = whiteKingFile;
+    }
+
+    if (stmKingFile >= 4) //king is on the right, need to flip
+    {
+        if (board.side == White)
+        {
+            flipWhite = true;
+        }
+        else
+        {
+            flipBlack = true;
+        }
+    }
+    else
+    {
+        if (board.side == White)
+        {
+            flipWhite = false;
+        }
+        else
+        {
+            flipBlack = false;
+        }
+    }
+
+    if (nstmKingFile >= 4)
+    {
+        if (board.side == White)
+        {
+            flipBlack = true;
+        }
+        else
+        {
+            flipWhite = true;
+        }
+    }
+    else
+    {
+        if (board.side == White)
+        {
+            flipBlack = false;
+        }
+        else
+        {
+            flipWhite = false;
+        }
+    }
+
+    if (get_piece(move.Piece, White) == K)
+    {
+        if (getFile(move.From) <= 3) //king was left before
+        {
+            if (getFile(move.To) >= 4) //king moved to right
+            {
+                //fully refresh the stm accumulator, and change that to start mirroring
+                if (board.side == White)
+                {
+                    flipWhite = true;
+                }
+                else
+                {
+                    flipBlack = true;
+                }
+            }
+        }
+        else //king was right before
+        {
+            if (getFile(move.To) <= 3) //king moved to left
+            {
+                //fully refresh the stm accumulator, and change that to stop mirroring
+                if (board.side == White)
+                {
+                    flipWhite = false;
+                }
+                else
+                {
+                    flipBlack = false;
+                }
+            }
+        }
+    }
+    UpdateZobrist(board, move, flipWhite, flipBlack);
     //uint64_t lzobrist = board.zobristKey;
 
     if (board.enpassent != NO_SQ)

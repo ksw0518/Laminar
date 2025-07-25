@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = clang++ # Fixed to clang++
-CXXFLAGS ?= -O3 -std=c++20 -Wall -Wextra -DNDEBUG -march=native -flto -fuse-ld=lld # Default compiler flags
+CXXFLAGS ?= -O3 -std=c++20 -Wall -Wextra -march=native -flto -fuse-ld=lld # Default compiler flags
 
 # Automatically find all source files in the correct folder
 SRC = $(wildcard Laminar/*.cpp)
@@ -10,6 +10,7 @@ OBJ = $(SRC:.cpp=.o)
 
 # Output binary (default)
 EXE ?= Laminar.exe
+EVALFILE ?= Laminar/nnue.bin
 
 RM := rm -f
 RMDIR := "Laminar/"*.o
@@ -22,8 +23,8 @@ endif
 all: $(EXE)
 
 # Rule to build the executable
-$(EXE): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+$(EXE): $(SRC)
+	$(CXX) $(CXXFLAGS) -DEVALFILE=\"$(EVALFILE)\" $(SRC) -o $@
 
 # Rule to build object files
 %.o: %.cpp

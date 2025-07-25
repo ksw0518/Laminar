@@ -5,6 +5,7 @@
 #include "Evaluation.h"
 #include "History.h"
 #include "Movegen.h"
+#include "NNUE.h"
 #include "Ordering.h"
 #include "SEE.h"
 #include "Transpositions.h"
@@ -14,6 +15,9 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#ifndef EVALFILE
+    #define EVALFILE "./nnue.bin"
+#endif
 
 int lmrTable[MAXPLY][256];
 void InitializeLMRTable()
@@ -24,6 +28,50 @@ void InitializeLMRTable()
         {
             lmrTable[depth][move] =
                 std::floor((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100));
+        }
+    }
+}
+void InitializeSearch(ThreadData& data)
+{
+    memset(&data.histories, 0, sizeof(data.histories));
+}
+void InitNNUE()
+{
+    LoadNetwork(EVALFILE);
+}
+void refresh_if_cross(Move& move, Board& board)
+{
+    if (get_piece(move.Piece, White) == K) //king has moved
+    {
+        if (getFile(move.From) <= 3) //king was left before
+        {
+            if (getFile(move.To) >= 4) //king moved to right
+            {
+                //fully refresh the stm accumulator, and change that to start mirroring
+                if (board.side == White)
+                {
+                    resetWhiteAccumulator(board, board.accumulator, true);
+                }
+                else
+                {
+                    resetBlackAccumulator(board, board.accumulator, true);
+                }
+            }
+        }
+        else //king was right before
+        {
+            if (getFile(move.To) <= 3) //king moved to left
+            {
+                //fully refresh the stm accumulator, and change that to stop mirroring
+                if (board.side == White)
+                {
+                    resetWhiteAccumulator(board, board.accumulator, false);
+                }
+                else
+                {
+                    resetBlackAccumulator(board, board.accumulator, false);
+                }
+            }
         }
     }
 }
@@ -64,6 +112,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     SortNoisyMoves(moveList, board);
 
     int searchedMoves = 0;
+
+    AccumulatorPair last_accumulator = board.accumulator;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -80,6 +130,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
 
+        refresh_if_cross(move, board);
         MakeMove(board, move);
         data.ply++;
 
@@ -91,6 +142,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.castle = lastCastle;
             board.side = lastside;
             board.zobristKey = last_zobrist;
+            board.accumulator = last_accumulator;
             data.ply--;
             continue;
         }
@@ -106,6 +158,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.castle = lastCastle;
         board.side = lastside;
         board.zobristKey = last_zobrist;
+        board.accumulator = last_accumulator;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -124,6 +177,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
     return bestValue;
 }
+
 inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
@@ -166,7 +220,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
 
     int eval = Evaluate(board);
-    int rawEval = Evaluate(board);
+    int rawEval = eval;
 
     bool isInCheck = is_in_check(board);
 
@@ -223,6 +277,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
+
+    AccumulatorPair last_accumulator = board.accumulator;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -249,6 +305,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int childDepth = depth - 1;
 
         bool isCapture = IsMoveCapture(move);
+        refresh_if_cross(move, board);
         MakeMove(board, move);
         data.ply++;
 
@@ -260,6 +317,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.castle = lastCastle;
             board.side = lastside;
             board.zobristKey = last_zobrist;
+            board.accumulator = last_accumulator;
             data.ply--;
             continue;
         }
@@ -305,6 +363,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.castle = lastCastle;
         board.side = lastside;
         board.zobristKey = last_zobrist;
+        board.accumulator = last_accumulator;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)

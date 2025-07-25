@@ -1,11 +1,12 @@
 
 
 #include "Evaluation.h"
+#include "Accumulator.h"
 #include "Bit.h"
 #include "Board.h"
 #include "Const.h"
 #include "Movegen.h"
-
+#include "NNUE.h"
 #include <iomanip>
 #include <iostream>
 
@@ -159,36 +160,43 @@ void init_tables()
 }
 int Evaluate(Board& board)
 {
-    int mg[2];
-    int eg[2];
+    int NN_score;
+    if (board.side == White)
+        NN_score = forward(&EvalNetwork, &board.accumulator.white, &board.accumulator.black);
+    else
+        NN_score = forward(&EvalNetwork, &board.accumulator.black, &board.accumulator.white);
 
-    mg[White] = 0;
-    mg[Black] = 0;
-    eg[White] = 0;
-    eg[Black] = 0;
+    return NN_score;
+    //int mg[2];
+    //int eg[2];
 
-    int gamePhase = 0;
+    //mg[White] = 0;
+    //mg[Black] = 0;
+    //eg[White] = 0;
+    //eg[Black] = 0;
 
-    int evalSide = board.side;
+    //int gamePhase = 0;
 
-    for (int sq = 0; sq < 64; ++sq)
-    {
-        int pc = board.mailbox[sq];
-        if (pc != NO_PIECE)
-        {
-            int col = getSide(pc);
-            mg[col] += mg_table[pc][sq];
-            eg[col] += eg_table[pc][sq];
-            gamePhase += gamephaseInc[pc];
-        }
-    }
-    int mgScore = mg[evalSide] + mg[1 - evalSide];
-    int egScore = eg[evalSide] + eg[1 - evalSide];
-    int mgPhase = gamePhase;
-    if (mgPhase > 24)
-        mgPhase = 24; /* in case of early promotion */
-    int egPhase = 24 - mgPhase;
+    //int evalSide = board.side;
 
-    int Whiteeval = (mgScore * mgPhase + egScore * egPhase) / 24;
-    return Whiteeval * side_multiply[evalSide];
+    //for (int sq = 0; sq < 64; ++sq)
+    //{
+    //    int pc = board.mailbox[sq];
+    //    if (pc != NO_PIECE)
+    //    {
+    //        int col = getSide(pc);
+    //        mg[col] += mg_table[pc][sq];
+    //        eg[col] += eg_table[pc][sq];
+    //        gamePhase += gamephaseInc[pc];
+    //    }
+    //}
+    //int mgScore = mg[evalSide] + mg[1 - evalSide];
+    //int egScore = eg[evalSide] + eg[1 - evalSide];
+    //int mgPhase = gamePhase;
+    //if (mgPhase > 24)
+    //    mgPhase = 24; /* in case of early promotion */
+    //int egPhase = 24 - mgPhase;
+
+    //int Whiteeval = (mgScore * mgPhase + egScore * egPhase) / 24;
+    //return Whiteeval * side_multiply[evalSide];
 }

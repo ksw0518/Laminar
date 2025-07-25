@@ -131,12 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Accumulator.cpp" />
     <ClCompile Include="Bench.cpp" />
     <ClCompile Include="Bit.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Evaluation.cpp" />
     <ClCompile Include="History.cpp" />
     <ClCompile Include="Movegen.cpp" />
+    <ClCompile Include="NNUE.cpp" />
     <ClCompile Include="Ordering.cpp" />
     <ClCompile Include="Search.cpp" />
     <ClCompile Include="SEE.cpp" />
@@ -144,6 +146,7 @@
     <ClCompile Include="UCI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Accumulator.h" />
     <ClInclude Include="Bench.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Board.h" />
@@ -151,6 +154,7 @@
     <ClInclude Include="Evaluation.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Movegen.h" />
+    <ClInclude Include="NNUE.h" />
     <ClInclude Include="Ordering.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SEE.h" />
