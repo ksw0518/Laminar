@@ -70,7 +70,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (!isMoveNoisy(move))
             continue;
 
-        if (!SEE(board, move, 0))
+        if (!SEE(board, move, QS_SEE_MARGIN))
         {
             continue;
         }
@@ -164,6 +164,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
     }
     int currentPly = data.ply;
+    bool root = (currentPly == 0);
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;
     if (depth <= 0 || currentPly >= MAXPLY - 1)
@@ -179,9 +180,25 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int searchedMoves = 0;
 
     Move bestMove;
+
+    int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
+    int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
+        bool isQuiet = !IsMoveCapture(move);
+
+        bool isNotMated = bestValue > -49000 + 99;
+
+        if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
+        {
+            int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
+            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
+            if (!SEE(board, move, seeThreshold))
+            {
+                continue;
+            }
+        }
 
         int lastEp = board.enpassent;
         uint8_t lastCastle = board.castle;
