@@ -109,3 +109,6 @@ uint64_t all_attackers_to_square(Board& board, uint64_t occupied, int sq);
 uint64_t get_bishop_attacks(int square, uint64_t occupancy);
 uint64_t get_rook_attacks(int square, uint64_t occupancy);
 uint64_t get_queen_attacks(int square, uint64_t occupancy);
+bool IsOnlyKingPawn(Board& board);
+void MakeNullMove(Board& board);
+void UnmakeNullmove(Board& board);

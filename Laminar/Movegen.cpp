@@ -1370,7 +1370,21 @@ void UpdateZobrist(Board& board, Move& move) //have to call before doing anythin
         XORPieceZobrist(board.zobristKey, promoPiece, move.To); //add promoting piece in to square
     }
 }
-
+void MakeNullMove(Board& board)
+{
+    if (board.enpassent != NO_SQ)
+    {
+        board.zobristKey ^= enpassant_keys[board.enpassent];
+        board.enpassent = NO_SQ;
+    }
+    board.side = 1 - board.side;
+    board.zobristKey ^= side_key;
+}
+void UnmakeNullmove(Board& board)
+{
+    board.side = 1 - board.side;
+    board.zobristKey ^= side_key;
+}
 void MakeMove(Board& board, Move move)
 {
     UpdateZobrist(board, move);
@@ -2563,4 +2577,10 @@ uint64_t all_attackers_to_square(Board& board, uint64_t occupied, int sq)
          | (king_attacks[sq] & (board.bitboards[k] | board.bitboards[K]));
 
     return 0ULL;
+}
+bool IsOnlyKingPawn(Board& board)
+{
+    return (board.occupancies[Both]
+            & ~(board.bitboards[P] | board.bitboards[p] | board.bitboards[K] | board.bitboards[k]))
+        == 0ULL;
 }

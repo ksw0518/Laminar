@@ -135,9 +135,18 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
 
     bool isPvNode = beta - alpha > 1;
+    int currentPly = data.ply;
+    bool root = (currentPly == 0);
+    data.selDepth = std::max(currentPly, data.selDepth);
+    data.pvLengths[currentPly] = currentPly;
 
     int score = 0;
     int bestValue = -MAXSCORE;
+    if (depth <= 0 || currentPly >= MAXPLY - 1)
+    {
+        score = QuiescentSearch(board, data, alpha, beta);
+        return score;
+    }
 
     int ttFlag = HFUPPER;
     bool ttHit = false;
@@ -146,15 +155,18 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         ttHit = true;
     }
+
     int eval = Evaluate(board);
     int rawEval = Evaluate(board);
+
     bool isInCheck = is_in_check(board);
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
     if (canPrune && notMated) //do whole node pruining
     {
-        if (depth <= RFP_MAX_DEPTH) //rfp
+        //RFP
+        if (depth <= RFP_MAX_DEPTH)
         {
             int rfpMargin = RFP_MULTIPLIER * depth;
             if (rawEval - rfpMargin >= beta)
@@ -162,16 +174,35 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 return rawEval;
             }
         }
+        //NMP
+        //The null move skips our turn without making move,
+        //which allows opponent to make two moves in a row
+        //if a null move returns a score>= beta, we assume the current position is too strong
+        //so prune the rest of the moves
+        if (!isPvNode && depth >= 2 && !root && rawEval >= beta && currentPly >= data.minNmpPly
+            && !IsOnlyKingPawn(board))
+        {
+            int lastEp = board.enpassent;
+            uint64_t last_zobrist = board.zobristKey;
+
+            data.ply++;
+            MakeNullMove(board);
+            int reduction = 3;
+            data.minNmpPly = currentPly + 2;
+            int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
+            data.minNmpPly = 0;
+            UnmakeNullmove(board);
+            board.enpassent = lastEp;
+            board.zobristKey = last_zobrist;
+            data.ply--;
+
+            if (score >= beta)
+            {
+                return score > 49000 ? beta : score;
+            }
+        }
     }
-    int currentPly = data.ply;
-    bool root = (currentPly == 0);
-    data.selDepth = std::max(currentPly, data.selDepth);
-    data.pvLengths[currentPly] = currentPly;
-    if (depth <= 0 || currentPly >= MAXPLY - 1)
-    {
-        score = QuiescentSearch(board, data, alpha, beta);
-        return score;
-    }
+
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
     SortMoves(moveList, board, data, ttEntry);
