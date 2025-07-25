@@ -2,7 +2,7 @@
 #include "Bit.h"
 #include "Board.h"
 #include "Const.h"
-
+#include <cstring>
 void resetAccumulators(const Board& board, AccumulatorPair& accumulator)
 {
     uint64_t whitePieces = board.occupancies[White];
