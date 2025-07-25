@@ -420,7 +420,6 @@ std::pair<Move, int> IterativeDeepening(
     {
         data.ply = 0;
         data.selDepth = 0;
-        data.searchNodeCount = 0;
         data.stopSearch = false;
         for (int i = 0; i < MAXPLY; i++)
         {
