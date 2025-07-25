@@ -154,6 +154,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
     {
         ttHit = true;
+        bool ExactCutoff = (ttEntry.bound == HFEXACT);
+        bool LowerCutoff = (ttEntry.bound == HFLOWER && ttEntry.score >= beta);
+        bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
+        bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
+
+        if (!isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
+        {
+            return ttEntry.score;
+        }
     }
 
     int eval = Evaluate(board);
@@ -349,6 +358,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     ttEntry.bound = ttFlag;
     ttEntry.depth = depth;
     ttEntry.zobristKey = board.zobristKey;
+    ttEntry.score = bestValue;
     ttStore(ttEntry, board);
     return bestValue;
 }
