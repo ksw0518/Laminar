@@ -10,6 +10,7 @@ struct TranspositionEntry
     Move bestMove;
     uint8_t depth;
     uint8_t bound;
+    int32_t score;
 };
 TranspositionEntry ttLookUp(uint64_t zobrist);
 void ttStore(TranspositionEntry& ttEntry, Board& board);
