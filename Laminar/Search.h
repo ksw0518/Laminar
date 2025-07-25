@@ -27,6 +27,7 @@ struct ThreadData
     int pvLengths[MAXPLY + 1] = {};
     Move pvTable[MAXPLY + 1][MAXPLY + 1];
     Histories histories;
+    int minNmpPly = 0;
 };
 struct SearchLimitations
 {
