@@ -147,6 +147,7 @@ void PrintBoards(Board board)
     std::cout << std::hex << "    Zobrist key:     " << generate_hash_key(board) << std::hex << "\n";
     std::cout << std::hex << "    Zobrist key_incremental:     " << board.zobristKey << std::dec << "\n";
     std::cout << "    Castle_key:     " << get_castle(board.castle) << "\n";
+    std::cout << "    FEN:            " << boardToFEN(board);
     std::cout << ("\n");
 }
 void print_mailbox(int mailbox[])

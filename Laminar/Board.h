@@ -1,4 +1,5 @@
 #pragma once
+#include "Accumulator.h"
 #include <cstdint>
 
 #include <string>
@@ -20,6 +21,7 @@ public:
     std::vector<uint64_t> history;
 
     int lastIrreversiblePly = 0;
+    AccumulatorPair accumulator;
     Board();
 };
 void PrintBoards(Board board);

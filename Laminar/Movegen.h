@@ -112,3 +112,4 @@ uint64_t get_queen_attacks(int square, uint64_t occupancy);
 bool IsOnlyKingPawn(Board& board);
 void MakeNullMove(Board& board);
 void UnmakeNullmove(Board& board);
+std::string boardToFEN(const Board& board);

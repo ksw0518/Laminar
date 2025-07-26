@@ -3,6 +3,8 @@
 #include "Evaluation.h"
 #include "Movegen.h"
 #include "Search.h"
+
+#include "Bit.h"
 #include "Transpositions.h"
 #include <chrono>
 #include <iomanip>
@@ -93,7 +95,7 @@ int64_t TryGetLabelledValueInt(
         return defaultValue;
     }
 }
-static void InitAll()
+static void InitAll(ThreadData& data)
 {
     InitializeLeaper();
     init_sliders_attacks(1);
@@ -101,7 +103,10 @@ static void InitAll()
     init_tables();
     init_random_keys();
     InitializeLMRTable();
+    InitializeSearch(data);
+    InitNNUE();
 }
+
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
     if (depth == 0)
@@ -114,6 +119,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
     uint64_t nodes = 0;
 
     GeneratePseudoLegalMoves(move_list, board);
+    AccumulatorPair last_accumulator = board.accumulator;
     for (int i = 0; i < move_list.count; ++i)
     {
         Move& move = move_list.moves[i];
@@ -123,7 +129,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
         int captured_piece = board.mailbox[move.To];
 
         uint64_t last_zobrist = board.zobristKey;
-
+        refresh_if_cross(move, board);
         MakeMove(board, move);
         if (isLegal(move, board))
         {
@@ -144,6 +150,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
+        board.accumulator = last_accumulator;
     }
     return nodes;
 }
@@ -203,7 +210,7 @@ void PlayMoves(std::string& moves_string, Board& board)
                     && (move_to_play.To == moveList.moves[j].To)) //found same move
                 {
                     move_to_play = moveList.moves[j];
-
+                    refresh_if_cross(move_to_play, board);
                     if ((moveList.moves[j].Type & knight_promo) != 0) // promo
                     {
                         if (promo == "q")
@@ -273,7 +280,8 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     }
     else if (mainCommand == "ucinewgame")
     {
-        //do something later
+        Initialize_TT(32); //set initial TT size as 32mb
+        InitAll(data);
     }
     else if (mainCommand == "isready")
     {
@@ -396,14 +404,29 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::string moves_in_string = TryGetLabelledValue(input, "moves", position_commands);
         PlayMoves(moves_in_string, mainBoard);
     }
+    else if (mainCommand == "eval")
+    {
+        int eval = Evaluate(mainBoard);
+
+        std::cout << ("evaluation: ") << eval << "cp ";
+        if (mainBoard.side == White)
+        {
+            std::cout << ("(White's perspective)\n");
+        }
+        else
+        {
+            std::cout << ("(Black's perspective)\n");
+
+            std::cout << ("White's perspective: ") << -eval << "cp \n";
+        }
+    }
 }
 int main(int argc, char* argv[])
 {
-    InitAll();
-    parse_fen(STARTPOS, mainBoard);
-
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
     ThreadData& data = *heapAllocated;
+    InitAll(data);
+    parse_fen(STARTPOS, mainBoard);
     Initialize_TT(32); //set initial TT size as 32mb
     if (argc > 1)
     {
