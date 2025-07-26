@@ -6,9 +6,13 @@
 #include "Transpositions.h"
 #include "Tuneables.h"
 #include <algorithm>
-bool isMoveNoisy(Move& move)
+bool IsMoveNoisy(Move& move)
 {
     return (move.Type & (captureFlag | promotionFlag)) != 0;
+}
+bool IsMoveQuiet(Move& move)
+{
+    return !IsMoveCapture(move);
 }
 bool IsMoveCapture(Move& move)
 {

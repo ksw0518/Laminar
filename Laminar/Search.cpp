@@ -87,8 +87,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     bool isPvNode = beta - alpha > 1;
 
-    int staticEval = Evaluate(board);
-
+    int rawEval = Evaluate(board);
+    int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     if (currentPly >= MAXPLY - 1)
@@ -117,7 +117,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
-        if (!isMoveNoisy(move))
+        if (!IsMoveNoisy(move))
             continue;
 
         if (!SEE(board, move, QS_SEE_MARGIN))
@@ -129,6 +129,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         bool lastside = board.side;
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
+        uint64_t last_pawnKey = board.pawnKey;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -144,6 +145,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.side = lastside;
             board.zobristKey = last_zobrist;
             board.accumulator = last_accumulator;
+            board.pawnKey = last_pawnKey;
+
             data.ply--;
             continue;
         }
@@ -160,6 +163,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.side = lastside;
         board.zobristKey = last_zobrist;
         board.accumulator = last_accumulator;
+        board.pawnKey = last_pawnKey;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -220,8 +224,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
     }
 
-    int eval = Evaluate(board);
-    int rawEval = eval;
+    int rawEval = Evaluate(board);
+    int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
 
     bool isInCheck = is_in_check(board);
 
@@ -233,9 +237,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (depth <= RFP_MAX_DEPTH)
         {
             int rfpMargin = RFP_MULTIPLIER * depth;
-            if (rawEval - rfpMargin >= beta)
+            if (staticEval - rfpMargin >= beta)
             {
-                return rawEval;
+                return staticEval;
             }
         }
         //NMP
@@ -243,7 +247,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
-        if (!isPvNode && depth >= 2 && !root && rawEval >= beta && currentPly >= data.minNmpPly
+        if (!isPvNode && depth >= 2 && !root && staticEval >= beta && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
@@ -274,7 +278,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     MoveList searchedQuietMoves;
     int searchedMoves = 0;
 
-    Move bestMove;
+    Move bestMove = Move(0, 0, 0, 0);
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
@@ -302,12 +306,14 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool lastside = board.side;
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
+        uint64_t last_pawnKey = board.pawnKey;
 
         int childDepth = depth - 1;
 
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
         MakeMove(board, move);
+
         data.ply++;
 
         if (!isLegal(move, board))
@@ -319,6 +325,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.side = lastside;
             board.zobristKey = last_zobrist;
             board.accumulator = last_accumulator;
+            board.pawnKey = last_pawnKey;
             data.ply--;
             continue;
         }
@@ -365,6 +372,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.side = lastside;
         board.zobristKey = last_zobrist;
         board.accumulator = last_accumulator;
+        board.pawnKey = last_pawnKey;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -413,6 +421,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     if (ttFlag == HFUPPER && ttHit)
     {
         bestMove = ttEntry.bestMove;
+    }
+    if (!isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
+        && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
+    {
+        updateCorrhists(board, depth, bestValue - staticEval, data);
     }
     ttEntry.bestMove = bestMove;
     ttEntry.bound = ttFlag;

@@ -133,6 +133,7 @@ void parse_fen(std::string fen, Board& board)
     board.occupancies[Both] |= board.occupancies[Black];
     board.occupancies[Both] |= board.occupancies[White];
     board.zobristKey = generate_hash_key(board);
+    board.pawnKey = generate_pawn_key(board);
 
     resetAccumulators(board, board.accumulator);
 
@@ -211,6 +212,32 @@ void init_random_keys()
     }
 
     side_key = get_random_U64_number();
+}
+uint64_t generate_pawn_key(Board& board)
+{
+    uint64_t final_key = 0ULL;
+    uint64_t bitboard;
+
+    bitboard = board.bitboards[P];
+
+    while (bitboard)
+    {
+        int square = get_ls1b(bitboard);
+
+        final_key ^= piece_keys[P][square];
+        Pop_bit(bitboard, square);
+    }
+
+    bitboard = board.bitboards[p];
+
+    while (bitboard)
+    {
+        int square = get_ls1b(bitboard);
+
+        final_key ^= piece_keys[p][square];
+        Pop_bit(bitboard, square);
+    }
+    return final_key;
 }
 
 uint64_t generate_hash_key(Board& board)
@@ -1180,17 +1207,13 @@ void XORZobrist(uint64_t& zobrist, uint64_t key)
 {
     zobrist ^= key;
 }
-void XORPieceZobrist(
-    uint64_t& zobrist,
-    int piece,
-    int square,
-    Board& board,
-    bool flipWhite,
-    bool flipBlack,
-    bool AddingPiece
-)
+void XORPieceZobrist(int piece, int square, Board& board, bool flipWhite, bool flipBlack, bool AddingPiece)
 {
-    XORZobrist(zobrist, piece_keys[piece][square]);
+    XORZobrist(board.zobristKey, piece_keys[piece][square]);
+    if (get_piece(piece, White) == P)
+    {
+        XORZobrist(board.pawnKey, piece_keys[piece][square]);
+    }
     bool side = piece <= 5 ? White : Black;
     Accumulator& accumulator = ((side == White) ? board.accumulator.white : board.accumulator.black);
 
@@ -1331,16 +1354,9 @@ void UpdateZobrist(
     }
     XORZobrist(board.zobristKey, side_key); //flip side
 
-    XORPieceZobrist(
-        board.zobristKey,
-        move.Piece,
-        move.From,
-        board,
-        flipWhite,
-        flipBlack,
-        false
-    ); //remove piece in from square
-    XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack, true); //add piece in to square
+    XORPieceZobrist(move.Piece, move.From, board, flipWhite, flipBlack,
+                    false);                                                  //remove piece in from square
+    XORPieceZobrist(move.Piece, move.To, board, flipWhite, flipBlack, true); //add piece in to square
     if (isDoublePush)
     {
         if (board.side == White)
@@ -1417,7 +1433,6 @@ void UpdateZobrist(
         }
         int captured_piece = board.mailbox[capture_square];
         XORPieceZobrist(
-            board.zobristKey,
             captured_piece,
             capture_square,
             board,
@@ -1440,7 +1455,6 @@ void UpdateZobrist(
         }
 
         XORPieceZobrist(
-            board.zobristKey,
             board.mailbox[rookSquare],
             rookSquare,
             board,
@@ -1449,7 +1463,6 @@ void UpdateZobrist(
             false
         ); //remove castling rook
         XORPieceZobrist(
-            board.zobristKey,
             board.mailbox[rookSquare],
             rookSquare - 2,
             board,
@@ -1471,7 +1484,6 @@ void UpdateZobrist(
         }
 
         XORPieceZobrist(
-            board.zobristKey,
             board.mailbox[rookSquare],
             rookSquare,
             board,
@@ -1480,7 +1492,6 @@ void UpdateZobrist(
             false
         ); //remove castling rook
         XORPieceZobrist(
-            board.zobristKey,
             board.mailbox[rookSquare],
             rookSquare + 3,
             board,
@@ -1491,26 +1502,12 @@ void UpdateZobrist(
     }
     if (isPromo)
     {
-        XORPieceZobrist(
-            board.zobristKey,
-            move.Piece,
-            move.To,
-            board,
-            flipWhite,
-            flipBlack,
-            false
-        ); //remove pawn in to square
+        XORPieceZobrist(move.Piece, move.To, board, flipWhite, flipBlack,
+                        false); //remove pawn in to square
 
         int promoPiece = GetPromotingPiece(move);
-        XORPieceZobrist(
-            board.zobristKey,
-            promoPiece,
-            move.To,
-            board,
-            flipWhite,
-            flipBlack,
-            true
-        ); //add promoting piece in to square
+        XORPieceZobrist(promoPiece, move.To, board, flipWhite, flipBlack,
+                        true); //add promoting piece in to square
     }
 }
 void MakeNullMove(Board& board)

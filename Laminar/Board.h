@@ -18,6 +18,7 @@ public:
     uint8_t castle;
     uint8_t halfmove;
     uint64_t zobristKey;
+    uint64_t pawnKey;
     std::vector<uint64_t> history;
 
     int lastIrreversiblePly = 0;
