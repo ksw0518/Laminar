@@ -52,6 +52,7 @@ int adjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
     int adjust = 0;
 
     adjust += pawnEntry * PAWN_CORRHIST_MULTIPLIER;
+    adjust /= 128;
 
     return std::clamp(rawEval + adjust / CORRHIST_GRAIN, -mate_found + 1, mate_found - 1);
 }

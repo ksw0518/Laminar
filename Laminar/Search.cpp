@@ -87,8 +87,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     bool isPvNode = beta - alpha > 1;
 
-    int staticEval = Evaluate(board);
-
+    int rawEval = Evaluate(board);
+    int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     if (currentPly >= MAXPLY - 1)
@@ -278,7 +278,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     MoveList searchedQuietMoves;
     int searchedMoves = 0;
 
-    Move bestMove;
+    Move bestMove = Move(0, 0, 0, 0);
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
@@ -313,6 +313,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
         MakeMove(board, move);
+
         data.ply++;
 
         if (!isLegal(move, board))
