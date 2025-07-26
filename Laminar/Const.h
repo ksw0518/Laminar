@@ -133,6 +133,12 @@ constexpr int MATESCORE = 49000;
 constexpr int PieceValues[12] = {98, 280, 295, 479, 1064, 0, 0};
 
 extern size_t TTSize;
+
+constexpr int16_t CORRHIST_WEIGHT_SCALE = 256;
+constexpr int16_t CORRHIST_GRAIN = 256;
+constexpr int16_t CORRHIST_SIZE = 16384;
+constexpr int16_t CORRHIST_MAX = 16384;
+
 inline int get_piece(int piece, int col)
 {
     return Get_Whitepiece[piece] + Side_value[col];

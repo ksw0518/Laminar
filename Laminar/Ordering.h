@@ -4,7 +4,8 @@
 #include "Search.h"
 #include "Transpositions.h"
 bool IsMoveCapture(Move& move);
-bool isMoveNoisy(Move& move);
+bool IsMoveQuiet(Move& move);
+bool IsMoveNoisy(Move& move);
 void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry);
 void SortNoisyMoves(MoveList& ml, Board& board);
 
