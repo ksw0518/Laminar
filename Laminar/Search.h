@@ -57,3 +57,5 @@ void InitializeLMRTable();
 void InitializeSearch(ThreadData& data);
 void InitNNUE();
 void refresh_if_cross(Move& move, Board& board);
+bool operator==(const Accumulator& a, const Accumulator& b);
+bool operator==(const AccumulatorPair& a, const AccumulatorPair& b);

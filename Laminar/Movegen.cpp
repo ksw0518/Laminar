@@ -18,6 +18,7 @@ uint64_t enpassant_keys[64];
 uint64_t castle_keys[16];
 uint64_t side_key;
 uint32_t random_state;
+
 void parse_fen(std::string fen, Board& board)
 {
     for (int i = 0; i < 64; i++)
@@ -1179,20 +1180,28 @@ void XORZobrist(uint64_t& zobrist, uint64_t key)
 {
     zobrist ^= key;
 }
-void XORPieceZobrist(uint64_t& zobrist, int piece, int square, Board& board, bool flipWhite, bool flipBlack)
+void XORPieceZobrist(
+    uint64_t& zobrist,
+    int piece,
+    int square,
+    Board& board,
+    bool flipWhite,
+    bool flipBlack,
+    bool AddingPiece
+)
 {
     XORZobrist(zobrist, piece_keys[piece][square]);
     bool side = piece <= 5 ? White : Black;
     Accumulator& accumulator = ((side == White) ? board.accumulator.white : board.accumulator.black);
 
-    if (board.mailbox[square] == NO_PIECE) //adding piece
+    if (AddingPiece) //adding piece
     {
-        /*       std::cout << "adding"
+        /* std::cout << "adding"
                   << "\n"
                   << "flipwhite:" << flipWhite << "\n"
                   << "flipblack: " << flipBlack << "\n"
                   << "piece :" << getCharFromPiece(get_piece(piece, White)) << "\nside" << side << "\nsquare"
-                  << CoordinatesToChessNotation(square) << "\n";*/
+                  << CoordinatesToChessNotation(square) << "\n\n";*/
 
         accumulatorAdd(
             &EvalNetwork,
@@ -1207,12 +1216,12 @@ void XORPieceZobrist(uint64_t& zobrist, int piece, int square, Board& board, boo
     }
     else
     {
-        /*  std::cout << "removing"
+        /*std::cout << "removing"
                   << "\n"
                   << "flipwhite:" << flipWhite << "\n"
                   << "flipblack: " << flipBlack << "\n"
                   << "piece :" << getCharFromPiece(get_piece(piece, White)) << "\nside" << side << "\nsquare"
-                  << CoordinatesToChessNotation(square) << "\n";*/
+                  << CoordinatesToChessNotation(square) << "\n\n";*/
         accumulatorSub(
             &EvalNetwork,
             &board.accumulator.white,
@@ -1322,8 +1331,16 @@ void UpdateZobrist(
     }
     XORZobrist(board.zobristKey, side_key); //flip side
 
-    XORPieceZobrist(board.zobristKey, move.Piece, move.From, board, flipWhite, flipBlack); //remove piece in from square
-    XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack);   //add piece in to square
+    XORPieceZobrist(
+        board.zobristKey,
+        move.Piece,
+        move.From,
+        board,
+        flipWhite,
+        flipBlack,
+        false
+    ); //remove piece in from square
+    XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack, true); //add piece in to square
     if (isDoublePush)
     {
         if (board.side == White)
@@ -1405,7 +1422,8 @@ void UpdateZobrist(
             capture_square,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            false
         ); //remove captured piece in to square
     }
 
@@ -1427,7 +1445,8 @@ void UpdateZobrist(
             rookSquare,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            false
         ); //remove castling rook
         XORPieceZobrist(
             board.zobristKey,
@@ -1435,7 +1454,8 @@ void UpdateZobrist(
             rookSquare - 2,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            true
         ); //add castling rook
     }
     else if (isQueenCastle)
@@ -1456,7 +1476,8 @@ void UpdateZobrist(
             rookSquare,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            false
         ); //remove castling rook
         XORPieceZobrist(
             board.zobristKey,
@@ -1464,12 +1485,21 @@ void UpdateZobrist(
             rookSquare + 3,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            true
         ); //add castling rook
     }
     if (isPromo)
     {
-        XORPieceZobrist(board.zobristKey, move.Piece, move.To, board, flipWhite, flipBlack); //remove pawn in to square
+        XORPieceZobrist(
+            board.zobristKey,
+            move.Piece,
+            move.To,
+            board,
+            flipWhite,
+            flipBlack,
+            false
+        ); //remove pawn in to square
 
         int promoPiece = GetPromotingPiece(move);
         XORPieceZobrist(
@@ -1478,7 +1508,8 @@ void UpdateZobrist(
             move.To,
             board,
             flipWhite,
-            flipBlack
+            flipBlack,
+            true
         ); //add promoting piece in to square
     }
 }
@@ -2793,4 +2824,69 @@ bool IsOnlyKingPawn(Board& board)
     return (board.occupancies[Both]
             & ~(board.bitboards[P] | board.bitboards[p] | board.bitboards[K] | board.bitboards[k]))
         == 0ULL;
+}
+std::string getCastlingRights(const Board& board)
+{
+    std::string rights = "";
+    if (board.castle & WhiteKingCastle)
+        rights += "K"; // White kingside castling
+    if (board.castle & WhiteQueenCastle)
+        rights += "Q"; // White queenside castling
+    if (board.castle & BlackKingCastle)
+        rights += "k"; // Black kingside castling
+    if (board.castle & BlackQueenCastle)
+        rights += "q"; // Black queenside castling
+    return (rights.empty()) ? "-" : rights;
+}
+std::string boardToFEN(const Board& board)
+{
+    // Step 1: Construct the piece placement part (ranks 8 to 1)
+    std::string piecePlacement = "";
+    for (int rank = 7; rank >= 0; --rank)
+    { // Fix: Iterate from 7 down to 0
+        int emptyCount = 0;
+        for (int file = 0; file < 8; ++file)
+        {
+            int square = (7 - rank) * 8 + file;
+            int piece = board.mailbox[square];
+
+            if (piece == NO_PIECE)
+            {
+                ++emptyCount; // Empty square
+            }
+            else
+            {
+                if (emptyCount > 0)
+                {
+                    piecePlacement += std::to_string(emptyCount); // Insert the number of empty squares
+                    emptyCount = 0;
+                }
+                piecePlacement += getCharFromPiece(piece); // Add the piece (e.g., 'p', 'R')
+            }
+        }
+
+        if (emptyCount > 0)
+        {
+            piecePlacement += std::to_string(emptyCount); // End of rank with empty squares
+        }
+
+        if (rank > 0)
+        { // Fix: Only add '/' if it's not the last rank (rank 1)
+            piecePlacement += "/";
+        }
+    }
+
+    // Step 2: Construct the other parts of FEN
+    std::string sideToMove = (board.side == 0) ? "w" : "b"; // White or Black to move
+    std::string castlingRights = getCastlingRights(board);  // Castling rights
+    std::string enPassant =
+        (board.enpassent == NO_SQ) ? "-" : CoordinatesToChessNotation(board.enpassent); // En passant square
+    std::string halfmove = std::to_string(board.halfmove);                              // Halfmove clock
+    std::string fullmove = std::to_string(board.history.size() / 2 + 1);                // Fullmove number
+
+    // Step 3: Combine all parts into the final FEN string
+    std::string fen =
+        piecePlacement + " " + sideToMove + " " + castlingRights + " " + enPassant + " " + halfmove + " " + fullmove;
+
+    return fen;
 }

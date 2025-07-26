@@ -3,6 +3,8 @@
 #include "Evaluation.h"
 #include "Movegen.h"
 #include "Search.h"
+
+#include "Bit.h"
 #include "Transpositions.h"
 #include <chrono>
 #include <iomanip>
@@ -104,6 +106,7 @@ static void InitAll(ThreadData& data)
     InitializeSearch(data);
     InitNNUE();
 }
+
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
     if (depth == 0)
@@ -116,6 +119,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
     uint64_t nodes = 0;
 
     GeneratePseudoLegalMoves(move_list, board);
+    AccumulatorPair last_accumulator = board.accumulator;
     for (int i = 0; i < move_list.count; ++i)
     {
         Move& move = move_list.moves[i];
@@ -125,7 +129,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
         int captured_piece = board.mailbox[move.To];
 
         uint64_t last_zobrist = board.zobristKey;
-
+        refresh_if_cross(move, board);
         MakeMove(board, move);
         if (isLegal(move, board))
         {
@@ -146,6 +150,7 @@ uint64_t Perft(Board& board, int depth, int perftDepth)
         board.enpassent = lastEp;
         board.castle = lastCastle;
         board.side = lastside;
+        board.accumulator = last_accumulator;
     }
     return nodes;
 }

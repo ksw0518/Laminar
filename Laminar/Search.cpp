@@ -132,6 +132,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
+
         data.ply++;
 
         if (!isLegal(move, board))
