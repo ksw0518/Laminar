@@ -193,6 +193,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         return 0;
     }
 
+    bool isSingularSearch = (data.excludedMove != NULLMOVE);
     bool isPvNode = beta - alpha > 1;
     int currentPly = data.ply;
     bool root = (currentPly == 0);
@@ -218,7 +219,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
-        if (!isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
+        if (!isSingularSearch && !isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
         {
             return ttEntry.score;
         }
@@ -229,7 +230,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     bool isInCheck = is_in_check(board);
 
-    bool canPrune = !isInCheck;
+    bool canPrune = !isInCheck && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
     if (canPrune && notMated) //do whole node pruining
     {
@@ -287,6 +288,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
+        if (move == data.excludedMove)
+        {
+            continue;
+        }
         bool isQuiet = !IsMoveCapture(move);
 
         bool isNotMated = bestValue > -49000 + 99;
@@ -307,8 +312,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
         uint64_t last_pawnKey = board.pawnKey;
-
-        int childDepth = depth - 1;
 
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
@@ -335,7 +338,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         searchedMoves++;
         data.searchNodeCount++;
-        data.searchStack[currentPly].move = move;
 
         int reduction = 0;
 
@@ -348,6 +350,39 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction = 0;
         bool isReduced = reduction > 0;
 
+        int extensions = 0;
+        if (!root && depth >= 7 && move == ttEntry.bestMove && data.excludedMove == NULLMOVE
+            && ttEntry.depth >= depth - 3 && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) <= MATESCORE + MAXPLY)
+        {
+            //unmake move for singular search
+            UnmakeMove(board, move, captured_piece);
+            data.ply--;
+            board.enpassent = lastEp;
+            board.castle = lastCastle;
+            board.side = lastside;
+            board.zobristKey = last_zobrist;
+            board.accumulator = last_accumulator;
+            board.pawnKey = last_pawnKey;
+
+            //do singular search to prove the move is singular
+            int singularBeta = ttEntry.score - depth * 2;
+            int singularDepth = (depth - 1) / 2;
+            data.excludedMove = ttEntry.bestMove;
+            int singularScore = AlphaBeta(board, data, singularDepth, singularBeta - 1, singularBeta);
+            data.excludedMove = NULLMOVE;
+
+            refresh_if_cross(move, board);
+            MakeMove(board, move);
+            data.ply++;
+
+            if (singularScore < singularBeta)
+            {
+                extensions += 1;
+            }
+        }
+        data.searchStack[currentPly].move = move;
+
+        int childDepth = depth + extensions - 1;
         if (doLmr)
         {
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
@@ -410,7 +445,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (isInCheck)
         {
             //checkmate
-            return -49000 + data.ply;
+            return isSingularSearch ? alpha : -49000 + data.ply;
         }
         else
         {
@@ -422,17 +457,22 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         bestMove = ttEntry.bestMove;
     }
-    if (!isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
+    if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
         updateCorrhists(board, depth, bestValue - staticEval, data);
     }
-    ttEntry.bestMove = bestMove;
-    ttEntry.bound = ttFlag;
-    ttEntry.depth = depth;
-    ttEntry.zobristKey = board.zobristKey;
-    ttEntry.score = bestValue;
-    ttStore(ttEntry, board);
+    if (!isSingularSearch)
+    {
+        ttEntry.bestMove = bestMove;
+        ttEntry.bound = ttFlag;
+        ttEntry.depth = depth;
+        ttEntry.zobristKey = board.zobristKey;
+        ttEntry.score = bestValue;
+
+        ttStore(ttEntry, board);
+    }
+
     return bestValue;
 }
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data)

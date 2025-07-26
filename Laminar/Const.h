@@ -139,6 +139,8 @@ constexpr int16_t CORRHIST_GRAIN = 256;
 constexpr int16_t CORRHIST_SIZE = 16384;
 constexpr int16_t CORRHIST_MAX = 16384;
 
+#define NULLMOVE Move(0, 0, 0, 0)
+
 inline int get_piece(int piece, int col)
 {
     return Get_Whitepiece[piece] + Side_value[col];
