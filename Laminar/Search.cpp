@@ -231,6 +231,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
+
     if (canPrune && notMated) //do whole node pruining
     {
         //RFP
@@ -282,13 +283,18 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
+    int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
 
+    bool skipQuiets = false;
     AccumulatorPair last_accumulator = board.accumulator;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
         bool isQuiet = !IsMoveCapture(move);
-
+        if (skipQuiets && isQuiet)
+        {
+            continue;
+        }
         bool isNotMated = bestValue > -49000 + 99;
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
@@ -297,6 +303,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
             {
+                continue;
+            }
+            if (searchedMoves >= lmpThreshold)
+            {
+                skipQuiets = true;
                 continue;
             }
         }
