@@ -17,6 +17,9 @@ struct Histories
 
     //[stm][pawnKey]
     int16_t pawnCorrHist[2][CORRHIST_SIZE];
+
+    //[piece][to][piece][to]
+    int16_t contHist[12][64][12][64];
 };
 struct ThreadData
 {
