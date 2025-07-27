@@ -261,6 +261,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             data.ply++;
             MakeNullMove(board);
             int reduction = 3;
+            reduction += depth / 3;
             data.minNmpPly = currentPly + 2;
             int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
             data.minNmpPly = 0;
