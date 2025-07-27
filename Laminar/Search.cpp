@@ -88,7 +88,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     bool isPvNode = beta - alpha > 1;
 
     int rawEval = Evaluate(board);
-    int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
+    int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
     if (currentPly >= MAXPLY - 1)
@@ -231,7 +231,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
 
     int rawEval = Evaluate(board);
-    int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
+    int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -416,6 +416,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus);
             MalusMainHist(data, searchedQuietMoves, move, mainHistMalus);
 
+            int16_t contHistBonus = std::min(CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+            int16_t contHistMalus = std::min(CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
+            UpdateContHist(move, contHistBonus, data);
+            MalusContHist(data, searchedQuietMoves, move, contHistMalus);
+
             break;
         }
     }
@@ -440,7 +445,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     if (!isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
-        updateCorrhists(board, depth, bestValue - staticEval, data);
+        UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
     ttEntry.bestMove = bestMove;
     ttEntry.bound = ttFlag;

@@ -28,7 +28,50 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
         }
     }
 }
-void updatePawnCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
+int16_t GetSingleContHistScore(Move& move, const int offset, ThreadData& data)
+{
+    if (data.ply >= offset)
+    {
+        Move prevMove = data.searchStack[data.ply - offset].move;
+        return data.histories.contHist[prevMove.Piece][prevMove.To][move.Piece][move.To];
+    }
+    return -1;
+}
+int GetContHistScore(Move& move, ThreadData& data)
+{
+    int onePlyContHist = GetSingleContHistScore(move, 1, data);
+    int twoPlyContHist = GetSingleContHistScore(move, 2, data);
+    return onePlyContHist + twoPlyContHist;
+}
+void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadData& data)
+{
+    if (data.ply >= offset)
+    {
+        Move prevMove = data.searchStack[data.ply - offset].move;
+        int clampedBonus = std::clamp(bonus, -MAX_CONTHIST, MAX_CONTHIST);
+        int scaledBonus = clampedBonus - GetSingleContHistScore(move, offset, data) * abs(clampedBonus) / MAX_CONTHIST;
+
+        data.histories.contHist[prevMove.Piece][prevMove.To][move.Piece][move.To] += scaledBonus;
+    }
+}
+void UpdateContHist(Move& move, const int bonus, ThreadData& data)
+{
+    UpdateSingleContHist(move, bonus, 1, data);
+    UpdateSingleContHist(move, bonus, 2, data);
+}
+void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
+{
+    bool stm = bonus_move.Piece <= 5 ? White : Black;
+    for (int i = 0; i < searchedQuietMoves.count; ++i)
+    {
+        Move& searchedMove = searchedQuietMoves.moves[i];
+        if (searchedMove != bonus_move)
+        {
+            UpdateContHist(searchedMove, -malus, data);
+        }
+    }
+}
+void UpdatePawnCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
 {
     uint64_t pawnKey = board.pawnKey;
     int16_t& pawnEntry = data.histories.pawnCorrHist[board.side][pawnKey % CORRHIST_SIZE];
@@ -37,12 +80,12 @@ void updatePawnCorrHist(Board& board, const int depth, const int diff, ThreadDat
     pawnEntry = (pawnEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     pawnEntry = std::clamp<int16_t>(pawnEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
-void updateCorrhists(Board& board, const int depth, const int diff, ThreadData& data)
+void UpdateCorrhists(Board& board, const int depth, const int diff, ThreadData& data)
 {
-    updatePawnCorrHist(board, depth, diff, data);
+    UpdatePawnCorrHist(board, depth, diff, data);
 }
 
-int adjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
+int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
 {
     uint64_t pawnKey = board.pawnKey;
     const int& pawnEntry = data.histories.pawnCorrHist[board.side][pawnKey % CORRHIST_SIZE];

@@ -1,6 +1,7 @@
 #include "Ordering.h"
 #include "Board.h"
 #include "Const.h"
+#include "History.h"
 #include "Movegen.h"
 #include "Search.h"
 #include "Transpositions.h"
@@ -42,7 +43,10 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
     else
     {
         int mainHistValue = data.histories.mainHist[board.side][move.From][move.To];
-        return mainHistValue - MAX_HISTORY; //set the range to -maxhist ~ 0
+        int contHistValue = GetContHistScore(move, data);
+
+        int historyScore = mainHistValue + contHistValue;
+        return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
 int QsearchGetMoveScore(Move& move, Board& board)
