@@ -45,3 +45,6 @@ constexpr int PAWN_CORRHIST_MULTIPLIER = 178;
 
 constexpr int LMP_BASE = 300;
 constexpr int LMP_MULTIPLIER = 100;
+
+constexpr int HISTORY_PRUNING_MULTIPLIER = 1372;
+constexpr int HISTORY_PRUNING_BASE = 69;

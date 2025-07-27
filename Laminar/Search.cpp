@@ -288,6 +288,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
     int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
+    int historyPruningThreshold = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
 
     bool skipQuiets = false;
     AccumulatorPair last_accumulator = board.accumulator;
@@ -301,6 +302,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         bool isNotMated = bestValue > -49000 + 99;
 
+        int historyScore = GetContHistScore(move, data) + data.histories.mainHist[board.side][move.From][move.To];
+        ;
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
@@ -312,6 +315,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
+                continue;
+            }
+            //If history score is very bad, skip the move
+            if (depth <= 5 && historyScore < historyPruningThreshold)
+            {
                 continue;
             }
         }
