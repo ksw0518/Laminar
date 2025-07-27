@@ -35,6 +35,7 @@ int16_t GetSingleContHistScore(Move& move, const int offset, ThreadData& data)
         Move prevMove = data.searchStack[data.ply - offset].move;
         return data.histories.contHist[prevMove.Piece][prevMove.To][move.Piece][move.To];
     }
+    return -1;
 }
 int GetContHistScore(Move& move, ThreadData& data)
 {
