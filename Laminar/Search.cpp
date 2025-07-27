@@ -262,6 +262,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             MakeNullMove(board);
             int reduction = 3;
             reduction += depth / 3;
+            reduction += std::min((staticEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
             int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
             data.minNmpPly = 0;

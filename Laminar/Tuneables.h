@@ -45,3 +45,6 @@ constexpr int PAWN_CORRHIST_MULTIPLIER = 178;
 
 constexpr int LMP_BASE = 300;
 constexpr int LMP_MULTIPLIER = 100;
+
+constexpr int NMP_EVAL_DIVISER = 400;
+constexpr int MAX_NMP_EVAL_R = 3;
