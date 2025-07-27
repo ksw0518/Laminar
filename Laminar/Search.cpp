@@ -353,12 +353,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.searchStack[currentPly].move = move;
 
         int reduction = 0;
-
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            int reduction_bonus = 0;
+
+            reduction += !isPvNode ? 1024 : 0;
         }
+
         if (reduction < 0)
             reduction = 0;
         bool isReduced = reduction > 0;
