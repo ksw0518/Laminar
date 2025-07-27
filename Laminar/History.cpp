@@ -40,8 +40,8 @@ int16_t GetSingleContHistScore(Move& move, const int offset, ThreadData& data)
 int GetContHistScore(Move& move, ThreadData& data)
 {
     int onePlyContHist = GetSingleContHistScore(move, 1, data);
-    int twoPlyContHist = GetSingleContHistScore(move, 2, data);
-    return onePlyContHist + twoPlyContHist;
+    //int twoPlyContHist = GetSingleContHistScore(move, 2, data);
+    return onePlyContHist;
 }
 void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadData& data)
 {
@@ -57,7 +57,7 @@ void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadD
 void UpdateContHist(Move& move, const int bonus, ThreadData& data)
 {
     UpdateSingleContHist(move, bonus, 1, data);
-    UpdateSingleContHist(move, bonus, 2, data);
+    //UpdateSingleContHist(move, bonus, 2, data);
 }
 void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
 {
