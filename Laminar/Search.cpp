@@ -201,6 +201,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int score = 0;
     int bestValue = -MAXSCORE;
+    bool isInCheck = is_in_check(board);
+
+    if (isInCheck)
+    {
+        depth++;
+    }
     if (depth <= 0 || currentPly >= MAXPLY - 1)
     {
         score = QuiescentSearch(board, data, alpha, beta);
@@ -226,8 +232,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int rawEval = Evaluate(board);
     int staticEval = adjustEvalWithCorrHist(board, rawEval, data);
-
-    bool isInCheck = is_in_check(board);
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
