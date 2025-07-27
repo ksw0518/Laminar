@@ -34,5 +34,5 @@ constexpr int PVS_NOISY_MULTIPLIER = 20;
 
 constexpr int PAWN_CORRHIST_MULTIPLIER = 178;
 
-constexpr int LMP_BASE = 46;
-constexpr int LMP_MULTIPLIER = 94;
+constexpr int LMP_BASE = 100;
+constexpr int LMP_MULTIPLIER = 100;
