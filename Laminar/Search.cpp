@@ -359,9 +359,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction = lmrTable[depth][searchedMoves];
             int reduction_bonus = 0;
 
-            reduction += !isPvNode ? 1024 : 0;
+            reduction_bonus += !isPvNode ? 1024 : 0;
+            reduction_bonus /= 1024;
+            reduction += reduction_bonus;
         }
-
         if (reduction < 0)
             reduction = 0;
         bool isReduced = reduction > 0;
