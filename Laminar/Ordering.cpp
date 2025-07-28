@@ -3,6 +3,7 @@
 #include "Const.h"
 #include "History.h"
 #include "Movegen.h"
+#include "SEE.h"
 #include "Search.h"
 #include "Transpositions.h"
 #include "Tuneables.h"
@@ -38,6 +39,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int victimValue = PieceValues[victim];
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
+        int seeValue = SEE(board, move, SEE_ORDERING_THRESHOLD) ? 200000 : -10000000;
         return mvvlvaValue;
     }
     else

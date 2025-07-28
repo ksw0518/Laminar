@@ -45,3 +45,5 @@ constexpr int PAWN_CORRHIST_MULTIPLIER = 178;
 
 constexpr int LMP_BASE = 300;
 constexpr int LMP_MULTIPLIER = 100;
+
+constexpr int SEE_ORDERING_THRESHOLD = -100;
