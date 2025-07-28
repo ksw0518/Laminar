@@ -332,6 +332,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
         data.ply++;
 
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To];
+        int contHistScore = GetContHistScore(move, data);
+        int historyScore = mainHistScore + contHistScore;
+
         if (!isLegal(move, board))
         {
             UnmakeMove(board, move, captured_piece);
@@ -359,6 +363,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            reduction -= historyScore / 16384;
         }
         if (reduction < 0)
             reduction = 0;
