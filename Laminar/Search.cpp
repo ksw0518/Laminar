@@ -597,6 +597,10 @@ std::pair<Move, int> IterativeDeepening(
         {
             break;
         }
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit))
+        {
+            break;
+        }
     }
 
     std::cout << "bestmove ";
