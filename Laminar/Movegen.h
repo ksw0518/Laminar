@@ -114,3 +114,4 @@ bool IsOnlyKingPawn(Board& board);
 void MakeNullMove(Board& board);
 void UnmakeNullmove(Board& board);
 std::string boardToFEN(const Board& board);
+uint64_t GetAttackedSquares(int side, Board& board, uint64_t occupancy);

@@ -12,8 +12,8 @@ struct SearchData
 };
 struct Histories
 {
-    //[stm][from][to]
-    int16_t mainHist[2][64][64];
+    //[stm][from][to][from threat][to threat]
+    int16_t mainHist[2][64][64][2][2];
 
     //[stm][pawnKey]
     int16_t pawnCorrHist[2][CORRHIST_SIZE];

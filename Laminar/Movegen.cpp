@@ -2665,7 +2665,7 @@ bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupan
 
     return false;
 }
-uint64_t get_attacked_squares(int side, Board& board, uint64_t occupancy)
+uint64_t GetAttackedSquares(int side, Board& board, uint64_t occupancy)
 {
     uint64_t attack_map = 0ULL;
 
@@ -2747,7 +2747,7 @@ bool isLegal(Move& move, Board& board)
     }
     else
     {
-        uint64_t attacked_squares = get_attacked_squares(board.side, board, board.occupancies[Both]);
+        uint64_t attacked_squares = GetAttackedSquares(board.side, board, board.occupancies[Both]);
         if (move.Type == king_castle)
         {
             uint64_t NoAttackArea;

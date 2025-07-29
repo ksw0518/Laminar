@@ -1,4 +1,5 @@
 #include "History.h"
+#include "Bit.h"
 #include "Search.h"
 #include "Tuneables.h"
 #include <algorithm>
@@ -11,20 +12,23 @@ void UpdateHistoryEntry(int16_t& entry, int16_t bonus)
     entry += clampedBonus - entry * abs(clampedBonus) / MAX_HISTORY;
 }
 
-void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus)
+void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus, uint64_t threat)
 {
-    int16_t& historyEntry = data.histories.mainHist[stm][from][to];
+    bool fromThreat = Get_bit(threat, from);
+    bool toThreat = Get_bit(threat, to);
+    int16_t& historyEntry = data.histories.mainHist[stm][from][to][fromThreat][toThreat];
     UpdateHistoryEntry(historyEntry, bonus);
 }
-void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
+void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus, uint64_t threat)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
     for (int i = 0; i < searchedQuietMoves.count; ++i)
     {
         Move& searchedMove = searchedQuietMoves.moves[i];
+
         if (searchedMove != bonus_move)
         {
-            UpdateMainHist(data, stm, searchedMove.From, searchedMove.To, -malus);
+            UpdateMainHist(data, stm, searchedMove.From, searchedMove.To, -malus, threat);
         }
     }
 }
