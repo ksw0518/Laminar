@@ -178,7 +178,13 @@ std::vector<std::string> splitStringBySpace(const std::string& str)
 }
 int64_t CalculateHardLimit(int64_t time, int64_t incre)
 {
-    return time / 20 + incre / 2;
+    return time / 2;
+}
+int64_t CalculateSoftLimit(int64_t time, int64_t incre)
+{
+    return 0.6
+         * (static_cast<float>(time) / static_cast<float>(20)
+            + static_cast<float>(incre) * static_cast<float>(3) / static_cast<float>(4));
 }
 void PlayMoves(std::string& moves_string, Board& board)
 {
@@ -321,7 +327,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             searchLimits.HardTimeLimit = movetime;
             IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
-        else if (Commands[1] == "wtime")
+        else if (Commands[1] == "wtime" || Commands[1] == "btime")
         {
             int depth = (int)TryGetLabelledValueInt(input, "depth", go_commands);
             int64_t wtime = TryGetLabelledValueInt(input, "wtime", go_commands);
@@ -330,13 +336,17 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             int64_t binc = TryGetLabelledValueInt(input, "binc", go_commands);
 
             int64_t hard_bound;
+            int64_t soft_bound;
 
             int64_t time = mainBoard.side == White ? wtime : btime;
             int64_t incre = mainBoard.side == White ? winc : binc;
 
             hard_bound = CalculateHardLimit(time, incre);
+            soft_bound = CalculateSoftLimit(time, incre);
 
             searchLimits.HardTimeLimit = hard_bound;
+
+            searchLimits.SoftTimeLimit = soft_bound;
             IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
         if (Commands[1] == "perft")
