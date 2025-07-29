@@ -91,6 +91,23 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
+
+    bool ttHit = false;
+    TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
+    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
+    {
+        ttHit = true;
+        bool ExactCutoff = (ttEntry.bound == HFEXACT);
+        bool LowerCutoff = (ttEntry.bound == HFLOWER && ttEntry.score >= beta);
+        bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
+        bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
+
+        if (DoTTCutoff)
+        {
+            return ttEntry.score;
+        }
+    }
+
     if (currentPly >= MAXPLY - 1)
     {
         return staticEval;
