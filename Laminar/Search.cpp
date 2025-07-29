@@ -427,7 +427,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             break;
         }
     }
-
     if (searchedMoves == 0)
     {
         if (isInCheck)
