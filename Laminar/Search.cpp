@@ -107,6 +107,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             return ttEntry.score;
         }
     }
+    int ttFlag = HFUPPER;
     if (currentPly >= MAXPLY - 1)
     {
         return staticEval;
@@ -188,6 +189,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         }
         if (alpha >= beta)
         {
+            ttFlag = HFLOWER;
             break;
         }
     }
@@ -196,6 +198,13 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         return staticEval;
     }
+
+    ttEntry.score = bestValue;
+    ttEntry.bound = ttFlag;
+    ttEntry.depth = -1;
+    ttEntry.zobristKey = board.zobristKey;
+    ttStore(ttEntry, board);
+
     return bestValue;
 }
 
