@@ -199,11 +199,14 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         return staticEval;
     }
 
-    ttEntry.score = bestValue;
-    ttEntry.bound = ttFlag;
-    ttEntry.depth = -1;
-    ttEntry.zobristKey = board.zobristKey;
-    ttStore(ttEntry, board);
+    if (ttEntry.depth == -5)
+    {
+        ttEntry.score = bestValue;
+        ttEntry.bound = ttFlag;
+        ttEntry.depth = -1;
+        ttEntry.zobristKey = board.zobristKey;
+        ttStore(ttEntry, board);
+    }
 
     return bestValue;
 }

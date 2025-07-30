@@ -8,7 +8,7 @@ struct TranspositionEntry
 {
     uint64_t zobristKey;
     Move bestMove;
-    uint8_t depth;
+    uint8_t depth = -5;
     uint8_t bound;
     int32_t score;
 };
