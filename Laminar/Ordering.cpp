@@ -1,4 +1,5 @@
 #include "Ordering.h"
+#include "Bit.h"
 #include "Board.h"
 #include "Const.h"
 #include "History.h"
@@ -23,7 +24,7 @@ bool IsEpCapture(Move& move)
 {
     return (move.Type & ep_capture) != 0;
 }
-int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry)
+int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threat)
 {
     if (move == entry.bestMove)
     {
@@ -42,7 +43,10 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
     }
     else
     {
-        int mainHistValue = data.histories.mainHist[board.side][move.From][move.To];
+        bool fromThreat = Get_bit(threat, move.From);
+        bool toThreat = Get_bit(threat, move.To);
+
+        int mainHistValue = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistValue = GetContHistScore(move, data);
 
         int historyScore = mainHistValue + contHistValue;
@@ -67,13 +71,13 @@ int QsearchGetMoveScore(Move& move, Board& board)
         return -90000;
     }
 }
-void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry)
+void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threats)
 {
     ScoredMove scored[256];
 
     for (int i = 0; i < ml.count; ++i)
     {
-        scored[i].score = GetMoveScore(ml.moves[i], board, data, entry);
+        scored[i].score = GetMoveScore(ml.moves[i], board, data, entry, threats);
         scored[i].move = ml.moves[i];
     }
 

@@ -276,10 +276,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             }
         }
     }
+    //Calculate all squares opponent is controlling
+    uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
 
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
-    SortMoves(moveList, board, data, ttEntry);
+    SortMoves(moveList, board, data, ttEntry, oppThreats);
 
     MoveList searchedQuietMoves;
     int searchedMoves = 0;
@@ -414,8 +416,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             int16_t mainHistBonus = std::min(MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
             int16_t mainHistMalus = std::min(MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
 
-            UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus);
-            MalusMainHist(data, searchedQuietMoves, move, mainHistMalus);
+            UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
+            MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
             int16_t contHistBonus = std::min(CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
             int16_t contHistMalus = std::min(CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
@@ -425,7 +427,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             break;
         }
     }
-
     if (searchedMoves == 0)
     {
         if (isInCheck)
