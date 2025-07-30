@@ -347,7 +347,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
+
         MakeMove(board, move);
+        bool givingCheck = is_in_check(board);
 
         data.ply++;
 
@@ -378,6 +380,16 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            int reductionBonus = 0;
+
+            //reduce less if we the move is giving check
+            if (givingCheck)
+            {
+                reductionBonus -= LMR_INCHECK_SUB;
+            }
+
+            reductionBonus /= 1024;
+            reduction += reductionBonus;
         }
         if (reduction < 0)
             reduction = 0;
