@@ -357,6 +357,12 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         refresh_if_cross(move, board);
         MakeMove(board, move);
 
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
+        int contHistScore = GetContHistScore(move, data);
+
+        int historyScore = mainHistScore * 2 + contHistScore;
         data.ply++;
 
         if (!isLegal(move, board))
@@ -388,6 +394,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            reduction -= historyScore / 30000;
         }
         if (reduction < 0)
             reduction = 0;
