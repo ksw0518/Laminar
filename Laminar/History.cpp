@@ -84,21 +84,56 @@ void UpdatePawnCorrHist(Board& board, const int depth, const int diff, ThreadDat
     pawnEntry = (pawnEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     pawnEntry = std::clamp<int16_t>(pawnEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
+void UpdateNonPawnCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
+{
+    uint64_t whiteKey = board.whiteNonPawnKey;
+    uint64_t blackKey = board.blackNonPawnKey;
+
+    const int scaledDiff = diff * CORRHIST_GRAIN;
+    const int newWeight = std::min(depth + 1, 16);
+
+    int16_t& whiteEntry = data.histories.nonPawnCorrHist[White][board.side][whiteKey % CORRHIST_SIZE];
+
+    whiteEntry = (whiteEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
+    whiteEntry = std::clamp<int16_t>(whiteEntry, -CORRHIST_MAX, CORRHIST_MAX);
+
+    int16_t& blackEntry = data.histories.nonPawnCorrHist[Black][board.side][blackKey % CORRHIST_SIZE];
+
+    blackEntry = (blackEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
+    blackEntry = std::clamp<int16_t>(blackEntry, -CORRHIST_MAX, CORRHIST_MAX);
+}
 void UpdateCorrhists(Board& board, const int depth, const int diff, ThreadData& data)
 {
     UpdatePawnCorrHist(board, depth, diff, data);
+    UpdateNonPawnCorrHist(board, depth, diff, data);
 }
-
-int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
+int16_t GetPawnCorrHistValue(Board& board, ThreadData& data)
 {
     uint64_t pawnKey = board.pawnKey;
-    const int& pawnEntry = data.histories.pawnCorrHist[board.side][pawnKey % CORRHIST_SIZE];
+    return data.histories.pawnCorrHist[board.side][pawnKey % CORRHIST_SIZE];
+}
+int16_t GetWhiteNonPawnCorrHistValue(Board& board, ThreadData& data)
+{
+    uint64_t whiteNPKey = board.whiteNonPawnKey;
+    return data.histories.nonPawnCorrHist[White][board.side][whiteNPKey % CORRHIST_SIZE];
+}
+int16_t GetBlackNonPawnCorrHistValue(Board& board, ThreadData& data)
+{
+    uint64_t blackNPKey = board.blackNonPawnKey;
+    return data.histories.nonPawnCorrHist[Black][board.side][blackNPKey % CORRHIST_SIZE];
+}
+int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
+{
+    int pawnEntry = GetPawnCorrHistValue(board, data);
+    int whiteNPEntry = GetWhiteNonPawnCorrHistValue(board, data);
+    int blackNPEntry = GetBlackNonPawnCorrHistValue(board, data);
 
     int mate_found = MATESCORE - MAXPLY;
 
     int adjust = 0;
 
     adjust += pawnEntry * PAWN_CORRHIST_MULTIPLIER;
+    adjust += (whiteNPEntry + blackNPEntry) * NONPAWN_CORRHIST_MULTIPLIER;
     adjust /= 128;
 
     return std::clamp(rawEval + adjust / CORRHIST_GRAIN, -mate_found + 1, mate_found - 1);
