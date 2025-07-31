@@ -72,7 +72,14 @@ char getCharFromPiece(int piece)
     }
 }
 Board::Board() :
-        side(0), enpassent((NO_SQ)), castle(0), halfmove(0), zobristKey(0)
+        side(0),
+        enpassent((NO_SQ)),
+        castle(0),
+        halfmove(0),
+        zobristKey(0),
+        pawnKey(0),
+        whiteNonPawnKey(0),
+        blackNonPawnKey(0)
 {
     std::memset(bitboards, 0, sizeof(bitboards));
     std::memset(occupancies, 0, sizeof(occupancies));

@@ -146,6 +146,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
         uint64_t last_pawnKey = board.pawnKey;
+        uint64_t last_white_np = board.whiteNonPawnKey;
+        uint64_t last_black_np = board.blackNonPawnKey;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -162,6 +164,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.zobristKey = last_zobrist;
             board.accumulator = last_accumulator;
             board.pawnKey = last_pawnKey;
+            board.whiteNonPawnKey = last_white_np;
+            board.blackNonPawnKey = last_black_np;
 
             data.ply--;
             continue;
@@ -180,6 +184,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.zobristKey = last_zobrist;
         board.accumulator = last_accumulator;
         board.pawnKey = last_pawnKey;
+        board.whiteNonPawnKey = last_white_np;
+        board.blackNonPawnKey = last_black_np;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -342,6 +348,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int captured_piece = board.mailbox[move.To];
         uint64_t last_zobrist = board.zobristKey;
         uint64_t last_pawnKey = board.pawnKey;
+        uint64_t last_white_np = board.whiteNonPawnKey;
+        uint64_t last_black_np = board.blackNonPawnKey;
 
         int childDepth = depth - 1;
 
@@ -361,6 +369,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.zobristKey = last_zobrist;
             board.accumulator = last_accumulator;
             board.pawnKey = last_pawnKey;
+            board.whiteNonPawnKey = last_white_np;
+            board.blackNonPawnKey = last_black_np;
             data.ply--;
             continue;
         }
@@ -408,6 +418,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.zobristKey = last_zobrist;
         board.accumulator = last_accumulator;
         board.pawnKey = last_pawnKey;
+        board.whiteNonPawnKey = last_white_np;
+        board.blackNonPawnKey = last_black_np;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
