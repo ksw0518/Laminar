@@ -20,7 +20,7 @@ constexpr int CONTHIST_MALUS_MULT = 420;
 constexpr int CONTHIST_MALUS_MAX = 2400;
 
 constexpr int RFP_MULTIPLIER = 80;
-constexpr int RFP_BASE = 0;
+constexpr int RFP_IMPROVING_MULTIPLIER = 60;
 
 constexpr int RFP_MAX_DEPTH = 4;
 

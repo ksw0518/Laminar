@@ -249,15 +249,20 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
 
+    data.searchStack[data.ply].staticEval = staticEval;
+
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     if (canPrune && notMated) //do whole node pruining
     {
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = RFP_MULTIPLIER * depth;
+            int rfpMargin;
+            int rfpMultiplier = improving ? RFP_IMPROVING_MULTIPLIER : RFP_MULTIPLIER;
+            rfpMargin = rfpMultiplier * depth;
             if (staticEval - rfpMargin >= beta)
             {
                 return staticEval;
