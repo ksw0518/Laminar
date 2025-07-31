@@ -89,7 +89,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
+
     int currentPly = data.ply;
+
+    data.searchStack[currentPly].staticEval = staticEval;
+
     data.selDepth = std::max(currentPly, data.selDepth);
 
     bool ttHit = false;
@@ -249,7 +253,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
 
-    data.searchStack[data.ply].staticEval = staticEval;
+    data.searchStack[currentPly].staticEval = staticEval;
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -538,6 +542,8 @@ std::pair<Move, int> IterativeDeepening(
         data.ply = 0;
         data.selDepth = 0;
         data.stopSearch = false;
+        memset(data.searchStack, 0, sizeof(data.searchStack));
+
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
