@@ -398,6 +398,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            if (!isQuiet)
+            {
+                reduction--;
+            }
         }
         if (reduction < 0)
             reduction = 0;
