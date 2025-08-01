@@ -401,7 +401,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
             }
         }
-        else
+        else if (!isPvNode || searchedMoves > 1)
         {
             score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
         }
