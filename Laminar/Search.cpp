@@ -254,6 +254,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
+    int ttAdjustedEval = staticEval;
+    uint8_t Bound = ttEntry.bound;
+
+    if (ttHit && !isInCheck
+        && (Bound == HFEXACT || (Bound == HFLOWER && ttEntry.score >= staticEval)
+            || (Bound == HFUPPER && ttEntry.score <= staticEval)))
+    {
+        ttAdjustedEval = ttEntry.score;
+    }
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -264,9 +273,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (depth <= RFP_MAX_DEPTH)
         {
             int rfpMargin = RFP_MULTIPLIER * depth;
-            if (staticEval - rfpMargin >= beta)
+            if (ttAdjustedEval - rfpMargin >= beta)
             {
-                return staticEval;
+                return ttAdjustedEval;
             }
         }
         //NMP
@@ -274,7 +283,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
-        if (!isPvNode && depth >= 2 && !root && staticEval >= beta && currentPly >= data.minNmpPly
+        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
@@ -284,7 +293,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             MakeNullMove(board);
             int reduction = 3;
             reduction += depth / 3;
-            reduction += std::min((staticEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
+            reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
             int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
             data.minNmpPly = 0;
