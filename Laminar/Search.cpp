@@ -278,6 +278,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 return ttAdjustedEval;
             }
         }
+
         //NMP
         //The null move skips our turn without making move,
         //which allows opponent to make two moves in a row
