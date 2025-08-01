@@ -15,11 +15,13 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#define NULLMOVE Move(0, 0, 0, 0)
 #ifndef EVALFILE
     #define EVALFILE "./nnue.bin"
 #endif
 
 int lmrTable[MAXPLY][256];
+
 void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
@@ -90,6 +92,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
+
+    if (currentPly >= MAXPLY - 1)
+    {
+        return staticEval;
+    }
     data.selDepth = std::max(currentPly, data.selDepth);
 
     bool ttHit = false;
@@ -106,10 +113,6 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         {
             return ttEntry.score;
         }
-    }
-    if (currentPly >= MAXPLY - 1)
-    {
-        return staticEval;
     }
 
     int score = -MAXSCORE;
@@ -225,7 +228,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int bestValue = -MAXSCORE;
     bool isInCheck = is_in_check(board);
 
-    if (isInCheck)
+    bool isSingularSearch = data.excludedMove != NULLMOVE;
+    if (!isSingularSearch && isInCheck)
     {
         depth++;
     }
@@ -246,7 +250,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
-        if (!isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
+        if (!isSingularSearch && !isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
         {
             return ttEntry.score;
         }
@@ -255,7 +259,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
 
-    bool canPrune = !isInCheck;
+    bool canPrune = !isInCheck && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
     if (canPrune && notMated) //do whole node pruining
@@ -320,6 +324,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
+        if (move == data.excludedMove)
+        {
+            continue;
+        }
         bool isQuiet = !IsMoveCapture(move);
         if (skipQuiets && isQuiet)
         {
@@ -351,8 +359,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
 
-        int childDepth = depth - 1;
-
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -380,9 +386,42 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         searchedMoves++;
         data.searchNodeCount++;
-        data.searchStack[currentPly].move = move;
 
         int reduction = 0;
+        int extension = 0;
+        if (ttHit && !root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
+            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) <= MATESCORE - MAXPLY)
+        {
+            UnmakeMove(board, move, captured_piece);
+
+            board.enpassent = lastEp;
+            board.castle = lastCastle;
+            board.side = lastside;
+            board.zobristKey = last_zobrist;
+            board.accumulator = last_accumulator;
+            board.pawnKey = last_pawnKey;
+            board.whiteNonPawnKey = last_white_np;
+            board.blackNonPawnKey = last_black_np;
+            data.ply--;
+
+            int s_beta = ttEntry.score - depth * 2;
+            int s_depth = (depth - 1) / 2;
+
+            data.excludedMove = ttEntry.bestMove;
+            int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta);
+            data.excludedMove = NULLMOVE;
+            if (s_score < s_beta)
+            {
+                extension++;
+            }
+
+            refresh_if_cross(move, board);
+            MakeMove(board, move);
+            data.ply++;
+        }
+        data.searchStack[currentPly].move = move;
+
+        int childDepth = depth + extension - 1;
 
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
@@ -401,7 +440,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
             }
         }
-        else
+        else if (!isPvNode || searchedMoves > 1)
         {
             score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
         }
@@ -466,24 +505,28 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         else
         {
             //stalemate
-            return 0;
+            return isSingularSearch ? alpha : 0;
         }
     }
     if (ttFlag == HFUPPER && ttHit)
     {
         bestMove = ttEntry.bestMove;
     }
-    if (!isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
+    if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
-    ttEntry.bestMove = bestMove;
-    ttEntry.bound = ttFlag;
-    ttEntry.depth = depth;
-    ttEntry.zobristKey = board.zobristKey;
-    ttEntry.score = bestValue;
-    ttStore(ttEntry, board);
+    if (!isSingularSearch)
+    {
+        ttEntry.bestMove = bestMove;
+        ttEntry.bound = ttFlag;
+        ttEntry.depth = depth;
+        ttEntry.zobristKey = board.zobristKey;
+        ttEntry.score = bestValue;
+        ttStore(ttEntry, board);
+    }
+
     return bestValue;
 }
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data)
@@ -545,6 +588,8 @@ std::pair<Move, int> IterativeDeepening(
         data.ply = 0;
         data.selDepth = 0;
         data.stopSearch = false;
+        data.excludedMove = NULLMOVE;
+
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);

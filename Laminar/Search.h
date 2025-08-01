@@ -38,6 +38,7 @@ struct ThreadData
     Move pvTable[MAXPLY + 1][MAXPLY + 1];
     Histories histories;
     int minNmpPly = 0;
+    Move excludedMove;
 };
 struct SearchLimitations
 {
