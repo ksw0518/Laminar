@@ -385,9 +385,20 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int reduction = 0;
 
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
+
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
+        int contHistScore = GetContHistScore(move, data);
+
+        int historyScore = mainHistScore * 2 + contHistScore;
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            if (historyScore < (-HISTORY_LMR_MULTIPLIER * depth) + HISTORY_LMR_BASE)
+            {
+                reduction++;
+            }
         }
         if (reduction < 0)
             reduction = 0;
