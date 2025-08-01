@@ -238,7 +238,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttFlag = HFUPPER;
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
-    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
+    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
     {
         ttHit = true;
         bool ExactCutoff = (ttEntry.bound == HFEXACT);
@@ -250,6 +250,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         {
             return ttEntry.score;
         }
+    }
+    if (isPvNode && depth >= 4 && !ttHit)
+    {
+        depth--;
     }
 
     int rawEval = Evaluate(board);
