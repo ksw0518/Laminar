@@ -18,7 +18,6 @@
 #ifndef EVALFILE
     #define EVALFILE "./nnue.bin"
 #endif
-
 int lmrTable[MAXPLY][256];
 void InitializeLMRTable()
 {
@@ -362,7 +361,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistScore = GetContHistScore(move, data);
 
-        int historyScore = mainHistScore * 2 + contHistScore;
+        int historyScore = mainHistScore * 2 + contHistScore - HISTORY_SUBTRACTION;
         data.ply++;
 
         if (!isLegal(move, board))
@@ -386,6 +385,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         searchedMoves++;
         data.searchNodeCount++;
+
         data.searchStack[currentPly].move = move;
 
         int reduction = 0;
@@ -396,7 +396,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction = lmrTable[depth][searchedMoves];
             if (isQuiet)
             {
-                reduction -= historyScore / 30000;
+                reduction -= historyScore / 20000;
             }
         }
         if (reduction < 0)
@@ -575,6 +575,7 @@ std::pair<Move, int> IterativeDeepening(
 
         //aspiration window
         //start with small window and gradually widen to allow more cutoffs
+
         while (true)
         {
             auto end = std::chrono::steady_clock::now();
@@ -644,6 +645,5 @@ std::pair<Move, int> IterativeDeepening(
     std::cout << "bestmove ";
     printMove(bestmove);
     std::cout << "\n" << std::flush;
-
     return std::pair<Move, int>(bestmove, bestScore);
 }
