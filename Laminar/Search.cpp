@@ -254,6 +254,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
+
+    data.searchStack[currentPly].staticEval = staticEval;
+
     int ttAdjustedEval = staticEval;
     uint8_t Bound = ttEntry.bound;
 
@@ -267,12 +270,14 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
     if (canPrune && notMated) //do whole node pruining
     {
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = RFP_MULTIPLIER * depth;
+            int multiplier = improving ? RFP_IMPROVING_MULTIPLIER : RFP_MULTIPLIER;
+            int rfpMargin = multiplier * depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
@@ -555,6 +560,8 @@ std::pair<Move, int> IterativeDeepening(
         data.ply = 0;
         data.selDepth = 0;
         data.stopSearch = false;
+        memset(data.searchStack, 0, sizeof(data.searchStack));
+
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
