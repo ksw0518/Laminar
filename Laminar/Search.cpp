@@ -84,7 +84,6 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         data.stopSearch = true;
         return 0;
     }
-
     bool isPvNode = beta - alpha > 1;
 
     int rawEval = Evaluate(board);
