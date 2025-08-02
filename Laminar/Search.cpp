@@ -317,6 +317,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
     MoveList searchedQuietMoves;
     int searchedMoves = 0;
+    int quietMoves = 0;
 
     Move bestMove = Move(0, 0, 0, 0);
 
@@ -386,6 +387,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (!isCapture)
         {
             searchedQuietMoves.add(move);
+            quietMoves++;
         }
         searchedMoves++;
         data.searchNodeCount++;
@@ -397,6 +399,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            if (!isPvNode && quietMoves >= 4)
+            {
+                reduction++;
+            }
         }
         if (reduction < 0)
             reduction = 0;
