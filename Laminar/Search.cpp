@@ -252,6 +252,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
     }
 
+    if (!ttHit && isPvNode && depth >= 4)
+    {
+        depth--;
+    }
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
