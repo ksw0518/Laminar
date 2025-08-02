@@ -366,6 +366,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
         MakeMove(board, move);
+        bool givingCheck = is_in_check(board);
 
         data.ply++;
 
@@ -402,6 +403,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             if (!isPvNode && quietMoves >= 4)
             {
                 reduction++;
+            }
+            if (givingCheck)
+            {
+                reduction--;
             }
         }
         if (reduction < 0)
