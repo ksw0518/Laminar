@@ -9,6 +9,7 @@ struct SearchData
 {
     Move move;
     int staticEval = 0;
+    bool isInCheck;
 };
 struct Histories
 {

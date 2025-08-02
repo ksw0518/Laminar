@@ -256,6 +256,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
 
     data.searchStack[currentPly].staticEval = staticEval;
+    data.searchStack[currentPly].isInCheck = isInCheck;
 
     int ttAdjustedEval = staticEval;
     uint8_t Bound = ttEntry.bound;
@@ -270,7 +271,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
-    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
+    bool improving = currentPly >= 2 && !isInCheck && !data.searchStack[currentPly - 2].isInCheck
+                  && staticEval > data.searchStack[currentPly - 2].staticEval;
     if (canPrune && notMated) //do whole node pruining
     {
         //RFP
