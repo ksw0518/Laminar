@@ -93,7 +93,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
-    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bestMove != Move(0, 0, 0, 0))
+    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
     {
         ttHit = true;
         bool ExactCutoff = (ttEntry.bound == HFEXACT);
