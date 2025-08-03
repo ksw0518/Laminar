@@ -580,6 +580,7 @@ std::pair<Move, int> IterativeDeepening(
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
+            data.searchStack[i].staticEval = 0;
         }
         //ensure depth 1 search always finishes
         if (data.currDepth == 1)
