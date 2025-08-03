@@ -408,7 +408,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             }
             if (isQuiet)
             {
-                reduction -= mainHistScore / 8192;
+                reduction -= mainHistScore / 12288;
             }
         }
         if (reduction < 0)
