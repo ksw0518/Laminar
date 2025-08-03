@@ -366,6 +366,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool isCapture = IsMoveCapture(move);
         refresh_if_cross(move, board);
         MakeMove(board, move);
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
 
         data.ply++;
 
@@ -402,6 +405,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             if (!isPvNode && quietMoves >= 4)
             {
                 reduction++;
+            }
+            if (isQuiet)
+            {
+                reduction -= mainHistScore / 8192;
             }
         }
         if (reduction < 0)
