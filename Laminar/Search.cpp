@@ -263,6 +263,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         ttAdjustedEval = ttEntry.score;
     }
+    data.searchStack[currentPly].staticEval = staticEval;
+    //If current static evaluation is greater than static evaluation from 2 plies ago
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     bool canPrune = !isInCheck;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -273,6 +276,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         if (depth <= RFP_MAX_DEPTH)
         {
             int rfpMargin = RFP_MULTIPLIER * depth;
+            rfpMargin -= 25 * improving;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
