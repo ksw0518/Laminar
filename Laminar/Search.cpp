@@ -416,6 +416,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             {
                 reduction -= std::clamp(historyScore / 16384, -2, 2);
             }
+            if (is_in_check(board))
+            {
+                reduction -= 1;
+            }
         }
         if (reduction < 0)
             reduction = 0;
