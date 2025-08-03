@@ -84,7 +84,7 @@ void UpdatePawnCorrHist(Board& board, const int depth, const int diff, ThreadDat
     pawnEntry = (pawnEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     pawnEntry = std::clamp<int16_t>(pawnEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
-void updateMinorCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
+void UpdateMinorCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
 {
     uint64_t minorKey = board.minorKey;
     int16_t& entry = data.histories.minorCorrHist[board.side][minorKey % CORRHIST_SIZE];
@@ -115,6 +115,7 @@ void UpdateCorrhists(Board& board, const int depth, const int diff, ThreadData& 
 {
     UpdatePawnCorrHist(board, depth, diff, data);
     UpdateNonPawnCorrHist(board, depth, diff, data);
+    UpdateMinorCorrHist(board, depth, diff, data);
 }
 int16_t GetPawnCorrHistValue(Board& board, ThreadData& data)
 {
