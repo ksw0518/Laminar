@@ -10,6 +10,7 @@
 #include "SEE.h"
 #include "Transpositions.h"
 #include "Tuneables.h"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstring>
@@ -364,6 +365,14 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         int childDepth = depth - 1;
 
         bool isCapture = IsMoveCapture(move);
+
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
+        int contHistScore = GetContHistScore(move, data);
+
+        int historyScore = mainHistScore + contHistScore;
+
         refresh_if_cross(move, board);
         MakeMove(board, move);
 
@@ -402,6 +411,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             if (!isPvNode && quietMoves >= 4)
             {
                 reduction++;
+            }
+            if (isQuiet)
+            {
+                reduction -= std::clamp(historyScore / 16384, -2, 2);
             }
         }
         if (reduction < 0)
