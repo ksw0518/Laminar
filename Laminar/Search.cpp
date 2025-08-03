@@ -89,6 +89,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
+
+    data.searchStack[data.ply].staticEval = staticEval;
+
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
 
@@ -257,6 +260,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttAdjustedEval = staticEval;
     uint8_t Bound = ttEntry.bound;
 
+    data.searchStack[data.ply].staticEval = staticEval;
+
+    //If current static evaluation is greater than static evaluation from 2 plies ago
+    bool improving = !isInCheck && data.ply > 1 && staticEval > data.searchStack[data.ply - 2].staticEval;
+
     if (ttHit && !isInCheck
         && (Bound == HFEXACT || (Bound == HFLOWER && ttEntry.score >= staticEval)
             || (Bound == HFUPPER && ttEntry.score <= staticEval)))
@@ -415,6 +423,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             if (isQuiet)
             {
                 reduction -= std::clamp(historyScore / 16384, -2, 2);
+            }
+            if (improving)
+            {
+                reduction--;
             }
         }
         if (reduction < 0)
@@ -576,6 +588,7 @@ std::pair<Move, int> IterativeDeepening(
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
+            data.searchStack[i].staticEval = 0;
         }
         //ensure depth 1 search always finishes
         if (data.currDepth == 1)
