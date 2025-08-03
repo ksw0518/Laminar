@@ -96,6 +96,8 @@ uint64_t generate_hash_key(Board& board);
 uint64_t generate_pawn_key(Board& board);
 uint64_t generate_white_nonpawn_key(Board& board);
 uint64_t generate_black_nonpawn_key(Board& board);
+uint64_t generate_minor_key(Board& board);
+
 void init_random_keys();
 void init_sliders_attacks(int bishop);
 void InitializeLeaper();

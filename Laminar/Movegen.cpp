@@ -21,6 +21,8 @@ uint32_t random_state;
 
 constexpr int WhiteNonPawn[5] = {R, N, B, Q, K};
 constexpr int BlackNonPawn[5] = {r, n, b, q, k};
+constexpr int MinorPieces[6] = {B, b, N, n, K, k};
+
 void parse_fen(std::string fen, Board& board)
 {
     for (int i = 0; i < 64; i++)
@@ -138,6 +140,7 @@ void parse_fen(std::string fen, Board& board)
     board.pawnKey = generate_pawn_key(board);
     board.whiteNonPawnKey = generate_white_nonpawn_key(board);
     board.blackNonPawnKey = generate_black_nonpawn_key(board);
+    board.minorKey = generate_minor_key(board);
 
     resetAccumulators(board, board.accumulator);
 
@@ -272,6 +275,27 @@ uint64_t generate_black_nonpawn_key(Board& board)
     for (int i = 0; i < 5; i++)
     {
         int piece = BlackNonPawn[i];
+        bitboard = board.bitboards[piece];
+
+        while (bitboard)
+        {
+            int square = get_ls1b(bitboard);
+
+            final_key ^= piece_keys[piece][square];
+            Pop_bit(bitboard, square);
+        }
+    }
+
+    return final_key;
+}
+uint64_t generate_minor_key(Board& board)
+{
+    uint64_t final_key = 0ULL;
+    uint64_t bitboard;
+
+    for (int i = 0; i < 6; i++)
+    {
+        int piece = MinorPieces[i];
         bitboard = board.bitboards[piece];
 
         while (bitboard)
@@ -1252,6 +1276,10 @@ void XORZobrist(uint64_t& zobrist, uint64_t key)
 {
     zobrist ^= key;
 }
+inline bool IsMinorPiece(int piece)
+{
+    return (piece == B || piece == b || piece == N || piece == n || piece == K || piece == k);
+}
 void XORPieceZobrist(int piece, int square, Board& board, bool flipWhite, bool flipBlack, bool AddingPiece)
 {
     bool side = piece <= 5 ? White : Black;
@@ -1271,6 +1299,11 @@ void XORPieceZobrist(int piece, int square, Board& board, bool flipWhite, bool f
         else
         {
             XORZobrist(board.blackNonPawnKey, piece_keys[piece][square]);
+        }
+        //update minor corrhist key
+        if (IsMinorPiece(piece))
+        {
+            XORZobrist(board.minorKey, piece_keys[piece][square]);
         }
     }
 

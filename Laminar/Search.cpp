@@ -147,6 +147,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
+        uint64_t last_minorKey = board.minorKey;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -165,6 +166,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minorKey;
 
             data.ply--;
             continue;
@@ -185,6 +187,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.minorKey = last_minorKey;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -360,6 +363,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
+        uint64_t last_minorKey = board.minorKey;
 
         int childDepth = depth - 1;
 
@@ -381,6 +385,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minorKey;
+
             data.ply--;
             continue;
         }
@@ -435,6 +441,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.minorKey = last_minorKey;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
