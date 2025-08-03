@@ -275,8 +275,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMult = improving ? RFP_IMPROVING_MULTIPLIER : RFP_MULTIPLIER;
-            int rfpMargin = rfpMult * depth;
+            int rfpMargin = RFP_MULTIPLIER * depth;
+            rfpMargin -= improving * 10;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
