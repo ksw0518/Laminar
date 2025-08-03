@@ -414,7 +414,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             }
             if (isQuiet)
             {
-                reduction -= std::clamp(historyScore / 8192, -3, 3);
+                reduction -= std::clamp(historyScore / 16384, -2, 2);
             }
         }
         if (reduction < 0)
