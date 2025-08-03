@@ -1,3 +1,3 @@
 #pragma once
-constexpr int BENCHDEPTH = 10;
+constexpr int BENCHDEPTH = 11;
 void bench();

@@ -250,7 +250,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             return ttEntry.score;
         }
     }
-
+    if (depth >= 5 && (isPvNode) && !ttHit)
+    {
+        depth--;
+    }
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
