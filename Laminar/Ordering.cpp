@@ -4,10 +4,12 @@
 #include "Const.h"
 #include "History.h"
 #include "Movegen.h"
+#include "SEE.h"
 #include "Search.h"
 #include "Transpositions.h"
 #include "Tuneables.h"
 #include <algorithm>
+
 bool IsMoveNoisy(Move& move)
 {
     return (move.Type & (captureFlag | promotionFlag)) != 0;
@@ -39,7 +41,9 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int victimValue = PieceValues[victim];
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
-        return mvvlvaValue;
+        int seeValue = SEE(board, move, -100) ? 0 : -1000000;
+
+        return mvvlvaValue + seeValue;
     }
     else
     {
