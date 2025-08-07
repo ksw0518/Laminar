@@ -202,6 +202,16 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         return staticEval;
     }
+
+    if (ttEntry.bound == HFNONE)
+    {
+        int nodeType = bestValue >= beta ? HFUPPER : HFLOWER;
+        ttEntry.score = bestValue;
+        ttEntry.bound = nodeType;
+        ttEntry.depth = -1;
+        ttEntry.zobristKey = board.zobristKey;
+        ttStore(ttEntry, board);
+    }
     return bestValue;
 }
 
