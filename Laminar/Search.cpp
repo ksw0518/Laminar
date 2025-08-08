@@ -279,7 +279,15 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
                 return ttAdjustedEval;
             }
         }
-
+        //RAZORING
+        if (depth <= 3 && ttAdjustedEval + RAZORING_MARGIN * depth + RAZORING_BASE <= alpha)
+        {
+            int razor_score = QuiescentSearch(board, data, alpha, alpha + 1);
+            if (razor_score <= alpha)
+            {
+                return razor_score;
+            }
+        }
         //NMP
         //The null move skips our turn without making move,
         //which allows opponent to make two moves in a row
