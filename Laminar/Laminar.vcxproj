@@ -140,6 +140,7 @@
     <ClCompile Include="Movegen.cpp" />
     <ClCompile Include="NNUE.cpp" />
     <ClCompile Include="Ordering.cpp" />
+    <ClCompile Include="PrettyPrinting.cpp" />
     <ClCompile Include="Search.cpp" />
     <ClCompile Include="SEE.cpp" />
     <ClCompile Include="Transpositions.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Movegen.h" />
     <ClInclude Include="NNUE.h" />
     <ClInclude Include="Ordering.h" />
+    <ClInclude Include="PrettyPrinting.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SEE.h" />
     <ClInclude Include="Transpositions.h" />
