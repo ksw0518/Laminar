@@ -1,10 +1,9 @@
 #include "Bench.h"
+#include "Bit.h"
 #include "Board.h"
 #include "Evaluation.h"
 #include "Movegen.h"
 #include "Search.h"
-
-#include "Bit.h"
 #include "Transpositions.h"
 #include <chrono>
 #include <iomanip>
@@ -283,6 +282,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
         std::cout << "uciok"
                   << "\n";
+        IsUCI = true;
     }
     else if (mainCommand == "ucinewgame")
     {
@@ -440,10 +440,12 @@ int main(int argc, char* argv[])
     Initialize_TT(32); //set initial TT size as 32mb
     if (argc > 1)
     {
+        IsUCI = true;
         ProcessUCI(argv[1], data, heapAllocated);
         delete heapAllocated;
         return 0;
     }
+    IsUCI = false;
     while (true)
     {
         std::string input;

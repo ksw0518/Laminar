@@ -4,7 +4,7 @@
 #include "Movegen.h"
 #include <chrono>
 #include <cstdint>
-
+extern bool IsUCI;
 struct SearchData
 {
     Move move;

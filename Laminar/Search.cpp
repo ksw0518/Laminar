@@ -7,6 +7,7 @@
 #include "Movegen.h"
 #include "NNUE.h"
 #include "Ordering.h"
+#include "PrettyPrinting.h"
 #include "SEE.h"
 #include "Transpositions.h"
 #include "Tuneables.h"
@@ -19,7 +20,7 @@
 #ifndef EVALFILE
     #define EVALFILE "./nnue.bin"
 #endif
-
+bool IsUCI = false;
 int lmrTable[MAXPLY][256];
 void InitializeLMRTable()
 {
@@ -520,7 +521,7 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
     //int hashfull = get_hashfull();
     std::cout << "info depth " << data.currDepth;
     std::cout << " seldepth " << data.selDepth;
-    if (std::abs(score) > 40000)
+    if (std::abs(score) > MATESCORE - MAXPLY)
     {
         int mate_ply = 49000 - std::abs(score);
         int mate_fullmove = (int)std::ceil(static_cast<double>(mate_ply) / 2);
@@ -646,7 +647,14 @@ std::pair<Move, int> IterativeDeepening(
 
         if (!data.stopSearch && !isBench)
         {
-            print_UCI(bestmove, score, elapsedMS, nps, data);
+            if (IsUCI)
+            {
+                print_UCI(bestmove, score, elapsedMS, nps, data);
+            }
+            else
+            {
+                printPretty(score, elapsedMS, nps, data);
+            }
         }
 
         if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit))
