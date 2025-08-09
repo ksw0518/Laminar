@@ -206,7 +206,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     return bestValue;
 }
 
-inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta)
+inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta, bool cutnode = false)
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
@@ -297,7 +297,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction += depth / 3;
             reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
-            int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1);
+            int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1, !cutnode);
             data.minNmpPly = 0;
             UnmakeNullmove(board);
             board.enpassent = lastEp;
@@ -421,6 +421,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             {
                 reduction++;
             }
+            if (cutnode)
+            {
+                reduction++;
+            }
         }
         if (reduction < 0)
             reduction = 0;
@@ -428,19 +432,19 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
         if (doLmr)
         {
-            score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha);
+            score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
             if (score > alpha && isReduced)
             {
-                score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+                score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
         }
         else if (!isPvNode || searchedMoves > 1)
         {
-            score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha);
+            score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
         }
         if (isPvNode && (searchedMoves == 1 || score > alpha))
         {
-            score = -AlphaBeta(board, data, childDepth, -beta, -alpha);
+            score = -AlphaBeta(board, data, childDepth, -beta, -alpha, false);
         }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
