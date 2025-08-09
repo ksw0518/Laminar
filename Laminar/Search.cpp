@@ -435,6 +435,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
             if (score > alpha && isReduced)
             {
+                childDepth += (score > (bestValue + 60 + childDepth * 2));
+                childDepth -= (score < bestValue + childDepth && !root);
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
         }
