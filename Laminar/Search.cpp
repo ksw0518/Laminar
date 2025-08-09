@@ -265,7 +265,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         ttAdjustedEval = ttEntry.score;
     }
 
-    bool canPrune = !isInCheck;
+    bool canPrune = !isInCheck && !isPvNode;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
     if (canPrune && notMated) //do whole node pruining
