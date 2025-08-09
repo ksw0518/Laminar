@@ -49,3 +49,6 @@ constexpr int LMP_MULTIPLIER = 100;
 
 constexpr int NMP_EVAL_DIVISER = 400;
 constexpr int MAX_NMP_EVAL_R = 3;
+
+constexpr int HISTORY_PRUNING_MULTIPLIER = 1100;
+constexpr int HISTORY_PRUNING_BASE = 40;

@@ -339,17 +339,32 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         }
         bool isNotMated = bestValue > -49000 + 99;
 
+        bool isCapture = IsMoveCapture(move);
+
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
+        int contHistScore = GetContHistScore(move, data);
+
+        int historyScore = mainHistScore + contHistScore;
+
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
-            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
-            if (!SEE(board, move, seeThreshold))
+            //If history score is very bad, skip the move
+            int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
+            if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
             {
                 continue;
             }
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
+                continue;
+            }
+            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
+            if (!SEE(board, move, seeThreshold))
+            {
                 continue;
             }
         }
@@ -364,15 +379,6 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         uint64_t last_black_np = board.blackNonPawnKey;
 
         int childDepth = depth - 1;
-
-        bool isCapture = IsMoveCapture(move);
-
-        bool fromThreat = Get_bit(oppThreats, move.From);
-        bool toThreat = Get_bit(oppThreats, move.To);
-        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
-        int contHistScore = GetContHistScore(move, data);
-
-        int historyScore = mainHistScore + contHistScore;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
