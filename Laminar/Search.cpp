@@ -258,6 +258,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttAdjustedEval = staticEval;
     uint8_t Bound = ttEntry.bound;
 
+    data.searchStack[currentPly].staticEval = staticEval;
+    //If current static evaluation is greater than static evaluation from 2 plies ago
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
+
     if (ttHit && !isInCheck
         && (Bound == HFEXACT || (Bound == HFLOWER && ttEntry.score >= staticEval)
             || (Bound == HFUPPER && ttEntry.score <= staticEval)))
@@ -273,7 +277,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = RFP_MULTIPLIER * depth;
+            int rfpMult = improving ? RFP_IMPROVING_MULTIPLIER : RFP_IMPROVING_MULTIPLIER;
+            int rfpMargin = rfpMult * depth;
+
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
