@@ -5,10 +5,12 @@
 #include <chrono>
 #include <cstdint>
 extern bool IsUCI;
+#define NULLMOVE Move(0, 0, 0, 0)
 struct SearchData
 {
     Move move;
     int staticEval = 0;
+    Move excludedMove = NULLMOVE;
 };
 struct Histories
 {
