@@ -12,6 +12,7 @@ void RunSearchInMultipleThreads(Board& board, int depth, SearchLimitations& sear
     for (int i = 0; i < threadCount; i++)
     {
         ThreadData* localData = persistentThreadData[i].get();
+        localData->stopSearch = false;
         threads.emplace_back(
             [=, &board, &searchLimits]()
             {

@@ -2,6 +2,7 @@
 #include "Board.h"
 #include "Const.h"
 #include "Movegen.h"
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 extern bool IsUCI;
@@ -32,7 +33,7 @@ struct ThreadData
     int64_t searchNodeCount = 0;
     int64_t SearchTime = -1;
     int currDepth = 0;
-    bool stopSearch = false;
+    std::atomic<bool> stopSearch{false};
     int selDepth = 0;
     SearchData searchStack[MAXPLY];
     int pvLengths[MAXPLY + 1] = {};

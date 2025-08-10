@@ -483,6 +483,20 @@ int main(int argc, char* argv[])
     InitAll(data);
     parse_fen(STARTPOS, mainBoard);
     Initialize_TT(32); //set initial TT size as 32mb
+    threadCount = 1;
+    persistentThreadData.clear();
+    persistentThreadData.reserve(threadCount);
+    for (int i = 0; i < threadCount; i++)
+    {
+        persistentThreadData.push_back(std::make_unique<ThreadData>());
+        InitializeSearch(*persistentThreadData[i]);
+    }
+    allThreadDataPtrs.clear();
+    allThreadDataPtrs.reserve(threadCount);
+    for (int i = 0; i < threadCount; i++)
+    {
+        allThreadDataPtrs.push_back(persistentThreadData[i].get());
+    }
     if (argc > 1)
     {
         IsUCI = true;

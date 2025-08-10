@@ -84,9 +84,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch || elapsedMS > data.SearchTime || stopSearch)
+    if (data.stopSearch.load(std::memory_order_relaxed) || elapsedMS > data.SearchTime)
     {
-        data.stopSearch = true;
+        data.stopSearch.store(true, std::memory_order_relaxed);
         return 0;
     }
     bool isPvNode = beta - alpha > 1;
@@ -213,9 +213,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch || elapsedMS > data.SearchTime || stopSearch)
+    if (data.stopSearch.load(std::memory_order_relaxed) || elapsedMS > data.SearchTime)
     {
-        data.stopSearch = true;
+        data.stopSearch.store(true, std::memory_order_relaxed);
         return 0;
     }
 
@@ -603,7 +603,6 @@ std::pair<Move, int> IterativeDeepening(
     {
         data.ply = 0;
         data.selDepth = 0;
-        data.stopSearch = false;
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
@@ -617,7 +616,7 @@ std::pair<Move, int> IterativeDeepening(
         {
             data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
         }
-
+        //std::cout << data.stopSearch.load(std::memory_order_relaxed);
         int delta = ASP_WINDOW_INITIAL;
         int adjustedAlpha = std::max(-MAXSCORE, score - delta);
         int adjustedBeta = std::min(MAXSCORE, score + delta);
@@ -630,11 +629,15 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || stopSearch)
+            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit)
+                || data.stopSearch.load(std::memory_order_relaxed))
             {
                 if (mainThread)
                 {
-                    stopSearch = true;
+                    for (auto ptr : allThreadDataPtrs)
+                    {
+                        ptr->stopSearch.store(true, std::memory_order_relaxed);
+                    }
                 }
                 break;
             }
@@ -671,13 +674,13 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
-        if (!data.stopSearch)
+        if (!data.stopSearch.load(std::memory_order_relaxed))
         {
             bestmove = data.pvTable[0][0];
             bestScore = score;
         }
 
-        if (!data.stopSearch && !isBench)
+        if (!data.stopSearch.load(std::memory_order_relaxed) && !isBench)
         {
             if (data.isMainThread)
             {
@@ -700,19 +703,27 @@ std::pair<Move, int> IterativeDeepening(
             }
         }
 
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || stopSearch)
+        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit)
+            || data.stopSearch.load(std::memory_order_relaxed))
         {
             if (mainThread)
             {
-                stopSearch = true;
+                for (auto ptr : allThreadDataPtrs)
+                {
+                    ptr->stopSearch.store(true, std::memory_order_relaxed);
+                }
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit))
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit)
+            || data.stopSearch.load(std::memory_order_relaxed))
         {
             if (mainThread)
             {
-                stopSearch = true;
+                for (auto ptr : allThreadDataPtrs)
+                {
+                    ptr->stopSearch.store(true, std::memory_order_relaxed);
+                }
             }
             break;
         }
