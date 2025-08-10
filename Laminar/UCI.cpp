@@ -391,14 +391,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             searchLimits.SoftTimeLimit = soft_bound;
             //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
-        if (threadCount >= 2)
-        {
-            RunSearchInMultipleThreads(mainBoard, depth, searchLimits, threadCount);
-        }
-        else
-        {
-            IterativeDeepening(mainBoard, depth, searchLimits, data);
-        }
+        RunSearchInMultipleThreads(mainBoard, depth, searchLimits, threadCount);
 
         if (Commands[1] == "perft")
         {
