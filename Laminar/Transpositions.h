@@ -12,6 +12,7 @@ struct TranspositionEntry
     uint8_t depth;
     uint8_t bound = HFNONE;
     int32_t score;
+    bool ttPv = false;
 };
 TranspositionEntry ttLookUp(uint64_t zobrist);
 void ttStore(TranspositionEntry& ttEntry, Board& board);

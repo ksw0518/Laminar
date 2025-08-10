@@ -239,6 +239,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttFlag = HFUPPER;
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
+
+    bool ttPv = isPvNode;
+
     if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
     {
         ttHit = true;
@@ -252,6 +255,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             return ttEntry.score;
         }
     }
+
+    //checks if the node has been in a pv node in the past
+    ttPv |= ttEntry.ttPv;
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
@@ -425,6 +431,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             {
                 reduction++;
             }
+            if (ttPv)
+            {
+                reduction--;
+            }
         }
         if (reduction < 0)
             reduction = 0;
@@ -525,6 +535,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     ttEntry.depth = depth;
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
+    ttEntry.ttPv = ttPv;
     ttStore(ttEntry, board);
     return bestValue;
 }
