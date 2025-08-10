@@ -62,7 +62,7 @@ void resetColor()
 {
     std::cout << "\033[0m";
 }
-void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data)
+void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int64_t nodes)
 {
     Move Bestmove = data.pvTable[0][0];
     std::cout << color::white;
@@ -93,8 +93,7 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data)
     int hashfull = get_hashfull();
     std::cout << color::bright_blue << std::right << std::setw(5) << static_cast<int>(std::round(elapsedMS))
               << color::white << " ms    ";
-    std::cout << color::bright_blue << std::right << std::setw(8) << data.searchNodeCount << color::white
-              << " nodes       ";
+    std::cout << color::bright_blue << std::right << std::setw(8) << nodes << color::white << " nodes       ";
     std::cout << color::bright_blue << std::right << std::setw(8) << static_cast<int>(std::round(nps)) << color::white
               << " nodes/sec      ";
     std::cout << color::bright_blue << std::right << std::setw(5) << (1000 - hashfull) / 10 << color::white
@@ -116,5 +115,5 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data)
             break;
     }
     std::cout << "\n\n" << std::flush;
-    ;
+    std::cout << color::white;
 }

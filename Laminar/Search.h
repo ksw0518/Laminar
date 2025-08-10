@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdint>
 extern bool IsUCI;
+extern bool stopSearch;
 struct SearchData
 {
     Move move;
@@ -38,6 +39,7 @@ struct ThreadData
     Move pvTable[MAXPLY + 1][MAXPLY + 1];
     Histories histories;
     int minNmpPly = 0;
+    bool isMainThread = true;
 };
 struct SearchLimitations
 {

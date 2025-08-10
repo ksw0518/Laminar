@@ -4,11 +4,13 @@
 #include "Evaluation.h"
 #include "Movegen.h"
 #include "Search.h"
+#include "Threading.h"
 #include "Transpositions.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <thread>
 
 const std::string STARTPOS = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const std::string KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
@@ -16,6 +18,7 @@ Board mainBoard;
 std::vector<std::string> position_commands = {"position", "startpos", "fen", "moves"};
 std::vector<std::string> go_commands = {"go", "movetime", "wtime", "btime", "winc", "binc", "movestogo"};
 std::vector<std::string> option_commands = {"setoption", "name", "value"};
+int threadCount = 1;
 
 std::string trim(const std::string& str)
 {
@@ -278,7 +281,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
                   << "\n";
         ;
         std::cout << "\n";
-        std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+        std::cout << "option name Threads type spin default 1 min 1 max 1024\n";
         std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
         std::cout << "uciok"
                   << "\n";
@@ -303,6 +306,27 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         {
             Initialize_TT(value);
         }
+        if (option == "Threads")
+        {
+            threadCount = value;
+
+            if ((int)persistentThreadData.size() != threadCount)
+            {
+                persistentThreadData.clear();
+                persistentThreadData.reserve(threadCount);
+                for (int i = 0; i < threadCount; i++)
+                {
+                    persistentThreadData.push_back(std::make_unique<ThreadData>());
+                    InitializeSearch(*persistentThreadData[i]);
+                }
+                allThreadDataPtrs.clear();
+                allThreadDataPtrs.reserve(threadCount);
+                for (int i = 0; i < threadCount; i++)
+                {
+                    allThreadDataPtrs.push_back(persistentThreadData[i].get());
+                }
+            }
+        }
     }
     else if (mainCommand == "quit")
     {
@@ -312,20 +336,25 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     if (mainCommand == "go")
     {
         SearchLimitations searchLimits = SearchLimitations();
+        int depth = MAXPLY;
+        /*  if (Commands[1] == "gigachad")
+        {
+           
+        }*/
         if (Commands.size() == 1 || Commands[1] == "infinite")
         {
-            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
         else if (Commands[1] == "depth")
         {
-            int depth = std::stoi(Commands[2]);
-            IterativeDeepening(mainBoard, depth, searchLimits, data);
+            depth = std::stoi(Commands[2]);
+            // IterativeDeepening(mainBoard, depth, searchLimits, data);
         }
         else if (Commands[1] == "movetime")
         {
             int64_t movetime = std::stoll(Commands[2]);
             searchLimits.HardTimeLimit = movetime;
-            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
         else if (Commands[1] == "wtime" || Commands[1] == "btime")
         {
@@ -347,8 +376,17 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             searchLimits.HardTimeLimit = hard_bound;
 
             searchLimits.SoftTimeLimit = soft_bound;
-            IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
         }
+        if (threadCount >= 2)
+        {
+            RunSearchInMultipleThreads(mainBoard, depth, searchLimits, threadCount);
+        }
+        else
+        {
+            IterativeDeepening(mainBoard, depth, searchLimits, data);
+        }
+
         if (Commands[1] == "perft")
         {
             int perftDepth = stoi(Commands[2]);
@@ -435,6 +473,7 @@ int main(int argc, char* argv[])
 {
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
     ThreadData& data = *heapAllocated;
+
     InitAll(data);
     parse_fen(STARTPOS, mainBoard);
     Initialize_TT(32); //set initial TT size as 32mb
