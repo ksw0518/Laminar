@@ -341,15 +341,21 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
-            int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
-            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
-            if (!SEE(board, move, seeThreshold))
+            int fpMargin = 100 + depth * 80;
+            if (!isInCheck && !isPvNode && staticEval + fpMargin <= alpha && depth <= 8 && isQuiet)
             {
+                skipQuiets = true;
                 continue;
             }
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
+                continue;
+            }
+            int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
+            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
+            if (!SEE(board, move, seeThreshold))
+            {
                 continue;
             }
         }
