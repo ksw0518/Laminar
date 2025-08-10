@@ -84,9 +84,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load(std::memory_order_relaxed) || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
     {
-        data.stopSearch.store(true, std::memory_order_relaxed);
+        data.stopSearch.store(true);
         return 0;
     }
     bool isPvNode = beta - alpha > 1;
@@ -213,9 +213,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load(std::memory_order_relaxed) || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
     {
-        data.stopSearch.store(true, std::memory_order_relaxed);
+        data.stopSearch.store(true);
         return 0;
     }
 
@@ -574,7 +574,7 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
-    SearchLimitations& searchLimits,
+    SearchLimitations searchLimits,
     ThreadData& data,
     bool isBench
 )
@@ -629,14 +629,13 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit)
-                || data.stopSearch.load(std::memory_order_relaxed))
+            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load())
             {
                 if (mainThread)
                 {
                     for (auto ptr : allThreadDataPtrs)
                     {
-                        ptr->stopSearch.store(true, std::memory_order_relaxed);
+                        ptr->stopSearch.store(true);
                     }
                 }
                 break;
@@ -674,13 +673,13 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
-        if (!data.stopSearch.load(std::memory_order_relaxed))
+        if (!data.stopSearch.load())
         {
             bestmove = data.pvTable[0][0];
             bestScore = score;
         }
 
-        if (!data.stopSearch.load(std::memory_order_relaxed) && !isBench)
+        if (!data.stopSearch.load() && !isBench)
         {
             if (data.isMainThread)
             {
@@ -703,26 +702,24 @@ std::pair<Move, int> IterativeDeepening(
             }
         }
 
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit)
-            || data.stopSearch.load(std::memory_order_relaxed))
+        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load())
         {
             if (mainThread)
             {
                 for (auto ptr : allThreadDataPtrs)
                 {
-                    ptr->stopSearch.store(true, std::memory_order_relaxed);
+                    ptr->stopSearch.store(true);
                 }
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit)
-            || data.stopSearch.load(std::memory_order_relaxed))
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit) || data.stopSearch.load())
         {
             if (mainThread)
             {
                 for (auto ptr : allThreadDataPtrs)
                 {
-                    ptr->stopSearch.store(true, std::memory_order_relaxed);
+                    ptr->stopSearch.store(true);
                 }
             }
             break;

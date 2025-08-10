@@ -59,7 +59,7 @@ struct SearchLimitations
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
-    SearchLimitations& searchLimits,
+    SearchLimitations searchLimits,
     ThreadData& data,
     bool isBench = false
 );
@@ -68,5 +68,3 @@ void InitializeLMRTable();
 void InitializeSearch(ThreadData& data);
 void InitNNUE();
 void refresh_if_cross(Move& move, Board& board);
-bool operator==(const Accumulator& a, const Accumulator& b);
-bool operator==(const AccumulatorPair& a, const AccumulatorPair& b);
