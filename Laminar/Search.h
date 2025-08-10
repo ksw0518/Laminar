@@ -26,7 +26,7 @@ struct Histories
     //[piece][to][piece][to]
     int16_t contHist[12][64][12][64];
 };
-struct ThreadData
+struct alignas(64) ThreadData
 {
     std::chrono::steady_clock::time_point clockStart;
     int ply = 0;
