@@ -519,6 +519,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
+
     ttEntry.bestMove = bestMove;
     ttEntry.bound = ttFlag;
     ttEntry.depth = depth;
