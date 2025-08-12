@@ -434,6 +434,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             {
                 reduction++;
             }
+            if (ttPv)
+            {
+                reduction--;
+            }
         }
         if (reduction < 0)
             reduction = 0;
