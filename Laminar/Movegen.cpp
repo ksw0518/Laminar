@@ -1568,6 +1568,8 @@ void UpdateZobrist(
         XORPieceZobrist(promoPiece, move.To, board, flipWhite, flipBlack,
                         true); //add promoting piece in to square
     }
+
+    board.history.push_back(board.zobristKey);
 }
 void MakeNullMove(Board& board)
 {
