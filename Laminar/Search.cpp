@@ -20,8 +20,11 @@
 #ifndef EVALFILE
     #define EVALFILE "./nnue.bin"
 #endif
+#include "Threading.h"
 bool IsUCI = false;
 int lmrTable[MAXPLY][256];
+
+bool stopSearch = false;
 void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
@@ -81,9 +84,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
     {
-        data.stopSearch = true;
+        data.stopSearch.store(true);
         return 0;
     }
     bool isPvNode = beta - alpha > 1;
@@ -210,9 +213,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
     {
-        data.stopSearch = true;
+        data.stopSearch.store(true);
         return 0;
     }
 
@@ -239,6 +242,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttFlag = HFUPPER;
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
+
+    bool ttPv = isPvNode;
+
     if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
     {
         ttHit = true;
@@ -252,6 +258,9 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             return ttEntry.score;
         }
     }
+
+    //checks if the node has been in a pv node in the past
+    ttPv |= ttEntry.ttPv;
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
@@ -525,10 +534,11 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     ttEntry.depth = depth;
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
+    ttEntry.ttPv = ttPv;
     ttStore(ttEntry, board);
     return bestValue;
 }
-void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data)
+void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
 {
     bestmove = data.pvTable[0][0];
     //int hashfull = get_hashfull();
@@ -548,8 +558,8 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
     {
         std::cout << " score cp " << score;
     }
-    int hashfull = get_hashfull();
-    std::cout << " time " << static_cast<int>(std::round(elapsedMS)) << " nodes " << data.searchNodeCount << " nps "
+    int hashfull = 1000 - get_hashfull();
+    std::cout << " time " << static_cast<int>(std::round(elapsedMS)) << " nodes " << nodes << " nps "
               << static_cast<int>(std::round(nps)) << " hashfull " << hashfull << " pv " << std::flush;
 
     for (int count = 0; count < data.pvLengths[0]; count++)
@@ -564,7 +574,7 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
-    SearchLimitations& searchLimits,
+    SearchLimitations searchLimits,
     ThreadData& data,
     bool isBench
 )
@@ -582,11 +592,17 @@ std::pair<Move, int> IterativeDeepening(
     memset(data.pvTable, 0, sizeof(data.pvTable));
     memset(data.pvLengths, 0, sizeof(data.pvLengths));
 
+    if (!data.isMainThread)
+    {
+        data.SearchTime = std::numeric_limits<int64_t>::max();
+        searchLimits.SoftTimeLimit = NOLIMIT;
+        searchLimits.HardTimeLimit = NOLIMIT;
+    }
+    bool mainThread = data.isMainThread;
     for (data.currDepth = 1; data.currDepth <= depth; data.currDepth++)
     {
         data.ply = 0;
         data.selDepth = 0;
-        data.stopSearch = false;
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
@@ -600,7 +616,7 @@ std::pair<Move, int> IterativeDeepening(
         {
             data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
         }
-
+        //std::cout << data.stopSearch.load(std::memory_order_relaxed);
         int delta = ASP_WINDOW_INITIAL;
         int adjustedAlpha = std::max(-MAXSCORE, score - delta);
         int adjustedBeta = std::min(MAXSCORE, score + delta);
@@ -613,8 +629,15 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit))
+            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load())
             {
+                if (mainThread)
+                {
+                    for (auto ptr : allThreadDataPtrs)
+                    {
+                        ptr->stopSearch.store(true);
+                    }
+                }
                 break;
             }
 
@@ -650,39 +673,65 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
-        float nps = data.searchNodeCount / second;
-
-        if (!data.stopSearch)
+        if (!data.stopSearch.load())
         {
             bestmove = data.pvTable[0][0];
             bestScore = score;
         }
 
-        if (!data.stopSearch && !isBench)
+        if (!data.stopSearch.load() && !isBench)
         {
-            if (IsUCI)
+            if (data.isMainThread)
             {
-                print_UCI(bestmove, score, elapsedMS, nps, data);
-            }
-            else
-            {
-                printPretty(score, elapsedMS, nps, data);
+                float nps = data.searchNodeCount / second;
+                int64_t combinedNodeCount = 0;
+                for (auto ptr : allThreadDataPtrs)
+                {
+                    combinedNodeCount += ptr->searchNodeCount;
+                }
+                float combinedNps = combinedNodeCount / second;
+
+                if (IsUCI)
+                {
+                    print_UCI(bestmove, score, elapsedMS, combinedNps, data, combinedNodeCount);
+                }
+                else
+                {
+                    printPretty(score, elapsedMS, combinedNps, data, combinedNodeCount);
+                }
             }
         }
 
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit))
+        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load())
         {
+            if (mainThread)
+            {
+                for (auto ptr : allThreadDataPtrs)
+                {
+                    ptr->stopSearch.store(true);
+                }
+            }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit))
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit) || data.stopSearch.load())
         {
+            if (mainThread)
+            {
+                for (auto ptr : allThreadDataPtrs)
+                {
+                    ptr->stopSearch.store(true);
+                }
+            }
             break;
         }
     }
 
-    std::cout << "bestmove ";
-    printMove(bestmove);
-    std::cout << "\n" << std::flush;
+    if (data.isMainThread)
+    {
+        std::cout << "bestmove ";
+        printMove(bestmove);
+        std::cout << "\n" << std::flush;
+    }
 
     return std::pair<Move, int>(bestmove, bestScore);
 }

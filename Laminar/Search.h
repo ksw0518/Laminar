@@ -2,9 +2,11 @@
 #include "Board.h"
 #include "Const.h"
 #include "Movegen.h"
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 extern bool IsUCI;
+extern bool stopSearch;
 struct SearchData
 {
     Move move;
@@ -24,20 +26,21 @@ struct Histories
     //[piece][to][piece][to]
     int16_t contHist[12][64][12][64];
 };
-struct ThreadData
+struct alignas(64) ThreadData
 {
     std::chrono::steady_clock::time_point clockStart;
     int ply = 0;
     int64_t searchNodeCount = 0;
     int64_t SearchTime = -1;
     int currDepth = 0;
-    bool stopSearch = false;
+    std::atomic<bool> stopSearch{false};
     int selDepth = 0;
     SearchData searchStack[MAXPLY];
     int pvLengths[MAXPLY + 1] = {};
     Move pvTable[MAXPLY + 1][MAXPLY + 1];
     Histories histories;
     int minNmpPly = 0;
+    bool isMainThread = true;
 };
 struct SearchLimitations
 {
@@ -56,7 +59,7 @@ struct SearchLimitations
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
-    SearchLimitations& searchLimits,
+    SearchLimitations searchLimits,
     ThreadData& data,
     bool isBench = false
 );
@@ -65,5 +68,3 @@ void InitializeLMRTable();
 void InitializeSearch(ThreadData& data);
 void InitNNUE();
 void refresh_if_cross(Move& move, Board& board);
-bool operator==(const Accumulator& a, const Accumulator& b);
-bool operator==(const AccumulatorPair& a, const AccumulatorPair& b);

@@ -22,4 +22,4 @@ namespace color
 
 } // namespace color
 
-void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data);
+void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int64_t nodes);
