@@ -44,6 +44,71 @@ void InitNNUE()
 {
     LoadNetwork(EVALFILE);
 }
+bool IsThreefold(std::vector<uint64_t>& history_table, int last_irreversible)
+{
+    uint64_t lastmove = history_table[history_table.size() - 1];
+
+    int repetition_count = 1;
+    for (int i = history_table.size() - 2; i > last_irreversible; i--)
+    {
+        if (i < 0)
+            break;
+
+        if (history_table[i] == lastmove)
+        {
+            repetition_count++;
+        }
+
+        if (repetition_count >= 2)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+bool isInsufficientMaterial(const Board& board)
+{
+    int whiteBishops = count_bits(board.bitboards[B]);
+    int blackBishops = count_bits(board.bitboards[b]);
+    int whiteKnights = count_bits(board.bitboards[N]);
+    int blackKnights = count_bits(board.bitboards[n]);
+    int whiteRooks = count_bits(board.bitboards[R]);
+    int blackRooks = count_bits(board.bitboards[r]);
+    int whiteQueens = count_bits(board.bitboards[Q]);
+    int blackQueens = count_bits(board.bitboards[q]);
+    int whitePawns = count_bits(board.bitboards[P]);
+    int blackPawns = count_bits(board.bitboards[p]);
+    if (whiteQueens == 0 && blackQueens == 0 && whiteRooks == 0 && blackRooks == 0 && whitePawns == 0
+        && blackPawns == 0)
+    {
+        if (whiteBishops == 0 && blackBishops == 0 && whiteKnights == 0 && blackKnights == 0)
+        {
+            return true;
+        }
+        else if (whiteBishops == 1 && blackBishops == 0 && whiteKnights == 0 && blackKnights == 0)
+        {
+            return true;
+        }
+        else if (whiteBishops == 0 && blackBishops == 1 && whiteKnights == 0 && blackKnights == 0)
+        {
+            return true;
+        }
+        else if (whiteBishops == 0 && blackBishops == 0 && whiteKnights == 1 && blackKnights == 0)
+        {
+            return true;
+        }
+        else if (whiteBishops == 0 && blackBishops == 0 && whiteKnights == 0 && blackKnights == 1)
+        {
+            return true;
+        }
+        else if (whiteBishops == 1 && blackBishops == 1 && whiteKnights == 0 && blackKnights == 0)
+        {
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
 void refresh_if_cross(Move& move, Board& board)
 {
     if (get_piece(move.Piece, White) == K) //king has moved
@@ -170,6 +235,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.history.pop_back();
 
             data.ply--;
             continue;
@@ -190,6 +256,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -218,10 +285,26 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.stopSearch.store(true);
         return 0;
     }
-
     bool isPvNode = beta - alpha > 1;
     int currentPly = data.ply;
     bool root = (currentPly == 0);
+
+    if (!root)
+    {
+        if (IsThreefold(board.history, board.lastIrreversiblePly))
+        {
+            return 0;
+        }
+        if (board.halfmove >= 100)
+        {
+            return 0;
+        }
+        if (isInsufficientMaterial(board))
+        {
+            return 0;
+        }
+    }
+
     data.selDepth = std::max(currentPly, data.selDepth);
     data.pvLengths[currentPly] = currentPly;
 
@@ -400,6 +483,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.history.pop_back();
+
             data.ply--;
             continue;
         }
@@ -470,6 +555,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
