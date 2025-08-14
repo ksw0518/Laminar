@@ -21,6 +21,9 @@
     #define EVALFILE "./nnue.bin"
 #endif
 #include "Threading.h"
+
+#define NULLMOVE Move(0, 0, 0, 0)
+
 bool IsUCI = false;
 int lmrTable[MAXPLY][256];
 
@@ -217,6 +220,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
+        int last_irreversible = board.lastIrreversiblePly;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -235,6 +239,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.lastIrreversiblePly = last_irreversible;
+
             board.history.pop_back();
 
             data.ply--;
@@ -256,6 +262,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.lastIrreversiblePly = last_irreversible;
+
         board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
@@ -276,8 +284,17 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     return bestValue;
 }
 
-inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int beta, bool cutnode = false)
+inline int AlphaBeta(
+    Board& board,
+    ThreadData& data,
+    int depth,
+    int alpha,
+    int beta,
+    bool cutnode = false,
+    const Move& excludedMove = NULLMOVE
+)
 {
+    bool isSingularSearch = excludedMove != NULLMOVE;
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
     if (data.stopSearch.load() || elapsedMS > data.SearchTime)
@@ -336,7 +353,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
-        if (!isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
+        if (!isSingularSearch && !isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
         {
             return ttEntry.score;
         }
@@ -350,14 +367,14 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     int ttAdjustedEval = staticEval;
     uint8_t Bound = ttEntry.bound;
 
-    if (ttHit && !isInCheck
+    if (!isSingularSearch && ttHit && !isInCheck
         && (Bound == HFEXACT || (Bound == HFLOWER && ttEntry.score >= staticEval)
             || (Bound == HFUPPER && ttEntry.score <= staticEval)))
     {
         ttAdjustedEval = ttEntry.score;
     }
 
-    bool canPrune = !isInCheck && !isPvNode;
+    bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
     if (canPrune && notMated) //do whole node pruining
@@ -424,6 +441,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
+        if (move == excludedMove)
+        {
+            continue;
+        }
         bool isQuiet = !IsMoveCapture(move);
         if (skipQuiets && isQuiet)
         {
@@ -454,8 +475,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
-
-        int childDepth = depth - 1;
+        uint64_t last_irreversible = board.lastIrreversiblePly;
 
         bool isCapture = IsMoveCapture(move);
 
@@ -483,6 +503,7 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.lastIrreversiblePly = last_irreversible;
             board.history.pop_back();
 
             data.ply--;
@@ -498,7 +519,37 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         data.searchStack[currentPly].move = move;
 
         int reduction = 0;
+        int extension = 0;
 
+        //Singular Extension
+        //If we have a TT move, we try to verify if it's the only good move. if the move is singular, search the move with increased depth
+        if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
+            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
+        {
+            data.ply--;
+            UnmakeMove(board, move, captured_piece);
+            board.enpassent = lastEp;
+            board.castle = lastCastle;
+            board.side = lastside;
+            board.zobristKey = last_zobrist;
+            board.accumulator = last_accumulator;
+            board.pawnKey = last_pawnKey;
+            board.whiteNonPawnKey = last_white_np;
+            board.blackNonPawnKey = last_black_np;
+            board.lastIrreversiblePly = last_irreversible;
+            board.history.pop_back();
+
+            int s_beta = ttEntry.score - depth * 2;
+            int s_depth = (depth - 1) / 2;
+            int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
+            if (s_score < s_beta)
+            {
+                extension++;
+            }
+            refresh_if_cross(move, board);
+            MakeMove(board, move);
+            data.ply++;
+        }
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
         {
@@ -528,6 +579,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
             reduction = 0;
         bool isReduced = reduction > 0;
 
+        int childDepth = depth + extension - 1;
+
         if (doLmr)
         {
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
@@ -555,6 +608,8 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.lastIrreversiblePly = last_irreversible;
+
         board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
@@ -598,22 +653,29 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     }
     if (searchedMoves == 0)
     {
-        if (isInCheck)
+        if (isSingularSearch)
         {
-            //checkmate
-            return -49000 + data.ply;
+            return alpha;
         }
         else
         {
-            //stalemate
-            return 0;
+            if (isInCheck)
+            {
+                //checkmate
+                return -49000 + data.ply;
+            }
+            else
+            {
+                //stalemate
+                return 0;
+            }
         }
     }
     if (ttFlag == HFUPPER && ttHit)
     {
         bestMove = ttEntry.bestMove;
     }
-    if (!isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
+    if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
@@ -625,7 +687,10 @@ inline int AlphaBeta(Board& board, ThreadData& data, int depth, int alpha, int b
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
     ttEntry.ttPv = ttPv;
-    ttStore(ttEntry, board);
+    if (!isSingularSearch)
+    {
+        ttStore(ttEntry, board);
+    }
     return bestValue;
 }
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
