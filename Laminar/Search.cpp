@@ -529,7 +529,7 @@ inline int AlphaBeta(
         //Singular Extension
         //If we have a TT move, we try to verify if it's the only good move. if the move is singular, search the move with increased depth
         if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
-            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY && isNotMated)
+            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
             UnmakeMove(board, move, captured_piece);
             board.enpassent = lastEp;
