@@ -516,7 +516,6 @@ inline int AlphaBeta(
         }
         searchedMoves++;
         data.searchNodeCount++;
-        data.searchStack[currentPly].move = move;
 
         int reduction = 0;
         int extension = 0;
@@ -526,7 +525,6 @@ inline int AlphaBeta(
         if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
             && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
-            data.ply--;
             UnmakeMove(board, move, captured_piece);
             board.enpassent = lastEp;
             board.castle = lastCastle;
@@ -538,6 +536,7 @@ inline int AlphaBeta(
             board.blackNonPawnKey = last_black_np;
             board.lastIrreversiblePly = last_irreversible;
             board.history.pop_back();
+            data.ply--;
 
             int s_beta = ttEntry.score - depth * 2;
             int s_depth = (depth - 1) / 2;
@@ -556,6 +555,7 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
+        data.searchStack[currentPly].move = move;
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
         {

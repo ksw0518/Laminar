@@ -289,7 +289,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     }
     else if (mainCommand == "ucinewgame")
     {
-        Initialize_TT(32); //set initial TT size as 32mb
+        ClearTT();
         InitAll(data);
         persistentThreadData.clear();
         persistentThreadData.reserve(threadCount);
