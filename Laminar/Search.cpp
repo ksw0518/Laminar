@@ -545,6 +545,12 @@ inline int AlphaBeta(
             if (s_score < s_beta)
             {
                 extension++;
+                //Double Extensions
+                //TT move is very singular, increase depth by 2
+                if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
+                {
+                    extension++;
+                }
             }
             refresh_if_cross(move, board);
             MakeMove(board, move);

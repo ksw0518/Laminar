@@ -49,3 +49,5 @@ constexpr int LMP_MULTIPLIER = 100;
 
 constexpr int NMP_EVAL_DIVISER = 400;
 constexpr int MAX_NMP_EVAL_R = 3;
+
+constexpr int DEXT_MARGIN = 20;
