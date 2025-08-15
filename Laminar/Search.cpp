@@ -315,10 +315,10 @@ inline int AlphaBeta(
         {
             return 0;
         }
-        if (board.halfmove >= 100)
+        /*  if (board.halfmove >= 100)
         {
             return 0;
-        }
+        }*/
         if (isInsufficientMaterial(board))
         {
             return 0;
