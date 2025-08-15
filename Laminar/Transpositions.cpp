@@ -22,6 +22,13 @@ void Initialize_TT(int size)
 
     TranspositionTable = new TranspositionEntry[TTSize]();
 }
+void ClearTT()
+{
+    if (TranspositionTable && TTSize > 0)
+    {
+        std::fill(TranspositionTable, TranspositionTable + TTSize, TranspositionEntry());
+    }
+}
 TranspositionEntry ttLookUp(uint64_t zobrist)
 {
     int tt_index = zobrist % TTSize;

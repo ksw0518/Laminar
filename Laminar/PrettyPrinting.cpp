@@ -114,6 +114,6 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int6
         if (count > 15)
             break;
     }
-    std::cout << "\n\n" << std::flush;
+    std::cout << "\n" << std::flush;
     std::cout << color::white;
 }
