@@ -521,6 +521,7 @@ inline int AlphaBeta(
         }
         searchedMoves++;
         data.searchNodeCount++;
+        data.searchStack[currentPly].move = move;
 
         int reduction = 0;
         int extension = 0;
@@ -562,7 +563,6 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
-        data.searchStack[currentPly].move = move;
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
         {
