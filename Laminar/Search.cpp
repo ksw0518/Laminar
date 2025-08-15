@@ -221,6 +221,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
         int last_irreversible = board.lastIrreversiblePly;
+        int last_halfmove = board.halfmove;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -240,6 +241,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
             board.lastIrreversiblePly = last_irreversible;
+            board.halfmove = last_halfmove;
 
             board.history.pop_back();
 
@@ -263,6 +265,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
         board.lastIrreversiblePly = last_irreversible;
+        board.halfmove = last_halfmove;
 
         board.history.pop_back();
 
@@ -450,7 +453,7 @@ inline int AlphaBeta(
         {
             continue;
         }
-        bool isNotMated = bestValue > -49000 + 99;
+        bool isNotMated = bestValue > -MATESCORE + MAXPLY;
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
@@ -476,6 +479,7 @@ inline int AlphaBeta(
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
         uint64_t last_irreversible = board.lastIrreversiblePly;
+        uint64_t last_halfmove = board.halfmove;
 
         bool isCapture = IsMoveCapture(move);
 
@@ -504,6 +508,7 @@ inline int AlphaBeta(
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
             board.lastIrreversiblePly = last_irreversible;
+            board.halfmove = last_halfmove;
             board.history.pop_back();
 
             data.ply--;
@@ -523,7 +528,7 @@ inline int AlphaBeta(
         //Singular Extension
         //If we have a TT move, we try to verify if it's the only good move. if the move is singular, search the move with increased depth
         if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
-            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
+            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY && isNotMated)
         {
             UnmakeMove(board, move, captured_piece);
             board.enpassent = lastEp;
@@ -536,6 +541,8 @@ inline int AlphaBeta(
             board.blackNonPawnKey = last_black_np;
             board.lastIrreversiblePly = last_irreversible;
             board.history.pop_back();
+            board.halfmove = last_halfmove;
+
             data.ply--;
 
             int s_beta = ttEntry.score - depth * 2;
@@ -615,6 +622,7 @@ inline int AlphaBeta(
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
         board.lastIrreversiblePly = last_irreversible;
+        board.halfmove = last_halfmove;
 
         board.history.pop_back();
 
@@ -661,6 +669,7 @@ inline int AlphaBeta(
     {
         if (isSingularSearch)
         {
+            //checkmate
             return alpha;
         }
         else
@@ -697,6 +706,7 @@ inline int AlphaBeta(
     {
         ttStore(ttEntry, board);
     }
+
     return bestValue;
 }
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
