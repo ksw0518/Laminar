@@ -531,37 +531,37 @@ inline int AlphaBeta(
         if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
             && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
-            UnmakeMove(board, move, captured_piece);
-            board.enpassent = lastEp;
-            board.castle = lastCastle;
-            board.side = lastside;
-            board.zobristKey = last_zobrist;
-            board.accumulator = last_accumulator;
-            board.pawnKey = last_pawnKey;
-            board.whiteNonPawnKey = last_white_np;
-            board.blackNonPawnKey = last_black_np;
-            board.lastIrreversiblePly = last_irreversible;
-            board.history.pop_back();
-            board.halfmove = last_halfmove;
+            //UnmakeMove(board, move, captured_piece);
+            //board.enpassent = lastEp;
+            //board.castle = lastCastle;
+            //board.side = lastside;
+            //board.zobristKey = last_zobrist;
+            //board.accumulator = last_accumulator;
+            //board.pawnKey = last_pawnKey;
+            //board.whiteNonPawnKey = last_white_np;
+            //board.blackNonPawnKey = last_black_np;
+            //board.lastIrreversiblePly = last_irreversible;
+            //board.history.pop_back();
+            //board.halfmove = last_halfmove;
 
-            data.ply--;
+            //data.ply--;
 
-            int s_beta = ttEntry.score - depth * 2;
-            int s_depth = (depth - 1) / 2;
-            int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
-            if (s_score < s_beta)
-            {
-                extension++;
-                //Double Extensions
-                //TT move is very singular, increase depth by 2
-                if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
-                {
-                    extension++;
-                }
-            }
-            refresh_if_cross(move, board);
-            MakeMove(board, move);
-            data.ply++;
+            //int s_beta = ttEntry.score - depth * 2;
+            //int s_depth = (depth - 1) / 2;
+            //int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
+            //if (s_score < s_beta)
+            //{
+            //    extension++;
+            //    //Double Extensions
+            //    //TT move is very singular, increase depth by 2
+            //    if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
+            //    {
+            //        extension++;
+            //    }
+            //}
+            //refresh_if_cross(move, board);
+            //MakeMove(board, move);
+            //data.ply++;
         }
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
         if (doLmr)
