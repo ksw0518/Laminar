@@ -156,6 +156,14 @@ void PrintBoards(Board board)
     std::cout << "    Castle_key:     " << get_castle(board.castle) << "\n";
     std::cout << "    FEN:            " << boardToFEN(board);
     std::cout << ("\n");
+
+    std::cout << "zobrist-table"
+              << "\n";
+
+    for (size_t i = 0; i < board.history.size(); i++)
+    {
+        std::cout << std::hex << board.history[i] << std::dec << "\n";
+    }
 }
 void print_mailbox(int mailbox[])
 {
