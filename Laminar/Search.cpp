@@ -772,6 +772,8 @@ std::pair<Move, int> IterativeDeepening(
     bool mainThread = data.isMainThread;
     for (data.currDepth = 1; data.currDepth <= depth; data.currDepth++)
     {
+        memset(data.pvTable, 0, sizeof(data.pvTable));
+        memset(data.pvLengths, 0, sizeof(data.pvLengths));
         data.ply = 0;
         data.selDepth = 0;
         for (int i = 0; i < MAXPLY; i++)

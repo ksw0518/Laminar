@@ -135,6 +135,8 @@ void parse_fen(std::string fen, Board& board)
     board.occupancies[Both] |= board.occupancies[Black];
     board.occupancies[Both] |= board.occupancies[White];
     board.zobristKey = generate_hash_key(board);
+    board.history.push_back(board.zobristKey);
+
     board.pawnKey = generate_pawn_key(board);
     board.whiteNonPawnKey = generate_white_nonpawn_key(board);
     board.blackNonPawnKey = generate_black_nonpawn_key(board);
