@@ -326,7 +326,11 @@ inline int AlphaBeta(
     }
 
     data.selDepth = std::max(currentPly, data.selDepth);
-    data.pvLengths[currentPly] = currentPly;
+
+    if (isPvNode)
+    {
+        data.pvLengths[currentPly] = currentPly;
+    }
 
     int score = 0;
     int bestValue = -MAXSCORE;
@@ -763,13 +767,15 @@ std::pair<Move, int> IterativeDeepening(
     memset(data.pvTable, 0, sizeof(data.pvTable));
     memset(data.pvLengths, 0, sizeof(data.pvLengths));
 
-    if (!data.isMainThread)
+    bool mainThread = data.isMainThread;
+    if (!mainThread)
     {
         data.SearchTime = std::numeric_limits<int64_t>::max();
+        hardTimeLimit = NOLIMIT;
         searchLimits.SoftTimeLimit = NOLIMIT;
         searchLimits.HardTimeLimit = NOLIMIT;
     }
-    bool mainThread = data.isMainThread;
+
     for (data.currDepth = 1; data.currDepth <= depth; data.currDepth++)
     {
         memset(data.pvTable, 0, sizeof(data.pvTable));
