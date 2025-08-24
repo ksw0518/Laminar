@@ -631,7 +631,7 @@ inline int AlphaBeta(
         board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
-        if (score > alpha)
+        if (bestValue > alpha)
         {
             ttFlag = HFEXACT;
             alpha = score;
