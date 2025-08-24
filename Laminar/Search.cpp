@@ -298,6 +298,10 @@ inline int AlphaBeta(
     const Move& excludedMove = NULLMOVE
 )
 {
+    data.pvLengths[data.ply] = 0;
+    for (int i = 0; i < MAXPLY; i++)
+        data.pvTable[data.ply][i] = NULLMOVE;
+
     bool isSingularSearch = excludedMove != NULLMOVE;
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
