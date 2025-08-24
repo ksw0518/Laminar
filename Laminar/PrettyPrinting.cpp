@@ -114,6 +114,29 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int6
         if (count > 15)
             break;
     }
+    //for (int depth = 0; depth < 15; depth++)
+    //{
+    //    if (data.pvLengths[depth] == 0)
+    //        continue; // skip empty PVs
+
+    //    std::cout << "Depth " << depth << ": ";
+
+    //    for (int count = 0; count < data.pvLengths[depth]; count++)
+    //    {
+    //        int brightness = 255 - (count * (255 - 128) / 16);
+    //        if (brightness < 128)
+    //            brightness = 128;
+
+    //        std::cout << "\033[38;2;" << brightness << ";" << brightness << ";" << brightness << "m";
+
+    //        printMove(data.pvTable[depth][count]);
+    //        std::cout << " ";
+
+    //        if (count > 15)
+    //            break; // safety cutoff
+    //    }
+    //    std::cout << "\033[0m\n"; // reset color after each depth line
+    //}
     std::cout << "\n" << std::flush;
     std::cout << color::white;
 }

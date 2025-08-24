@@ -152,7 +152,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime
+        || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
     {
         data.stopSearch.store(true);
         return 0;
@@ -300,7 +301,8 @@ inline int AlphaBeta(
     bool isSingularSearch = excludedMove != NULLMOVE;
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load() || elapsedMS > data.SearchTime)
+    if (data.stopSearch.load() || elapsedMS > data.SearchTime
+        || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
     {
         data.stopSearch.store(true);
         return 0;
@@ -326,7 +328,7 @@ inline int AlphaBeta(
     }
 
     data.selDepth = std::max(currentPly, data.selDepth);
-    data.pvLengths[currentPly] = currentPly;
+    //std::cout << "update pv length ply " << currentPly << "\n";
 
     int score = 0;
     int bestValue = -MAXSCORE;
@@ -627,21 +629,27 @@ inline int AlphaBeta(
         board.history.pop_back();
 
         bestValue = std::max(score, bestValue);
-        if (bestValue > alpha)
+        if (score > alpha)
         {
             ttFlag = HFEXACT;
             alpha = score;
 
             bestMove = move;
-
             if (isPvNode)
             {
-                data.pvTable[data.ply][data.ply] = move;
-                for (int next_ply = data.ply + 1; next_ply < data.pvLengths[data.ply + 1]; next_ply++)
+                // first move at this ply = column 0
+                data.pvTable[data.ply][0] = move;
+
+                // copy child PV
+                int k = 0;
+                while (k < data.pvLengths[data.ply + 1])
                 {
-                    data.pvTable[data.ply][next_ply] = data.pvTable[data.ply + 1][next_ply];
+                    data.pvTable[data.ply][k + 1] = data.pvTable[data.ply + 1][k];
+                    k++;
                 }
-                data.pvLengths[data.ply] = data.pvLengths[data.ply + 1];
+
+                // set PV length
+                data.pvLengths[data.ply] = data.pvLengths[data.ply + 1] + 1;
             }
         }
         if (alpha >= beta)
@@ -754,6 +762,7 @@ std::pair<Move, int> IterativeDeepening(
     data.SearchTime = hardTimeLimit != NOLIMIT ? hardTimeLimit : std::numeric_limits<int64_t>::max();
 
     data.searchNodeCount = 0;
+    data.hardNodeBound = searchLimits.HardNodeLimit;
     Move bestmove = Move(0, 0, 0, 0);
     data.clockStart = std::chrono::steady_clock::now();
 
@@ -875,7 +884,8 @@ std::pair<Move, int> IterativeDeepening(
             }
         }
 
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load())
+        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load()
+            || (searchLimits.HardNodeLimit != NOLIMIT && data.searchNodeCount > searchLimits.HardNodeLimit))
         {
             if (mainThread)
             {
