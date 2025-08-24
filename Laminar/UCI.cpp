@@ -75,7 +75,7 @@ int64_t TryGetLabelledValueInt(
     const std::string& text,
     const std::string& label,
     const std::vector<std::string>& allLabels,
-    int64_t defaultValue = 0
+    int64_t defaultValue = -1
 )
 {
     // Helper function TryGetLabelledValue should be implemented as shown earlier
@@ -376,6 +376,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             int64_t btime = TryGetLabelledValueInt(input, "btime", go_commands);
             int64_t winc = TryGetLabelledValueInt(input, "winc", go_commands);
             int64_t binc = TryGetLabelledValueInt(input, "binc", go_commands);
+            int64_t nodes = TryGetLabelledValueInt(input, "nodes", go_commands);
 
             int64_t hard_bound;
             int64_t soft_bound;
@@ -389,7 +390,13 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             searchLimits.HardTimeLimit = hard_bound;
 
             searchLimits.SoftTimeLimit = soft_bound;
+            searchLimits.HardNodeLimit = nodes;
+
             //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
+        }
+        else if (Commands[1] == "nodes")
+        {
+            searchLimits.HardNodeLimit = TryGetLabelledValueInt(input, "nodes", go_commands);
         }
         RunSearchInMultipleThreads(mainBoard, depth, searchLimits, threadCount);
 
