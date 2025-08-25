@@ -712,7 +712,7 @@ inline int AlphaBeta(
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
     ttEntry.ttPv = ttPv;
-    if (!isSingularSearch)
+    if (!isSingularSearch && data.isMainThread)
     {
         ttStore(ttEntry, board);
     }
