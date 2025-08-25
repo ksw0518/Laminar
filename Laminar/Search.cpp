@@ -705,16 +705,19 @@ inline int AlphaBeta(
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
-
-    ttEntry.bestMove = bestMove;
-    ttEntry.bound = ttFlag;
-    ttEntry.depth = depth;
-    ttEntry.zobristKey = board.zobristKey;
-    ttEntry.score = bestValue;
-    ttEntry.ttPv = ttPv;
     if (!isSingularSearch)
     {
-        ttStore(ttEntry, board);
+        if (ttFlag == HFEXACT || board.zobristKey != ttEntry.zobristKey || depth + 4 > ttEntry.depth)
+        {
+            ttEntry.bestMove = bestMove;
+            ttEntry.bound = ttFlag;
+            ttEntry.depth = depth;
+            ttEntry.zobristKey = board.zobristKey;
+            ttEntry.score = bestValue;
+            ttEntry.ttPv = ttPv;
+
+            ttStore(ttEntry, board);
+        }
     }
 
     return bestValue;
