@@ -28,7 +28,7 @@ bool IsEpCapture(Move& move)
 }
 int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threat)
 {
-    if (move == entry.bestMove)
+    if (board.zobristKey == entry.zobristKey && move == entry.bestMove)
     {
         return 900000000;
     }
