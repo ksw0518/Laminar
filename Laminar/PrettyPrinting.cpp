@@ -96,8 +96,7 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int6
     std::cout << color::bright_blue << std::right << std::setw(8) << nodes << color::white << " nodes       ";
     std::cout << color::bright_blue << std::right << std::setw(8) << static_cast<int>(std::round(nps)) << color::white
               << " nodes/sec      ";
-    std::cout << color::bright_blue << std::right << std::setw(5) << (1000 - hashfull) / 10 << color::white
-              << " % TT     ";
+    std::cout << color::bright_blue << std::right << std::setw(5) << (hashfull) / 10 << color::white << " % TT     ";
     /*std::cout << " time " << () << " nodes " << data.searchNodeCount << " nps "
               << static_cast<int>(std::round(nps)) << " hashfull " << hashfull << " pv " << std::flush;*/
     std::cout << "\n";

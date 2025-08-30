@@ -2,6 +2,7 @@
 #include "Board.h"
 #include "Const.h"
 #include "Movegen.h"
+#include "Transpositions.h"
 #include <atomic>
 #include <chrono>
 #include <cstdint>
@@ -67,3 +68,4 @@ void InitializeLMRTable();
 void InitializeSearch(ThreadData& data);
 void InitNNUE();
 void refresh_if_cross(Move& move, Board& board);
+bool compareMoves(Move move1, Move16 move2);

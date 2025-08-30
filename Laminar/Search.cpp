@@ -167,12 +167,13 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
-    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
+    int ttBound = unpackBound(ttEntry.packedInfo);
+    if (ttEntry.zobristKey == board.zobristKey && ttBound != HFNONE)
     {
         ttHit = true;
-        bool ExactCutoff = (ttEntry.bound == HFEXACT);
-        bool LowerCutoff = (ttEntry.bound == HFLOWER && ttEntry.score >= beta);
-        bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
+        bool ExactCutoff = (ttBound == HFEXACT);
+        bool LowerCutoff = (ttBound == HFLOWER && ttEntry.score >= beta);
+        bool UpperCutoff = (ttBound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
         if (DoTTCutoff)
@@ -287,6 +288,10 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
     return bestValue;
 }
+bool compareMoves(Move move1, Move16 move2)
+{
+    return (move1.From == move2.from() && move1.To == move2.to() && move1.Type == move2.type());
+}
 
 inline int AlphaBeta(
     Board& board,
@@ -352,31 +357,32 @@ inline int AlphaBeta(
 
     bool ttPv = isPvNode;
 
-    if (ttEntry.zobristKey == board.zobristKey && ttEntry.bound != HFNONE)
+    int ttBound = unpackBound(ttEntry.packedInfo);
+    int ttDepth = unpackDepth(ttEntry.packedInfo);
+    if (ttEntry.zobristKey == board.zobristKey && ttBound != HFNONE)
     {
         ttHit = true;
-        bool ExactCutoff = (ttEntry.bound == HFEXACT);
-        bool LowerCutoff = (ttEntry.bound == HFLOWER && ttEntry.score >= beta);
-        bool UpperCutoff = (ttEntry.bound == HFUPPER && ttEntry.score <= alpha);
+        bool ExactCutoff = (ttBound == HFEXACT);
+        bool LowerCutoff = (ttBound == HFLOWER && ttEntry.score >= beta);
+        bool UpperCutoff = (ttBound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
-        if (!isSingularSearch && !isPvNode && !root && ttEntry.depth >= depth && DoTTCutoff)
+        if (!isSingularSearch && !isPvNode && !root && ttDepth >= depth && DoTTCutoff)
         {
             return ttEntry.score;
         }
     }
 
     //checks if the node has been in a pv node in the past
-    ttPv |= ttEntry.ttPv;
+    ttPv |= unpackTtPv(ttEntry.packedInfo);
 
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
-    uint8_t Bound = ttEntry.bound;
 
     if (!isSingularSearch && ttHit && !isInCheck
-        && (Bound == HFEXACT || (Bound == HFLOWER && ttEntry.score >= staticEval)
-            || (Bound == HFUPPER && ttEntry.score <= staticEval)))
+        && (ttBound == HFEXACT || (ttBound == HFLOWER && ttEntry.score >= staticEval)
+            || (ttBound == HFUPPER && ttEntry.score <= staticEval)))
     {
         ttAdjustedEval = ttEntry.score;
     }
@@ -532,8 +538,8 @@ inline int AlphaBeta(
 
         //Singular Extension
         //If we have a TT move, we try to verify if it's the only good move. if the move is singular, search the move with increased depth
-        if (!root && depth >= 7 && move == ttEntry.bestMove && !isSingularSearch && ttEntry.depth >= depth - 3
-            && ttEntry.bound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
+        if (!root && depth >= 7 && compareMoves(move, ttEntry.bestMove) && !isSingularSearch && ttDepth >= depth - 3
+            && ttBound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
             UnmakeMove(board, move, captured_piece);
             board.enpassent = lastEp;
@@ -698,7 +704,9 @@ inline int AlphaBeta(
     }
     if (ttFlag == HFUPPER && ttHit)
     {
-        bestMove = ttEntry.bestMove;
+        bestMove.From = ttEntry.bestMove.from();
+        bestMove.To = ttEntry.bestMove.to();
+        bestMove.Type = ttEntry.bestMove.type();
     }
     if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
@@ -706,12 +714,10 @@ inline int AlphaBeta(
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
 
-    ttEntry.bestMove = bestMove;
-    ttEntry.bound = ttFlag;
-    ttEntry.depth = depth;
+    ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
-    ttEntry.ttPv = ttPv;
+    ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
     if (!isSingularSearch)
     {
         ttStore(ttEntry, board);
@@ -739,7 +745,7 @@ void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadDa
     {
         std::cout << " score cp " << score;
     }
-    int hashfull = 1000 - get_hashfull();
+    int hashfull = get_hashfull();
     std::cout << " time " << static_cast<int>(std::round(elapsedMS)) << " nodes " << nodes << " nps "
               << static_cast<int>(std::round(nps)) << " hashfull " << hashfull << " pv " << std::flush;
 
