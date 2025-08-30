@@ -43,7 +43,7 @@ int get_hashfull()
     int entryCount = 0;
     for (int i = 0; i < 1000; i++)
     {
-        if (unpackBound(TranspositionTable[i].packedInfo) != 0)
+        if (unpackBound(TranspositionTable[i].packedInfo) != HFNONE)
         {
             entryCount++;
         }
