@@ -160,7 +160,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
     bool isPvNode = beta - alpha > 1;
 
-    int rawEval = Evaluate(board);
+    int rawEval = ScaleEval(Evaluate(board), board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
     data.selDepth = std::max(currentPly, data.selDepth);
