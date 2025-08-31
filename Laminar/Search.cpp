@@ -386,6 +386,8 @@ inline int AlphaBeta(
     {
         ttAdjustedEval = ttEntry.score;
     }
+    data.searchStack[currentPly].staticEval = staticEval;
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -395,7 +397,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = RFP_MULTIPLIER * depth;
+            int rfpMargin = (RFP_MULTIPLIER - improving * 20) * depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
