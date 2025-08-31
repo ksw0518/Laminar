@@ -102,7 +102,6 @@ static void InitAll(ThreadData& data)
     InitializeLeaper();
     init_sliders_attacks(1);
     init_sliders_attacks(0);
-    init_tables();
     init_random_keys();
     InitializeLMRTable();
     InitializeSearch(data);

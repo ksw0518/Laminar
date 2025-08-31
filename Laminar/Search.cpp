@@ -376,7 +376,7 @@ inline int AlphaBeta(
     //checks if the node has been in a pv node in the past
     ttPv |= unpackTtPv(ttEntry.packedInfo);
 
-    int rawEval = Evaluate(board);
+    int rawEval = ScaleEval(Evaluate(board), board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
 
