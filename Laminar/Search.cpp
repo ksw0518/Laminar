@@ -290,7 +290,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         int nodeType = bestValue >= beta ? HFUPPER : HFLOWER;
         ttEntry.score = bestValue;
-        ttEntry.packedInfo = packData(0, nodeType, false);
+        ttEntry.packedInfo = packData(-1, nodeType, false);
         ttEntry.zobristKey = board.zobristKey;
 
         ttStore(ttEntry, board);

@@ -34,12 +34,13 @@ struct Move16
 };
 inline uint16_t packData(uint8_t depth, uint8_t bound, bool ttPv)
 {
-    return (uint16_t(depth) & 0xFF) | ((uint16_t(bound) & 0x3) << 8) | (uint16_t(ttPv ? 1 : 0) << 10);
+    //can store depth -1 for qs
+    return (uint16_t(depth + 1) & 0xFF) | ((uint16_t(bound) & 0x3) << 8) | (uint16_t(ttPv ? 1 : 0) << 10);
 }
 
 inline uint8_t unpackDepth(uint16_t data)
 {
-    return data & 0xFF;
+    return data & 0xFF - 1;
 }
 
 inline uint8_t unpackBound(uint16_t data)
