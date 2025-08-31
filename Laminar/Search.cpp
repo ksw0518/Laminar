@@ -286,6 +286,15 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         return staticEval;
     }
+    if (ttBound == HFNONE && !data.stopSearch.load()) //only store qs data to tt when the entry is empty
+    {
+        int nodeType = bestValue >= beta ? HFUPPER : HFLOWER;
+        ttEntry.score = bestValue;
+        ttEntry.packedInfo = packData(0, nodeType, false);
+        ttEntry.zobristKey = board.zobristKey;
+
+        ttStore(ttEntry, board);
+    }
     return bestValue;
 }
 bool compareMoves(Move move1, Move16 move2)
