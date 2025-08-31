@@ -718,7 +718,7 @@ inline int AlphaBeta(
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
     ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
-    if (!isSingularSearch)
+    if (!isSingularSearch && !data.stopSearch.load())
     {
         ttStore(ttEntry, board);
     }
