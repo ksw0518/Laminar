@@ -398,7 +398,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * 10)) * depth;
+            int rfpMargin = (RFP_MULTIPLIER) * (depth - improving);
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
