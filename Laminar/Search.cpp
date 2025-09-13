@@ -185,6 +185,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         return staticEval;
     }
+    data.searchStack[currentPly].staticEval = staticEval;
 
     int score = -MAXSCORE;
     int bestValue = staticEval;
@@ -397,7 +398,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - improving * 20) * depth;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * 10)) * depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
@@ -793,6 +794,7 @@ std::pair<Move, int> IterativeDeepening(
     {
         memset(data.pvTable, 0, sizeof(data.pvTable));
         memset(data.pvLengths, 0, sizeof(data.pvLengths));
+        memset(data.searchStack, 0, sizeof(data.searchStack));
         data.ply = 0;
         data.selDepth = 0;
         for (int i = 0; i < MAXPLY; i++)
