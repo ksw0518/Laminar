@@ -569,6 +569,10 @@ inline int AlphaBeta(
                     extension++;
                 }
             }
+            else if (ttEntry.score >= beta)
+            {
+                extension--;
+            }
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
