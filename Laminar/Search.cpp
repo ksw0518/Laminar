@@ -597,6 +597,10 @@ inline int AlphaBeta(
             {
                 reduction--;
             }
+            if (is_in_check(board))
+            {
+                reduction--;
+            }
         }
         if (reduction < 0)
             reduction = 0;
