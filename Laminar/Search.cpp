@@ -398,7 +398,7 @@ inline int AlphaBeta(
             int rfpMargin = RFP_MULTIPLIER * depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
-                return ttAdjustedEval;
+                return (ttAdjustedEval + beta) / 2;
             }
         }
 
