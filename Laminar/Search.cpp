@@ -402,7 +402,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * 20)) * depth;
+            int rfpMargin = (RFP_MULTIPLIER)*depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return ttAdjustedEval;
@@ -455,6 +455,7 @@ inline int AlphaBeta(
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
     int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
+    lmpThreshold /= (2 - improving);
 
     bool skipQuiets = false;
     AccumulatorPair last_accumulator = board.accumulator;
