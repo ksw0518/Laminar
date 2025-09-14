@@ -569,6 +569,10 @@ inline int AlphaBeta(
                     extension++;
                 }
             }
+            else if (s_beta >= beta)
+            {
+                return s_beta;
+            }
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
