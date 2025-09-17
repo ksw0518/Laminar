@@ -22,7 +22,7 @@ constexpr int CONTHIST_MALUS_MAX = 2400;
 constexpr int RFP_MULTIPLIER = 80;
 constexpr int RFP_BASE = 0;
 
-constexpr int RFP_MAX_DEPTH = 4;
+constexpr int RFP_MAX_DEPTH = 6;
 
 constexpr int ASP_WINDOW_INITIAL = 30;
 constexpr int ASP_WINDOW_MAX = 300;
