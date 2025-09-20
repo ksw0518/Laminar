@@ -814,6 +814,7 @@ std::pair<Move, int> IterativeDeepening(
         int delta = ASP_WINDOW_INITIAL;
         int adjustedAlpha = std::max(-MAXSCORE, score - delta);
         int adjustedBeta = std::min(MAXSCORE, score + delta);
+        int aspWindowDepth = data.currDepth;
 
         //aspiration window
         //start with small window and gradually widen to allow more cutoffs
@@ -835,18 +836,20 @@ std::pair<Move, int> IterativeDeepening(
                 break;
             }
 
-            score = AlphaBeta(board, data, data.currDepth, adjustedAlpha, adjustedBeta);
+            score = AlphaBeta(board, data, std::max(aspWindowDepth, 1), adjustedAlpha, adjustedBeta);
 
             delta += delta;
             if (score <= adjustedAlpha)
             {
                 //aspiration window failed low, give wider alpha
                 adjustedAlpha = std::max(-MAXSCORE, score - delta);
+                aspWindowDepth = data.currDepth;
             }
             else if (score >= adjustedBeta)
             {
                 //aspiration window failed high, give wider beta
                 adjustedBeta = std::min(MAXSCORE, score + delta);
+                aspWindowDepth = std::max(aspWindowDepth - 1, data.currDepth - 5);
             }
             else
             {
