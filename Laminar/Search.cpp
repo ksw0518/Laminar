@@ -613,6 +613,11 @@ inline int AlphaBeta(
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
             if (score > alpha && isReduced)
             {
+                //adjust the depth of the research based on reduced search result
+                int doDeeper = score > bestValue + 37 + childDepth * 5;
+                int doShallower = score < bestValue + childDepth;
+
+                childDepth += (doDeeper - doShallower);
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
         }
