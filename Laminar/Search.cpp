@@ -431,6 +431,14 @@ inline int AlphaBeta(
                 return score > 49000 ? beta : score;
             }
         }
+        if (depth <= 3 && ttAdjustedEval + 200 * depth + 0 <= alpha)
+        {
+            int razorScore = QuiescentSearch(board, data, alpha, alpha + 1);
+            if (razorScore <= alpha)
+            {
+                return razorScore;
+            }
+        }
     }
     //Calculate all squares opponent is controlling
     uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
