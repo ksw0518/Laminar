@@ -382,10 +382,9 @@ inline int AlphaBeta(
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
 
-    data.searchStack[currentPly].staticEval = isInCheck ? -MAXSCORE : staticEval;
+    data.searchStack[currentPly].staticEval = staticEval;
 
-    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval
-                  && data.searchStack[currentPly - 2].staticEval != -MAXSCORE;
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     if (!isSingularSearch && ttHit && !isInCheck
         && (ttBound == HFEXACT || (ttBound == HFLOWER && ttEntry.score >= staticEval)
@@ -402,7 +401,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER)*depth - (improving * 20);
+            int rfpMargin = (RFP_MULTIPLIER)*depth - (improving * 10);
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
