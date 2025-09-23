@@ -614,8 +614,8 @@ inline int AlphaBeta(
             if (score > alpha && isReduced)
             {
                 //adjust the depth of the research based on reduced search result
-                int doDeeper = score > bestValue + 37 + childDepth * 5;
-                int doShallower = score < bestValue + childDepth;
+                int doDeeper = score > bestValue + 60 + childDepth * 2;
+                int doShallower = score < bestValue + childDepth && currentPly != 0;
 
                 childDepth += (doDeeper - doShallower);
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
