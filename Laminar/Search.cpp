@@ -465,6 +465,13 @@ inline int AlphaBeta(
         }
         bool isNotMated = bestValue > -MATESCORE + MAXPLY;
 
+        bool fromThreat = Get_bit(oppThreats, move.From);
+        bool toThreat = Get_bit(oppThreats, move.To);
+        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
+        int contHistScore = GetContHistScore(move, data);
+
+        int historyScore = mainHistScore + contHistScore;
+
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
@@ -476,6 +483,12 @@ inline int AlphaBeta(
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
+                continue;
+            }
+            int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
+
+            if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
+            {
                 continue;
             }
         }
@@ -492,13 +505,6 @@ inline int AlphaBeta(
         uint64_t last_halfmove = board.halfmove;
 
         bool isCapture = IsMoveCapture(move);
-
-        bool fromThreat = Get_bit(oppThreats, move.From);
-        bool toThreat = Get_bit(oppThreats, move.To);
-        int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
-        int contHistScore = GetContHistScore(move, data);
-
-        int historyScore = mainHistScore + contHistScore;
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
