@@ -486,7 +486,6 @@ inline int AlphaBeta(
                 continue;
             }
             int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
-
             if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
             {
                 continue;
