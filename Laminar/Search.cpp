@@ -372,7 +372,12 @@ inline int AlphaBeta(
             return ttEntry.score;
         }
     }
-
+    //Internal Iterative Reduction
+    //If no hash move was found, reduce depth
+    if (!isSingularSearch && depth >= 4 && (isPvNode || cutnode) && (!ttHit))
+    {
+        depth--;
+    }
     //checks if the node has been in a pv node in the past
     ttPv |= unpackTtPv(ttEntry.packedInfo);
 
