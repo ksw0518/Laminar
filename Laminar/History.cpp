@@ -19,6 +19,11 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
     int16_t& historyEntry = data.histories.mainHist[stm][from][to][fromThreat][toThreat];
     UpdateHistoryEntry(historyEntry, bonus);
 }
+void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
+{
+    int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
+    UpdateHistoryEntry(historyEntry, bonus);
+}
 void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus, uint64_t threat)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
@@ -29,6 +34,19 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
         if (searchedMove != bonus_move)
         {
             UpdateMainHist(data, stm, searchedMove.From, searchedMove.To, -malus, threat);
+        }
+    }
+}
+void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_move, int16_t malus, Board& board)
+{
+    bool stm = bonus_move.Piece <= 5 ? White : Black;
+    for (int i = 0; i < searchedNoisyMoves.count; ++i)
+    {
+        Move& searchedMove = searchedNoisyMoves.moves[i];
+
+        if (searchedMove != bonus_move)
+        {
+            UpdateCaptHist(data, searchedMove.Piece, searchedMove.To, board.mailbox[searchedMove.To], -malus);
         }
     }
 }
