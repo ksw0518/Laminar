@@ -21,6 +21,9 @@ struct Histories
     //[stm][pawnKey]
     int16_t pawnCorrHist[2][CORRHIST_SIZE];
 
+    //[stm][minorkey]
+    int16_t minorCorrHist[2][CORRHIST_SIZE];
+
     //[stm][piece color][nonpawn key]
     int16_t nonPawnCorrHist[2][2][CORRHIST_SIZE];
 

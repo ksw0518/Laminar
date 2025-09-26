@@ -222,6 +222,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
+        uint64_t last_minor = board.minorKey;
         int last_irreversible = board.lastIrreversiblePly;
         int last_halfmove = board.halfmove;
 
@@ -242,6 +243,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minor;
             board.lastIrreversiblePly = last_irreversible;
             board.halfmove = last_halfmove;
 
@@ -505,6 +507,7 @@ inline int AlphaBeta(
         uint64_t last_pawnKey = board.pawnKey;
         uint64_t last_white_np = board.whiteNonPawnKey;
         uint64_t last_black_np = board.blackNonPawnKey;
+        uint64_t last_minor = board.minorKey;
         uint64_t last_irreversible = board.lastIrreversiblePly;
         uint64_t last_halfmove = board.halfmove;
 
@@ -527,6 +530,7 @@ inline int AlphaBeta(
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minor;
             board.lastIrreversiblePly = last_irreversible;
             board.halfmove = last_halfmove;
             board.history.pop_back();
@@ -560,6 +564,7 @@ inline int AlphaBeta(
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minor;
             board.lastIrreversiblePly = last_irreversible;
             board.history.pop_back();
             board.halfmove = last_halfmove;
@@ -645,6 +650,7 @@ inline int AlphaBeta(
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
+        board.minorKey = last_minor;
         board.lastIrreversiblePly = last_irreversible;
         board.halfmove = last_halfmove;
 

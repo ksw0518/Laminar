@@ -23,6 +23,7 @@ public:
     uint64_t pawnKey;
     uint64_t whiteNonPawnKey;
     uint64_t blackNonPawnKey;
+    uint64_t minorKey;
     std::vector<uint64_t> history;
 
     int lastIrreversiblePly = 0;
