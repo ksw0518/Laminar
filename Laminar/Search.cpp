@@ -477,6 +477,7 @@ inline int AlphaBeta(
         bool toThreat = Get_bit(oppThreats, move.To);
         int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistScore = GetContHistScore(move, data);
+        int capthistScore = data.histories.captureHistory[move.Piece][move.To][board.mailbox[move.To]];
 
         int historyScore = mainHistScore + contHistScore;
 
@@ -607,7 +608,13 @@ inline int AlphaBeta(
             }
             if (isQuiet)
             {
+                //quiet history lmr
                 reduction -= std::clamp(historyScore / 16384, -2, 2);
+            }
+            else
+            {
+                //capture history lmr
+                reduction -= std::clamp(capthistScore / 8192, -2, 2);
             }
             if (isQuiet)
             {
