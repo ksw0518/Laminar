@@ -70,8 +70,9 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][board.mailbox[move.To]];
+        int seeValue = SEE(board, move, 100) ? 0 : -1000000;
 
-        return mvvlvaValue + histScore;
+        return mvvlvaValue + histScore + seeValue;
     }
     else
     {
