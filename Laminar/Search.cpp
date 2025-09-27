@@ -614,7 +614,7 @@ inline int AlphaBeta(
             else
             {
                 //capture history lmr
-                reduction -= std::clamp(capthistScore / 8192, -2, 2);
+                reduction -= std::clamp(capthistScore / 10000, -2, 2);
             }
             if (isQuiet)
             {
