@@ -283,6 +283,10 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             break;
         }
     }
+    if (searchedMoves == 0)
+    {
+        return staticEval;
+    }
     if (ttBound == HFNONE)
     {
         int nodeType = bestValue >= beta ? HFUPPER : HFLOWER;
@@ -294,10 +298,6 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         {
             ttStore(ttEntry, board);
         }
-    }
-    if (searchedMoves == 0)
-    {
-        return staticEval;
     }
     return bestValue;
 }
