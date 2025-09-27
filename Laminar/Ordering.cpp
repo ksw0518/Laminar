@@ -22,6 +22,10 @@ bool IsMoveCapture(Move& move)
 {
     return (move.Type & captureFlag) != 0;
 }
+bool IsTypeCapture(uint8_t type)
+{
+    return (type & captureFlag) != 0;
+}
 bool IsEpCapture(Move& move)
 {
     return (move.Type & ep_capture) != 0;

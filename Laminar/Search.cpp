@@ -621,6 +621,10 @@ inline int AlphaBeta(
             {
                 reduction--;
             }
+            if (ttHit && IsTypeCapture(ttEntry.bestMove.type()))
+            {
+                reduction++;
+            }
         }
         if (reduction < 0)
             reduction = 0;
