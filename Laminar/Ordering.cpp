@@ -41,9 +41,10 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int victimValue = PieceValues[victim];
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
+        int histScore = data.histories.captureHistory[move.Piece][move.To][board.mailbox[move.To]];
         int seeValue = SEE(board, move, -100) ? 0 : -1000000;
 
-        return mvvlvaValue + seeValue;
+        return mvvlvaValue + seeValue + histScore;
     }
     else
     {
@@ -57,7 +58,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
-int QsearchGetMoveScore(Move& move, Board& board)
+int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
 {
     if (IsMoveCapture(move))
     {
@@ -67,8 +68,10 @@ int QsearchGetMoveScore(Move& move, Board& board)
         int attackerValue = PieceValues[attacker];
         int victimValue = PieceValues[victim];
 
-        int mvvlvaValue = victimValue * 10 - attackerValue;
-        return mvvlvaValue;
+        int mvvlvaValue = victimValue * 100 - attackerValue;
+        int histScore = data.histories.captureHistory[move.Piece][move.To][board.mailbox[move.To]];
+
+        return mvvlvaValue + histScore;
     }
     else
     {
@@ -96,13 +99,13 @@ void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry&
         ml.moves[i] = scored[i].move;
     }
 }
-void SortNoisyMoves(MoveList& ml, Board& board)
+void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data)
 {
     ScoredMove scored[256];
 
     for (int i = 0; i < ml.count; ++i)
     {
-        scored[i].score = QsearchGetMoveScore(ml.moves[i], board);
+        scored[i].score = QsearchGetMoveScore(ml.moves[i], board, data);
         scored[i].move = ml.moves[i];
     }
 

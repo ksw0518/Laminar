@@ -11,6 +11,14 @@ constexpr int MAINHIST_MALUS_BASE = 140;
 constexpr int MAINHIST_MALUS_MULT = 420;
 constexpr int MAINHIST_MALUS_MAX = 2400;
 
+constexpr int CAPTHIST_BONUS_BASE = 134;
+constexpr int CAPTHIST_BONUS_MULT = 400;
+constexpr int CAPTHIST_BONUS_MAX = 2400;
+
+constexpr int CAPTHIST_MALUS_BASE = 134;
+constexpr int CAPTHIST_MALUS_MULT = 400;
+constexpr int CAPTHIST_MALUS_MAX = 2400;
+
 constexpr int CONTHIST_BONUS_BASE = 140;
 constexpr int CONTHIST_BONUS_MULT = 420;
 constexpr int CONTHIST_BONUS_MAX = 2400;

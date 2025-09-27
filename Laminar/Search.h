@@ -18,6 +18,9 @@ struct Histories
     //[stm][from][to][from threat][to threat]
     int16_t mainHist[2][64][64][2][2];
 
+    //[attacking piece][to][captured piece]
+    int16_t captureHistory[12][64][12];
+
     //[stm][pawnKey]
     int16_t pawnCorrHist[2][CORRHIST_SIZE];
 
