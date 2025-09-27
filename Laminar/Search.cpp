@@ -283,7 +283,18 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             break;
         }
     }
-
+    if (ttBound == HFNONE)
+    {
+        int nodeType = bestValue >= beta ? HFUPPER : HFLOWER;
+        ttEntry.bestMove = Move16(0, 0, 0);
+        ttEntry.zobristKey = board.zobristKey;
+        ttEntry.score = bestValue;
+        ttEntry.packedInfo = packData(0, nodeType, false, true);
+        if (!data.stopSearch.load())
+        {
+            ttStore(ttEntry, board);
+        }
+    }
     if (searchedMoves == 0)
     {
         return staticEval;
@@ -361,7 +372,8 @@ inline int AlphaBeta(
 
     int ttBound = unpackBound(ttEntry.packedInfo);
     int ttDepth = unpackDepth(ttEntry.packedInfo);
-    if (ttEntry.zobristKey == board.zobristKey && ttBound != HFNONE)
+    int isTTQs = unpackIsQS(ttEntry.packedInfo);
+    if (ttEntry.zobristKey == board.zobristKey && ttBound != HFNONE && !isTTQs)
     {
         ttHit = true;
         bool ExactCutoff = (ttBound == HFEXACT);

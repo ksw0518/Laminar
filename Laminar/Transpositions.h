@@ -32,9 +32,11 @@ struct Move16
         return (data >> 12) & 0xF;
     }
 };
-inline uint16_t packData(uint8_t depth, uint8_t bound, bool ttPv)
+inline uint16_t packData(uint8_t depth, uint8_t bound, bool ttPv, bool isQuiescence = false)
 {
-    return (uint16_t(depth) & 0xFF) | ((uint16_t(bound) & 0x3) << 8) | (uint16_t(ttPv ? 1 : 0) << 10);
+    return (uint16_t(depth) & 0xFF) | ((uint16_t(bound) & 0x3) << 8) | (uint16_t(ttPv ? 1 : 0) << 10)
+         | (uint16_t(isQuiescence ? 1 : 0) << 11);
+    ;
 }
 
 inline uint8_t unpackDepth(uint16_t data)
@@ -50,6 +52,10 @@ inline uint8_t unpackBound(uint16_t data)
 inline bool unpackTtPv(uint16_t data)
 {
     return (data >> 10) & 0x1;
+}
+inline bool unpackIsQS(uint16_t data)
+{
+    return (data >> 11) & 0x1;
 }
 struct TranspositionEntry
 {
