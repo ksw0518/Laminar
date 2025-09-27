@@ -435,7 +435,19 @@ inline int AlphaBeta(
 
             if (score >= beta)
             {
-                return score > 49000 ? beta : score;
+                if (depth <= 14 || data.minNmpPly > 0)
+                {
+                    return score > 49000 ? beta : score;
+                }
+
+                data.minNmpPly = data.ply + (depth - reduction) * 3 / 4;
+                score = AlphaBeta(board, data, depth - reduction, beta - 1, beta, false);
+                data.minNmpPly = 0;
+
+                if (score >= beta)
+                {
+                    return score;
+                }
             }
         }
     }
