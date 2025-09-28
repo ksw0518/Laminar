@@ -593,6 +593,10 @@ inline int AlphaBeta(
             {
                 return s_beta;
             }
+            else if (cutnode)
+            {
+                extension--;
+            }
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
