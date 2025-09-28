@@ -56,7 +56,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int contHistValue = GetContHistScore(move, data);
 
         int historyScore = mainHistValue + contHistValue;
-        return historyScore - MAX_HISTORY - MAX_CONTHIST;
+        return historyScore - MAX_HISTORY - 2 * MAX_CONTHIST;
     }
 }
 int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
