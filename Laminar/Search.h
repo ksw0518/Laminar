@@ -49,6 +49,7 @@ struct alignas(64) ThreadData
     Histories histories;
     int minNmpPly = 0;
     bool isMainThread = true;
+    uint64_t nodesPerMove[64][64];
 };
 struct SearchLimitations
 {
