@@ -634,6 +634,15 @@ inline int AlphaBeta(
             if (score > alpha && isReduced)
             {
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
+
+                if (isQuiet && (score <= alpha || score >= beta))
+                {
+                    int16_t contHistBonus =
+                        std::min(CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+                    if (score <= alpha)
+                        contHistBonus *= -1;
+                    UpdateContHist(move, contHistBonus, data);
+                }
             }
         }
         else if (!isPvNode || searchedMoves > 1)
