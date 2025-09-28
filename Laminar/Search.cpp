@@ -28,6 +28,7 @@ bool IsUCI = false;
 int lmrTable[MAXPLY][256];
 
 bool stopSearch = false;
+
 void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
@@ -614,7 +615,7 @@ inline int AlphaBeta(
             else
             {
                 //capture history lmr
-                reduction -= std::clamp(capthistScore / 10000, -2, 2);
+                reduction -= std::clamp(capthistScore / 5000, -2, 2);
             }
             if (isQuiet)
             {
@@ -962,7 +963,6 @@ std::pair<Move, int> IterativeDeepening(
             break;
         }
     }
-
     if (data.isMainThread)
     {
         std::cout << "bestmove ";
