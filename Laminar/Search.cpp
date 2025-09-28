@@ -621,6 +621,10 @@ inline int AlphaBeta(
             {
                 reduction--;
             }
+            if (depth == MIN_LMR_DEPTH + 1)
+            {
+                reduction--;
+            }
         }
         if (reduction < 0)
             reduction = 0;

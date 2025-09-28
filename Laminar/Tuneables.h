@@ -38,7 +38,7 @@ constexpr int ASP_WINDOW_MAX = 300;
 constexpr int LMR_DIVISOR = 236;
 constexpr int LMR_OFFSET = 77;
 
-constexpr int MIN_LMR_DEPTH = 3;
+constexpr int MIN_LMR_DEPTH = 2;
 constexpr int SEEPieceValues[] = {98, 280, 295, 479, 1064, 0, 0};
 
 constexpr int QS_SEE_MARGIN = 0;
