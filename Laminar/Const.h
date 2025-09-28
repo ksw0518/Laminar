@@ -125,7 +125,7 @@ constexpr uint64_t BlackQueenCastleEmpty = (1ULL << d8) | (1ULL << c8) | (1ULL <
 constexpr uint64_t WhiteQueenCastleAttack = (1ULL << d1) | (1ULL << c1);
 constexpr uint64_t BlackQueenCastleAttack = (1ULL << d8) | (1ULL << c8);
 
-constexpr int MAXPLY = 128;
+constexpr int MAXPLY = 256;
 constexpr int MAXSCORE = 50000;
 constexpr int64_t NOLIMIT = -1;
 constexpr int MATESCORE = 49000;
