@@ -181,7 +181,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             return ttEntry.score;
         }
     }
-    if (currentPly >= MAXPLY - 1)
+    if (currentPly >= MAXPLY - 2)
     {
         return staticEval;
     }
@@ -347,7 +347,7 @@ inline int AlphaBeta(
     {
         depth++;
     }
-    if (depth <= 0 || currentPly >= MAXPLY - 1)
+    if (depth <= 0 || currentPly >= MAXPLY - 2)
     {
         score = QuiescentSearch(board, data, alpha, beta);
         return score;
