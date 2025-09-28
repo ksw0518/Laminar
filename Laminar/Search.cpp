@@ -867,7 +867,7 @@ std::pair<Move, int> IterativeDeepening(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
             if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load()
-                || (searchLimits.SoftTimeLimit != NOLIMIT && (double)MS * nodesTmScale > searchLimits.SoftTimeLimit))
+                || (searchLimits.SoftTimeLimit != NOLIMIT && (double)MS > searchLimits.SoftTimeLimit * nodesTmScale))
             {
                 if (mainThread)
                 {
