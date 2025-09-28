@@ -914,8 +914,7 @@ std::pair<Move, int> IterativeDeepening(
 
         if (data.currDepth >= 6 && searchLimits.SoftTimeLimit != NOLIMIT && searchLimits.HardTimeLimit != NOLIMIT)
         {
-            nodesTmScale =
-                (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 0.84;
+            nodesTmScale = (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 1;
         }
 
         if (!data.stopSearch.load())
@@ -959,7 +958,7 @@ std::pair<Move, int> IterativeDeepening(
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit * nodesTmScale)
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
             || data.stopSearch.load())
         {
             if (mainThread)
