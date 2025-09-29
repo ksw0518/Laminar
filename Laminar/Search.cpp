@@ -196,10 +196,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     {
         alpha = bestValue;
     }
+    uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
 
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
-    SortNoisyMoves(moveList, board, data);
+    SortNoisyMoves(moveList, board, data, oppThreats);
 
     int searchedMoves = 0;
 
@@ -710,15 +711,15 @@ inline int AlphaBeta(
                 MalusContHist(data, searchedQuietMoves, move, contHistMalus);
 
                 int16_t captHistMalus = std::min(CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
             else
             {
                 int16_t captHistBonus = std::min(CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
                 int16_t captHistMalus = std::min(CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
-                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                UpdateCaptHist(data, move.Piece, move.From, move.To, board.mailbox[move.To], captHistBonus, oppThreats);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
 
             break;
