@@ -628,6 +628,7 @@ inline int AlphaBeta(
 
         int childDepth = depth + extension - 1;
 
+        uint64_t nodesBeforeSearch = data.searchNodeCount;
         if (doLmr)
         {
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
@@ -643,6 +644,12 @@ inline int AlphaBeta(
         if (isPvNode && (searchedMoves == 1 || score > alpha))
         {
             score = -AlphaBeta(board, data, childDepth, -beta, -alpha, false);
+        }
+        uint64_t nodesAfterSearch = data.searchNodeCount;
+        uint64_t nodesSpent = nodesAfterSearch - nodesBeforeSearch;
+        if (root)
+        {
+            data.nodesPerMove[move.From][move.To] += nodesSpent;
         }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
@@ -823,10 +830,13 @@ std::pair<Move, int> IterativeDeepening(
         searchLimits.HardTimeLimit = NOLIMIT;
     }
     bool mainThread = data.isMainThread;
+    double nodesTmScale = 1.0;
+
     for (data.currDepth = 1; data.currDepth <= depth; data.currDepth++)
     {
         memset(data.pvTable, 0, sizeof(data.pvTable));
         memset(data.pvLengths, 0, sizeof(data.pvLengths));
+        memset(data.nodesPerMove, 0, sizeof(data.nodesPerMove));
         data.ply = 0;
         data.selDepth = 0;
         for (int i = 0; i < MAXPLY; i++)
@@ -902,6 +912,11 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
+        if (data.currDepth >= 6 && searchLimits.SoftTimeLimit != NOLIMIT && searchLimits.HardTimeLimit != NOLIMIT)
+        {
+            nodesTmScale = (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 1;
+        }
+
         if (!data.stopSearch.load())
         {
             bestmove = data.pvTable[0][0];
@@ -943,7 +958,8 @@ std::pair<Move, int> IterativeDeepening(
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > searchLimits.SoftTimeLimit) || data.stopSearch.load())
+        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
+            || data.stopSearch.load())
         {
             if (mainThread)
             {
@@ -955,7 +971,6 @@ std::pair<Move, int> IterativeDeepening(
             break;
         }
     }
-
     if (data.isMainThread)
     {
         std::cout << "bestmove ";
