@@ -866,7 +866,8 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load())
+            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load()
+                || searchLimits.SoftTimeLimit != NOLIMIT && MS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
             {
                 if (mainThread)
                 {
@@ -912,8 +913,7 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
-        if (data.currDepth >= 6 && searchLimits.SoftTimeLimit != NOLIMIT && searchLimits.HardTimeLimit != NOLIMIT
-            && searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
+        if (data.currDepth >= 6 && searchLimits.SoftTimeLimit != NOLIMIT && searchLimits.HardTimeLimit != NOLIMIT)
         {
             nodesTmScale = (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 1;
         }
