@@ -593,6 +593,18 @@ inline int AlphaBeta(
             {
                 return s_beta;
             }
+            else if (ttEntry.score >= beta)
+            {
+                extension -= 3;
+            }
+            else if (cutnode)
+            {
+                extension -= 2;
+            }
+            else if (ttEntry.score <= alpha)
+            {
+                extension -= 1;
+            }
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
