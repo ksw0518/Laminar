@@ -198,6 +198,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
 
     MoveList moveList;
+
+    Move bestMove;
+    uint8_t ttFlag = HFUPPER;
     GeneratePseudoLegalMoves(moveList, board);
     SortNoisyMoves(moveList, board, data);
 
@@ -277,17 +280,27 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (bestValue > alpha)
         {
             alpha = score;
+            ttFlag = HFEXACT;
         }
         if (alpha >= beta)
         {
+            ttFlag = HFLOWER;
             break;
         }
     }
-
+    ttEntry.score = bestValue;
+    ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
+    ttEntry.zobristKey = board.zobristKey;
+    ttEntry.packedInfo = packData(0, ttFlag, false);
+    if (ttBound == HFNONE)
+    {
+        ttStore(ttEntry, board);
+    }
     if (searchedMoves == 0)
     {
         return staticEval;
     }
+
     return bestValue;
 }
 bool compareMoves(Move move1, Move16 move2)
