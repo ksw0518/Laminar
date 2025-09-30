@@ -498,6 +498,10 @@ inline int AlphaBeta(
             {
                 continue;
             }
+            if (depth < 5 && !isPvNode && !isInCheck && (staticEval + 100) + 100 * depth <= alpha)
+            {
+                continue;
+            }
         }
 
         int lastEp = board.enpassent;
