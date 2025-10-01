@@ -158,6 +158,19 @@ void init_tables()
         }
     }
 }
+int material_phase(Board& board)
+{
+    int knights = count_bits(board.bitboards[N] | board.bitboards[n]);
+    int bishops = count_bits(board.bitboards[B] | board.bitboards[b]);
+    int rooks = count_bits(board.bitboards[R] | board.bitboards[r]);
+    int queens = count_bits(board.bitboards[Q] | board.bitboards[q]);
+    return 450 * knights + 450 * bishops + 650 * rooks + 1250 * queens;
+}
+int scale_evaluation(Board& board, int32_t eval)
+{
+    int phase = material_phase(board);
+    return eval * (26500 + phase) / 32768;
+}
 int Evaluate(Board& board)
 {
     int NN_score;
@@ -166,6 +179,7 @@ int Evaluate(Board& board)
     else
         NN_score = forward(&EvalNetwork, &board.accumulator.black, &board.accumulator.white);
 
+    NN_score = scale_evaluation(board, NN_score);
     return NN_score;
     //int mg[2];
     //int eg[2];
