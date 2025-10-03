@@ -202,7 +202,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     Move bestMove;
     uint8_t ttFlag = HFUPPER;
     GeneratePseudoLegalMoves(moveList, board);
-    SortNoisyMoves(moveList, board, data);
+    SortNoisyMoves(moveList, board, data, ttEntry);
 
     int searchedMoves = 0;
 

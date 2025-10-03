@@ -59,8 +59,12 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
-int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
+int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry)
 {
+    if (board.zobristKey == entry.zobristKey && compareMoves(move, entry.bestMove))
+    {
+        return 900000000;
+    }
     if (IsMoveCapture(move))
     {
         int attacker = get_piece(move.Piece, White);
@@ -102,13 +106,13 @@ void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry&
         ml.moves[i] = scored[i].move;
     }
 }
-void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data)
+void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry)
 {
     ScoredMove scored[256];
 
     for (int i = 0; i < ml.count; ++i)
     {
-        scored[i].score = QsearchGetMoveScore(ml.moves[i], board, data);
+        scored[i].score = QsearchGetMoveScore(ml.moves[i], board, data, entry);
         scored[i].move = ml.moves[i];
     }
 
