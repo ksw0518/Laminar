@@ -163,6 +163,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int rawEval = Evaluate(board);
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int currentPly = data.ply;
+
+    data.searchStack[currentPly].staticEval = staticEval;
     data.selDepth = std::max(currentPly, data.selDepth);
 
     bool ttHit = false;
@@ -331,6 +333,7 @@ inline int AlphaBeta(
     }
     bool isPvNode = beta - alpha > 1;
     int currentPly = data.ply;
+
     bool root = (currentPly == 0);
 
     if (!root)
@@ -406,6 +409,9 @@ inline int AlphaBeta(
     {
         ttAdjustedEval = ttEntry.score;
     }
+    data.searchStack[currentPly].staticEval = staticEval;
+
+    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
@@ -415,7 +421,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = RFP_MULTIPLIER * depth;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * 20)) * depth;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
