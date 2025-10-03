@@ -650,9 +650,9 @@ inline int AlphaBeta(
             {
                 reduction--;
             }
-            if (!improving)
+            if (improving)
             {
-                reduction++;
+                reduction--;
             }
         }
         if (reduction < 0)
