@@ -452,7 +452,6 @@ inline int AlphaBeta(
                 {
                     return score > 49000 ? beta : score;
                 }
-
                 data.minNmpPly = currentPly + (depth - reduction) * 3 / 4;
                 score = AlphaBeta(board, data, depth - reduction, beta - 1, beta);
                 data.minNmpPly = 0;
