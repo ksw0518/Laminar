@@ -505,6 +505,10 @@ inline int AlphaBeta(
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
+            if (isQuiet && depth < 5 && !isPvNode && !isInCheck && (staticEval + 100) + 100 * depth <= alpha)
+            {
+                continue;
+            }
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
             //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
