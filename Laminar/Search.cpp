@@ -514,19 +514,26 @@ inline int AlphaBeta(
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
-            int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
-            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
-            if (!SEE(board, move, seeThreshold))
+            if (searchedMoves >= lmpThreshold)
             {
+                skipQuiets = true;
                 continue;
             }
-            if (searchedMoves >= lmpThreshold)
+            int fpMargin = staticEval + 500 + 100 * depth;
+            if (isQuiet && !isInCheck && depth <= 8 && fpMargin <= alpha)
             {
                 skipQuiets = true;
                 continue;
             }
             int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
             if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
+            {
+                continue;
+            }
+            int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
+
+            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
+            if (!SEE(board, move, seeThreshold))
             {
                 continue;
             }
