@@ -752,6 +752,11 @@ inline int AlphaBeta(
 
                 int16_t captHistMalus = std::min(CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+
+                int16_t pawnHistBonus = std::min(PAWNHIST_BONUS_MAX, PAWNHIST_BONUS_BASE + PAWNHIST_BONUS_MULT * depth);
+                int16_t pawnHistMalus = std::min(PAWNHIST_MALUS_MAX, PAWNHIST_MALUS_BASE + PAWNHIST_MALUS_MULT * depth);
+                UpdatePawnHist(data, board, move, pawnHistBonus);
+                MalusPawnHist(data, board, searchedQuietMoves, move, pawnHistMalus);
             }
             else
             {

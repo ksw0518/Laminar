@@ -10,3 +10,5 @@ int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data);
 void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus);
 void UpdateContHist(Move& move, const int bonus, ThreadData& data);
 int GetContHistScore(Move& move, ThreadData& data);
+void MalusPawnHist(ThreadData& data, Board& board, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus);
+void UpdatePawnHist(ThreadData& data, Board& board, Move& bestMove, int16_t bonus);
