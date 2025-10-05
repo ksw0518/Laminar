@@ -736,7 +736,7 @@ void printMove(Move move)
 
     //std::cout << ("")
 }
-void GeneratePawnMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GeneratePawnMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t pawnBB, pawn_capture_mask, pawn_capture, pawnOnePush, pawnTwoPush;
@@ -854,54 +854,51 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board, bool noisyOnly)
             else
             {
                 // =======pawn one square push======= //
-                if (!noisyOnly)
+                pawnOnePush = (forward & ~board.occupancies[Both]);
+
+                bool isPossible = pawnOnePush != 0;
+
+                if (pawnOnePush != 0)
                 {
-                    pawnOnePush = (forward & ~board.occupancies[Both]);
-
-                    bool isPossible = pawnOnePush != 0;
-
-                    if (pawnOnePush != 0)
+                    while (true)
                     {
-                        while (true)
-                        {
-                            int To = get_ls1b(pawnOnePush);
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                quiet_move,
-                                static_cast<uint8_t>(get_piece(p, side))
-                            ));
-                            Pop_bit(pawnOnePush, To);
-                            if (pawnOnePush == 0ULL)
-                                break;
-                        }
+                        int To = get_ls1b(pawnOnePush);
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        Pop_bit(pawnOnePush, To);
+                        if (pawnOnePush == 0ULL)
+                            break;
                     }
+                }
 
-                    // =======pawn two square push======= //
+                // =======pawn two square push======= //
 
-                    pawnTwoPush = 0;
-                    if (isPossible)
+                pawnTwoPush = 0;
+                if (isPossible)
+                {
+                    if ((doublePushSquare & currPawnBB) != 0) //pawn on second rank
                     {
-                        if ((doublePushSquare & currPawnBB) != 0) //pawn on second rank
-                        {
-                            pawnTwoPush = (twoForward & ~board.occupancies[Both]);
-                        }
+                        pawnTwoPush = (twoForward & ~board.occupancies[Both]);
                     }
-                    if (pawnTwoPush != 0)
+                }
+                if (pawnTwoPush != 0)
+                {
+                    while (true)
                     {
-                        while (true)
-                        {
-                            int To = get_ls1b(pawnTwoPush);
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                double_pawn_push,
-                                static_cast<uint8_t>(get_piece(p, side))
-                            ));
-                            Pop_bit(pawnTwoPush, To);
-                            if (pawnTwoPush == 0ULL)
-                                break;
-                        }
+                        int To = get_ls1b(pawnTwoPush);
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            double_pawn_push,
+                            static_cast<uint8_t>(get_piece(p, side))
+                        ));
+                        Pop_bit(pawnTwoPush, To);
+                        if (pawnTwoPush == 0ULL)
+                            break;
                     }
                 }
                 // =======pawn capture======= //
@@ -954,7 +951,7 @@ void GeneratePawnMoves(MoveList& MoveList, Board& board, bool noisyOnly)
         }
     }
 }
-void GenerateKnightMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GenerateKnightMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t KnightBB;
@@ -988,15 +985,12 @@ void GenerateKnightMoves(MoveList& MoveList, Board& board, bool noisyOnly)
                     }
                     else
                     {
-                        if (!noisyOnly)
-                        {
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                quiet_move,
-                                static_cast<uint8_t>(get_piece(n, side))
-                            ));
-                        }
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(n, side))
+                        ));
                     }
                     Pop_bit(KnightMove, To);
                     if (KnightMove == 0)
@@ -1009,7 +1003,7 @@ void GenerateKnightMoves(MoveList& MoveList, Board& board, bool noisyOnly)
         }
     }
 }
-void GenerateBishopMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GenerateBishopMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t BishopBB;
@@ -1043,15 +1037,12 @@ void GenerateBishopMoves(MoveList& MoveList, Board& board, bool noisyOnly)
                     }
                     else
                     {
-                        if (!noisyOnly)
-                        {
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                quiet_move,
-                                static_cast<uint8_t>(get_piece(b, side))
-                            ));
-                        }
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(b, side))
+                        ));
                     }
                     Pop_bit(BishopMove, To);
                     if (BishopMove == 0)
@@ -1064,7 +1055,7 @@ void GenerateBishopMoves(MoveList& MoveList, Board& board, bool noisyOnly)
         }
     }
 }
-void GenerateRookMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GenerateRookMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t RookBB;
@@ -1100,15 +1091,12 @@ void GenerateRookMoves(MoveList& MoveList, Board& board, bool noisyOnly)
                     }
                     else
                     {
-                        if (!noisyOnly)
-                        {
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                quiet_move,
-                                static_cast<uint8_t>(get_piece(r, side))
-                            ));
-                        }
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(r, side))
+                        ));
                     }
                     Pop_bit(RookMove, To);
                     if (RookMove == 0)
@@ -1121,7 +1109,7 @@ void GenerateRookMoves(MoveList& MoveList, Board& board, bool noisyOnly)
         }
     }
 }
-void GenerateQueenMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GenerateQueenMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t QueenBB;
@@ -1155,15 +1143,12 @@ void GenerateQueenMoves(MoveList& MoveList, Board& board, bool noisyOnly)
                     }
                     else
                     {
-                        if (!noisyOnly)
-                        {
-                            MoveList.add(Move(
-                                static_cast<uint8_t>(From),
-                                static_cast<uint8_t>(To),
-                                quiet_move,
-                                static_cast<uint8_t>(get_piece(q, side))
-                            ));
-                        }
+                        MoveList.add(Move(
+                            static_cast<uint8_t>(From),
+                            static_cast<uint8_t>(To),
+                            quiet_move,
+                            static_cast<uint8_t>(get_piece(q, side))
+                        ));
                     }
                     Pop_bit(QueenMove, To);
                     if (QueenMove == 0)
@@ -1176,7 +1161,7 @@ void GenerateQueenMoves(MoveList& MoveList, Board& board, bool noisyOnly)
         }
     }
 }
-void GenerateKingMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GenerateKingMoves(MoveList& MoveList, Board& board)
 {
     int side = board.side;
     uint64_t KingBB;
@@ -1208,15 +1193,12 @@ void GenerateKingMoves(MoveList& MoveList, Board& board, bool noisyOnly)
                 }
                 else
                 {
-                    if (!noisyOnly)
-                    {
-                        MoveList.add(Move(
-                            static_cast<uint8_t>(From),
-                            static_cast<uint8_t>(To),
-                            quiet_move,
-                            static_cast<uint8_t>(get_piece(k, side))
-                        ));
-                    }
+                    MoveList.add(Move(
+                        static_cast<uint8_t>(From),
+                        static_cast<uint8_t>(To),
+                        quiet_move,
+                        static_cast<uint8_t>(get_piece(k, side))
+                    ));
                 }
                 Pop_bit(KingMove, To);
                 if (KingMove == 0)
@@ -1620,6 +1602,21 @@ void UpdateZobrist(
     }
 
     board.history.push_back(board.zobristKey);
+}
+uint64_t zobristAfterMove(Board& board, Move& move)
+{
+    int movingPiece = move.Piece;
+    int victim = board.mailbox[move.To];
+
+    uint64_t key = board.zobristKey;
+    XORZobrist(key, piece_keys[movingPiece][move.From]);
+    XORZobrist(key, piece_keys[movingPiece][move.To]);
+    if (victim != NO_PIECE)
+    {
+        XORZobrist(key, piece_keys[victim][move.To]);
+    }
+    key ^= side_key;
+    return key;
 }
 void MakeNullMove(Board& board)
 {
@@ -2738,17 +2735,17 @@ void UnmakeMove(Board& board, Move move, int captured_piece)
     board.side = 1 - board.side;
 }
 
-void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board, bool noisyOnly)
+void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board)
 {
     MoveList.clear();
 
-    GenerateQueenMoves(MoveList, board, noisyOnly);
-    GenerateRookMoves(MoveList, board, noisyOnly);
-    GenerateKnightMoves(MoveList, board, noisyOnly);
-    GenerateBishopMoves(MoveList, board, noisyOnly);
+    GenerateQueenMoves(MoveList, board);
+    GenerateRookMoves(MoveList, board);
+    GenerateKnightMoves(MoveList, board);
+    GenerateBishopMoves(MoveList, board);
 
-    GeneratePawnMoves(MoveList, board, noisyOnly);
-    GenerateKingMoves(MoveList, board, noisyOnly);
+    GeneratePawnMoves(MoveList, board);
+    GenerateKingMoves(MoveList, board);
 }
 bool IsSquareAttacked(int square, int side, const Board& board, uint64_t occupancy)
 {

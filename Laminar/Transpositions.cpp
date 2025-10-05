@@ -50,3 +50,8 @@ int get_hashfull()
     }
     return entryCount;
 }
+
+void prefetchTT(uint64_t zobrist)
+{
+    __builtin_prefetch(&TranspositionTable[zobrist % TTSize]);
+}
