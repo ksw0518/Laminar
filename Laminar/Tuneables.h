@@ -63,3 +63,11 @@ constexpr int DEXT_MARGIN = 20;
 
 constexpr int HISTORY_PRUNING_MULTIPLIER = 1372;
 constexpr int HISTORY_PRUNING_BASE = 69;
+
+constexpr int PV_LMR_ADD = 1024;
+constexpr int HIST_LMR_DIV = 16384;
+constexpr int QUIET_LMR_ADD = 1024;
+constexpr int CUTNODE_LMR_ADD = 1024;
+constexpr int TTPV_LMR_SUB = 1024;
+constexpr int IMPROVING_LMR_SUB = 1024;
+

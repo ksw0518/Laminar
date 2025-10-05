@@ -634,30 +634,34 @@ inline int AlphaBeta(
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
+            int lmrAdjustments = 0;
             if (!isPvNode && quietMoves >= 4)
             {
-                reduction++;
+                lmrAdjustments += PV_LMR_ADD;
             }
             if (isQuiet)
             {
-                reduction -= std::clamp(historyScore / 16384, -2, 2);
+                lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
             }
             if (isQuiet)
             {
-                reduction++;
+                lmrAdjustments += QUIET_LMR_ADD;
             }
             if (cutnode)
             {
-                reduction++;
+                lmrAdjustments += CUTNODE_LMR_ADD;
             }
             if (ttPv)
             {
-                reduction--;
+                lmrAdjustments -= TTPV_LMR_SUB;
             }
             if (improving)
             {
-                reduction--;
+                lmrAdjustments -= IMPROVING_LMR_SUB;
             }
+
+            lmrAdjustments /= 1024;
+            reduction += lmrAdjustments;
         }
         if (reduction < 0)
             reduction = 0;
