@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include <vector>
-
+extern uint64_t side_key;
 constexpr uint64_t rook_magic_numbers[64] = {
     0x8A80104000800020ULL, 0x140002000100040ULL,  0x2801880A0017001ULL,  0x100081001000420ULL,  0x200020010080420ULL,
     0x3001C0002010008ULL,  0x8480008002000100ULL, 0x2080088004402900ULL, 0x800098204000ULL,     0x2024401000200040ULL,
@@ -117,3 +117,4 @@ void MakeNullMove(Board& board);
 void UnmakeNullmove(Board& board);
 std::string boardToFEN(const Board& board);
 uint64_t GetAttackedSquares(int side, Board& board, uint64_t occupancy);
+uint64_t zobristAfterMove(Board& board, Move& move);

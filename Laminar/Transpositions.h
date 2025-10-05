@@ -69,3 +69,4 @@ void ClearTT();
 void ttStore(TranspositionEntry& ttEntry, Board& board);
 int get_hashfull();
 
+void prefetchTT(uint64_t zobrist);

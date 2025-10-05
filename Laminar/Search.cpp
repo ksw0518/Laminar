@@ -219,6 +219,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         {
             continue;
         }
+        prefetchTT(zobristAfterMove(board, move));
         int lastEp = board.enpassent;
         uint8_t lastCastle = board.castle;
         bool lastside = board.side;
@@ -440,11 +441,13 @@ inline int AlphaBeta(
             uint64_t last_zobrist = board.zobristKey;
 
             data.ply++;
+            prefetchTT(board.zobristKey ^ side_key);
             MakeNullMove(board);
             int reduction = 3;
             reduction += depth / 3;
             reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
+
             int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1, !cutnode);
             data.minNmpPly = 0;
             UnmakeNullmove(board);
@@ -528,6 +531,7 @@ inline int AlphaBeta(
                 continue;
             }
         }
+        prefetchTT(zobristAfterMove(board, move));
 
         int lastEp = board.enpassent;
         uint8_t lastCastle = board.castle;

@@ -1603,6 +1603,21 @@ void UpdateZobrist(
 
     board.history.push_back(board.zobristKey);
 }
+uint64_t zobristAfterMove(Board& board, Move& move)
+{
+    int movingPiece = move.Piece;
+    int victim = board.mailbox[move.To];
+
+    uint64_t key = board.zobristKey;
+    XORZobrist(key, piece_keys[movingPiece][move.From]);
+    XORZobrist(key, piece_keys[movingPiece][move.To]);
+    if (victim != NO_PIECE)
+    {
+        XORZobrist(key, piece_keys[victim][move.To]);
+    }
+    key ^= side_key;
+    return key;
+}
 void MakeNullMove(Board& board)
 {
     if (board.enpassent != NO_SQ)
