@@ -505,10 +505,14 @@ inline int AlphaBeta(
         }
         bool isNotMated = bestValue > -MATESCORE + MAXPLY;
 
+        int capturedPiece = IsEpCapture(move) ? get_piece(P, 1 - board.side) : board.mailbox[move.To];
+
         bool fromThreat = Get_bit(oppThreats, move.From);
         bool toThreat = Get_bit(oppThreats, move.To);
         int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistScore = GetContHistScore(move, data);
+
+        int captHistScore = data.histories.captureHistory[move.Piece][move.To][capturedPiece];
 
         int historyScore = mainHistScore + contHistScore;
 
@@ -642,6 +646,10 @@ inline int AlphaBeta(
             if (isQuiet)
             {
                 lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
+            }
+            else
+            {
+                lmrAdjustments -= std::clamp(captHistScore / 6000, -2, 2) * 1024;
             }
             if (isQuiet)
             {
