@@ -434,7 +434,7 @@ inline int AlphaBeta(
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
-        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta && currentPly >= data.minNmpPly
+        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + 30 && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
