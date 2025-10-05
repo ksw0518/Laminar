@@ -99,7 +99,7 @@ uint64_t generate_black_nonpawn_key(Board& board);
 void init_random_keys();
 void init_sliders_attacks(int bishop);
 void InitializeLeaper();
-void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board);
+void GeneratePseudoLegalMoves(MoveList& MoveList, Board& board, bool noisyOnly = false);
 void printMove(Move move);
 void MakeMove(Board& board, Move move);
 void UnmakeMove(Board& board, Move move, int captured_piece);
