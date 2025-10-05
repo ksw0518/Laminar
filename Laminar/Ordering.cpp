@@ -57,7 +57,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int pawnHistValue = data.histories.pawnHist[board.pawnKey % 32768][move.Piece][move.To];
 
         int historyScore = mainHistValue + contHistValue + pawnHistValue;
-        return historyScore - 2 * MAX_HISTORY - MAX_CONTHIST;
+        return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
 int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
