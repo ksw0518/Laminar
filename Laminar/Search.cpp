@@ -659,7 +659,11 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= IMPROVING_LMR_SUB;
             }
-
+            int futilityMargin = 150 + 80 * depth;
+            if (futilityMargin + staticEval <= alpha)
+            {
+                lmrAdjustments += 1024;
+            }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
