@@ -659,7 +659,7 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= IMPROVING_LMR_SUB;
             }
-            if (abs(staticEval - rawEval) > 85)
+            if (abs(staticEval - rawEval) > 85 && !isInCheck)
             {
                 lmrAdjustments -= 1024;
             }
