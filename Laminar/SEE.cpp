@@ -30,15 +30,15 @@ inline int move_estimated_value(Board& board, Move move)
     int target_piece = board.mailbox[move.To] > 5 ? board.mailbox[move.To] - 6 : board.mailbox[move.To];
 
     int promoted_piece = getPiecePromoting(move.Type, White);
-    int value = SEEPieceValues[target_piece];
+    int value = *SEEPieceValues[target_piece];
 
     // Factor in the new piece's value and remove our promoted pawn
     if ((move.Type & promotionFlag) != 0)
-        value += SEEPieceValues[promoted_piece] - SEEPieceValues[P];
+        value += *SEEPieceValues[promoted_piece] - *SEEPieceValues[P];
 
     // Target square is encoded as empty for enpass moves
     else if (move.Type == ep_capture)
-        value = SEEPieceValues[P];
+        value = *SEEPieceValues[P];
 
     // We encode Castle moves as KxR, so the initial step is wrong
     else if (move.Type == king_castle || move.Type == queen_castle)
@@ -74,7 +74,7 @@ int SEE(Board& pos, Move move, int threshold)
         return 0;
 
     // Worst case is losing the moved piece
-    balance -= SEEPieceValues[nextVictim];
+    balance -= *SEEPieceValues[nextVictim];
 
     // If the balance is positive even if losing the moved piece,
     // the exchange is guaranteed to beat the threshold.
@@ -137,7 +137,7 @@ int SEE(Board& pos, Move move, int threshold)
         colour = 1 - colour;
 
         // Negamax the balance and add the value of the next victim
-        balance = -balance - 1 - SEEPieceValues[nextVictim];
+        balance = -balance - 1 - *SEEPieceValues[nextVictim];
 
         // If the balance is non negative after giving away our piece then we win
         if (balance >= 0)

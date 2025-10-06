@@ -6,6 +6,7 @@
 #include "Search.h"
 #include "Threading.h"
 #include "Transpositions.h"
+#include "Tuneables.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -285,7 +286,32 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
         std::cout << "uciok"
                   << "\n";
+
+        for (int i = 0; i < AllTuneablesCount; i++)
+        {
+            std::cout << "option name " << AllTuneables[i]->name;
+            std::cout << " type spin";
+            std::cout << " default " << AllTuneables[i]->value;
+            std::cout << " min " << AllTuneables[i]->minValue;
+            std::cout << " max " << AllTuneables[i]->maxValue;
+            std::cout << "\n";
+        }
         IsUCI = true;
+    }
+    else if (mainCommand == "spsa")
+    {
+        for (int i = 0; i < AllTuneablesCount; i++)
+        {
+            std::cout << AllTuneables[i]->name;
+            std::cout << ", int";
+            std::cout << ", " << AllTuneables[i]->value;
+            std::cout << ", " << AllTuneables[i]->minValue;
+            std::cout << ", " << AllTuneables[i]->maxValue;
+            std::cout << ", " << AllTuneables[i]->step;
+            std::cout << ", "
+                      << "0.002";
+            std::cout << "\n";
+        }
     }
     else if (mainCommand == "ucinewgame")
     {
@@ -337,6 +363,16 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
                 for (int i = 0; i < threadCount; i++)
                 {
                     allThreadDataPtrs.push_back(persistentThreadData[i].get());
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < AllTuneablesCount; i++)
+            {
+                if (option == AllTuneables[i]->name)
+                {
+                    AllTuneables[i]->value = value;
                 }
             }
         }

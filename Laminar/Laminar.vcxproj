@@ -151,6 +151,7 @@
     <ClCompile Include="SEE.cpp" />
     <ClCompile Include="Threading.cpp" />
     <ClCompile Include="Transpositions.cpp" />
+    <ClCompile Include="Tuneables.cpp" />
     <ClCompile Include="UCI.cpp" />
   </ItemGroup>
   <ItemGroup>

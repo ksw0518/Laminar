@@ -422,7 +422,7 @@ inline int AlphaBeta(
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * 20)) * depth;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
@@ -434,7 +434,7 @@ inline int AlphaBeta(
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
-        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta && currentPly >= data.minNmpPly
+        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + NMP_BETA_OFFSET && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
@@ -445,7 +445,7 @@ inline int AlphaBeta(
             MakeNullMove(board);
             int reduction = 3;
             reduction += depth / 3;
-            reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISER, MAX_NMP_EVAL_R);
+            reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISOR, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
 
             int score = -AlphaBeta(board, data, depth - reduction, -beta, -beta + 1, !cutnode);
@@ -485,8 +485,8 @@ inline int AlphaBeta(
 
     Move bestMove = Move(0, 0, 0, 0);
 
-    int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULTIPLIER * depth;
-    int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULTIPLIER * depth * depth;
+    int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * depth;
+    int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * depth * depth;
     int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
 
     bool skipQuiets = false;
@@ -739,24 +739,31 @@ inline int AlphaBeta(
 
             if (isQuiet)
             {
-                int16_t mainHistBonus = std::min(MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
-                int16_t mainHistMalus = std::min(MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
+                int16_t mainHistBonus =
+                    std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+                int16_t mainHistMalus =
+                    std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
 
                 UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
-                int16_t contHistBonus = std::min(CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
-                int16_t contHistMalus = std::min(CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
+                int16_t contHistBonus =
+                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+                int16_t contHistMalus =
+                    std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
                 UpdateContHist(move, contHistBonus, data);
                 MalusContHist(data, searchedQuietMoves, move, contHistMalus);
 
-                int16_t captHistMalus = std::min(CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
+                int16_t captHistMalus =
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
             }
             else
             {
-                int16_t captHistBonus = std::min(CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
-                int16_t captHistMalus = std::min(CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
+                int16_t captHistBonus =
+                    std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
+                int16_t captHistMalus =
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
                 UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
