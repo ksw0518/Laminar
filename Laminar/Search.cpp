@@ -659,6 +659,10 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= IMPROVING_LMR_SUB;
             }
+            if (abs(rawEval - staticEval) > 100)
+            {
+                lmrAdjustments -= 1024;
+            }
 
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
