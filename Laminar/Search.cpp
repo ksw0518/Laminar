@@ -420,7 +420,7 @@ inline int AlphaBeta(
     if (canPrune && notMated) //do whole node pruining
     {
         //RFP
-        if (depth <= RFP_MAX_DEPTH)
+        if (depth <= RFP_MAX_DEPTH && !ttHit)
         {
             int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
             if (ttAdjustedEval - rfpMargin >= beta)
