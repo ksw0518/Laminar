@@ -514,7 +514,7 @@ inline int AlphaBeta(
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
-            if (searchedMoves >= lmpThreshold)
+            if (searchedMoves >= lmpThreshold / (2 - improving))
             {
                 skipQuiets = true;
                 continue;
