@@ -487,7 +487,6 @@ inline int AlphaBeta(
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * depth * depth;
-    int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
 
     bool skipQuiets = false;
     AccumulatorPair last_accumulator = board.accumulator;
@@ -514,6 +513,10 @@ inline int AlphaBeta(
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
+            int lmpThreshold = ((LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100) * 3 / 2;
+
+            lmpThreshold /= (2 - improving);
+
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
