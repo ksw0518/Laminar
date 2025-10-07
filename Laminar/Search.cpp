@@ -626,6 +626,11 @@ inline int AlphaBeta(
             {
                 return s_beta;
             }
+            else if (ttEntry.score >= beta)
+            {
+                extension--;
+            }
+
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
