@@ -7,6 +7,7 @@
 #include "Const.h"
 #include "Movegen.h"
 #include "NNUE.h"
+#include "Tuneables.h"
 #include <iomanip>
 #include <iostream>
 
@@ -164,12 +165,13 @@ int material_phase(Board& board)
     int bishops = count_bits(board.bitboards[B] | board.bitboards[b]);
     int rooks = count_bits(board.bitboards[R] | board.bitboards[r]);
     int queens = count_bits(board.bitboards[Q] | board.bitboards[q]);
-    return 450 * knights + 450 * bishops + 650 * rooks + 1250 * queens;
+    return SCALING_KNIGHT_VAL * knights + SCALING_BISHOP_VAL * bishops + SCALING_ROOK_VAL * rooks
+         + SCALING_QUEEN_VAL * queens;
 }
 int scale_evaluation(Board& board, int32_t eval)
 {
     int phase = material_phase(board);
-    return eval * (26500 + phase) / 32768;
+    return eval * (SCALING_BASE + phase) / 32768;
 }
 int Evaluate(Board& board)
 {

@@ -37,13 +37,13 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int attacker = get_piece(move.Piece, White);
 
         int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
-        int attackerValue = PieceValues[attacker];
-        int victimValue = PieceValues[victim];
+        int attackerValue = *SEEPieceValues[attacker];
+        int victimValue = *SEEPieceValues[victim];
         int coloredVictim = get_piece(victim, 1 - board.side);
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
-        int seeValue = SEE(board, move, -100) ? 0 : -1000000;
+        int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 0 : -1000000;
 
         return mvvlvaValue + seeValue + histScore;
     }
@@ -66,13 +66,13 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         int attacker = get_piece(move.Piece, White);
 
         int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
-        int attackerValue = PieceValues[attacker];
-        int victimValue = PieceValues[victim];
+        int attackerValue = *SEEPieceValues[attacker];
+        int victimValue = *SEEPieceValues[victim];
         int coloredVictim = get_piece(victim, 1 - board.side);
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
-        int seeValue = SEE(board, move, 100) ? 0 : -1000000;
+        int seeValue = SEE(board, move, QS_SEE_ORDERING) ? 0 : -1000000;
 
         return mvvlvaValue + histScore + seeValue;
     }
