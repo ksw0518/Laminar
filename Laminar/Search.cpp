@@ -621,7 +621,7 @@ inline int AlphaBeta(
                 {
                     extension++;
                 }
-                if (s_score < s_beta - 80)
+                if (s_score < s_beta - 100)
                 {
                     extension++;
                 }
