@@ -9,7 +9,7 @@ struct Tuneable
     int minValue;
     int maxValue;
     int step;
-    constexpr Tuneable(std::string n, int v, int minv, int maxv, int s) :
+    Tuneable(std::string n, int v, int minv, int maxv, int s) :
             name(n), value(v), minValue(minv), maxValue(maxv), step(s)
     {
     }
