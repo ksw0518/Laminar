@@ -287,7 +287,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::cout << "uciok"
                   << "\n";
 
-        for (int i = 0; i < AllTuneablesCount; i++)
+        /*  for (int i = 0; i < AllTuneablesCount; i++)
         {
             std::cout << "option name " << AllTuneables[i]->name;
             std::cout << " type spin";
@@ -295,7 +295,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             std::cout << " min " << AllTuneables[i]->minValue;
             std::cout << " max " << AllTuneables[i]->maxValue;
             std::cout << "\n";
-        }
+        }*/
         IsUCI = true;
     }
     else if (mainCommand == "spsa")
