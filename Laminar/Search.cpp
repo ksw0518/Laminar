@@ -376,6 +376,10 @@ inline int AlphaBeta(
     int bestValue = -MAXSCORE;
     bool isInCheck = is_in_check(board);
 
+    if (isInCheck)
+    {
+        depth++;
+    }
     if (depth <= 0 || currentPly >= MAXPLY - 2)
     {
         score = QuiescentSearch(board, data, alpha, beta);
