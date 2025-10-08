@@ -189,21 +189,30 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
 
     int score = -MAXSCORE;
-    int bestValue = staticEval;
-    if (bestValue >= beta)
+    bool isInCheck = is_in_check(board);
+
+    int bestValue = score;
+    if (!isInCheck)
     {
-        return bestValue;
-    }
-    if (bestValue > alpha)
-    {
-        alpha = bestValue;
+        bestValue = staticEval;
+        if (bestValue >= beta)
+        {
+            return bestValue;
+        }
+        if (bestValue > alpha)
+        {
+            alpha = bestValue;
+        }
     }
 
     MoveList moveList;
 
     Move bestMove;
     uint8_t ttFlag = HFUPPER;
-    GeneratePseudoLegalMoves(moveList, board, true);
+
+    //generate all moves if in check, generate only noisy moves if not in check
+    GeneratePseudoLegalMoves(moveList, board, !isInCheck);
+
     SortNoisyMoves(moveList, board, data);
 
     int searchedMoves = 0;
@@ -212,10 +221,10 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
-        if (!IsMoveNoisy(move))
+        if (!IsMoveNoisy(move) && !(isInCheck && searchedMoves == 0))
             continue;
 
-        if (!SEE(board, move, QS_SEE_MARGIN))
+        if (!SEE(board, move, QS_SEE_MARGIN) && !isInCheck)
         {
             continue;
         }
@@ -301,7 +310,14 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     }
     if (searchedMoves == 0)
     {
-        return staticEval;
+        if (isInCheck)
+        {
+            return -MATESCORE + data.ply;
+        }
+        else
+        {
+            return staticEval;
+        }
     }
 
     return bestValue;
@@ -360,10 +376,6 @@ inline int AlphaBeta(
     int bestValue = -MAXSCORE;
     bool isInCheck = is_in_check(board);
 
-    if (isInCheck)
-    {
-        depth++;
-    }
     if (depth <= 0 || currentPly >= MAXPLY - 2)
     {
         score = QuiescentSearch(board, data, alpha, beta);
