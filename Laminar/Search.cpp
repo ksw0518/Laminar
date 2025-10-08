@@ -370,7 +370,7 @@ inline int AlphaBeta(
         return score;
     }
 
-    int ttFlag = HFUPPER;
+    int ttStoreBound = HFUPPER;
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
 
@@ -470,6 +470,14 @@ inline int AlphaBeta(
                 }
             }
         }
+    }
+
+    //small probcut
+    int probcutBeta = beta + 350;
+    if (!isSingularSearch && !isPvNode && ttHit && (ttBound == HFLOWER || ttBound == HFEXACT) && ttDepth >= depth - 4
+        && ttEntry.score >= probcutBeta && abs(ttEntry.score) < MATESCORE && abs(beta) < MATESCORE)
+    {
+        return probcutBeta;
     }
     //Calculate all squares opponent is controlling
     uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
@@ -716,7 +724,7 @@ inline int AlphaBeta(
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
         {
-            ttFlag = HFEXACT;
+            ttStoreBound = HFEXACT;
             alpha = score;
 
             bestMove = move;
@@ -739,7 +747,7 @@ inline int AlphaBeta(
         }
         if (alpha >= beta)
         {
-            ttFlag = HFLOWER;
+            ttStoreBound = HFLOWER;
 
             if (isQuiet)
             {
@@ -797,14 +805,15 @@ inline int AlphaBeta(
             }
         }
     }
-    if (ttFlag == HFUPPER && ttHit)
+    if (ttStoreBound == HFUPPER && ttHit)
     {
         bestMove.From = ttEntry.bestMove.from();
         bestMove.To = ttEntry.bestMove.to();
         bestMove.Type = ttEntry.bestMove.type();
     }
     if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
-        && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
+        && !(ttStoreBound == HFLOWER && bestValue <= staticEval)
+        && !(ttStoreBound == HFUPPER && bestValue >= staticEval))
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
@@ -812,7 +821,7 @@ inline int AlphaBeta(
     ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
-    ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
+    ttEntry.packedInfo = packData(depth, ttStoreBound, ttPv);
     if (!isSingularSearch && !data.stopSearch.load())
     {
         ttStore(ttEntry, board);
