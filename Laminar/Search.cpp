@@ -679,6 +679,10 @@ inline int AlphaBeta(
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
             if (score > alpha && isReduced)
             {
+                bool doDeeper = score > bestValue + 60 + depth * childDepth;
+                bool doShallower = score < bestValue + childDepth;
+
+                childDepth += doDeeper - doShallower;
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
         }
