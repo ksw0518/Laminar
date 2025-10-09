@@ -413,6 +413,7 @@ inline int AlphaBeta(
     data.searchStack[currentPly].staticEval = staticEval;
 
     bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
+    improving |= staticEval >= beta + 100;
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
