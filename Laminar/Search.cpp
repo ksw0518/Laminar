@@ -209,12 +209,22 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int searchedMoves = 0;
 
     AccumulatorPair last_accumulator = board.accumulator;
+
+    int futilityMargin = staticEval + 130;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
         if (!IsMoveNoisy(move))
             continue;
 
+        if (futilityMargin <= alpha && !SEE(board, move, 1))
+        {
+            if (bestValue < futilityMargin)
+            {
+                bestValue = futilityMargin;
+            }
+            continue;
+        }
         if (!SEE(board, move, QS_SEE_MARGIN))
         {
             continue;
