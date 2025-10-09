@@ -443,7 +443,7 @@ inline int AlphaBeta(
             data.ply++;
             prefetchTT(board.zobristKey ^ side_key);
             MakeNullMove(board);
-            int reduction = 3;
+            int reduction = 4;
             reduction += depth / 3;
             reduction += std::min((ttAdjustedEval - beta) / NMP_EVAL_DIVISOR, MAX_NMP_EVAL_R);
             data.minNmpPly = currentPly + 2;
