@@ -203,8 +203,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     Move bestMove;
     uint8_t ttFlag = HFUPPER;
+
+    uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
+
     GeneratePseudoLegalMoves(moveList, board, true);
-    SortNoisyMoves(moveList, board, data);
+    SortNoisyMoves(moveList, board, data, oppThreats);
 
     int searchedMoves = 0;
 
@@ -764,7 +767,7 @@ inline int AlphaBeta(
 
                 int16_t captHistMalus =
                     std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
             else
             {
@@ -773,8 +776,8 @@ inline int AlphaBeta(
                 int16_t captHistMalus =
                     std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
-                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus, oppThreats);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
 
             break;
