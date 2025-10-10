@@ -42,6 +42,7 @@ void InitializeLMRTable()
 void InitializeSearch(ThreadData& data)
 {
     memset(&data.histories, 0, sizeof(data.histories));
+    memset(&data.killerMoves, 0, sizeof(data.killerMoves));
 }
 void InitNNUE()
 {
@@ -369,7 +370,11 @@ inline int AlphaBeta(
         score = QuiescentSearch(board, data, alpha, beta);
         return score;
     }
-
+    if (currentPly >= MAXPLY - 2)
+    {
+        // Reset killer moves for the next ply to make the killer move more local
+        data.killerMoves[data.ply + 1] = Move(0, 0, 0, 0);
+    }
     int ttFlag = HFUPPER;
     bool ttHit = false;
     TranspositionEntry ttEntry = ttLookUp(board.zobristKey);
@@ -747,6 +752,8 @@ inline int AlphaBeta(
 
             if (isQuiet)
             {
+                data.killerMoves[currentPly] = move;
+
                 int16_t mainHistBonus =
                     std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
                 int16_t mainHistMalus =

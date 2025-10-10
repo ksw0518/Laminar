@@ -47,6 +47,10 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
 
         return mvvlvaValue + seeValue + histScore;
     }
+    else if (data.killerMoves[data.ply] == move)
+    {
+        return 20000;
+    }
     else
     {
         bool fromThreat = Get_bit(threat, move.From);
@@ -56,6 +60,8 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int contHistValue = GetContHistScore(move, data);
 
         int historyScore = mainHistValue + contHistValue;
+
+        //quiet move max value = 16384
         return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }

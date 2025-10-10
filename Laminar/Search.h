@@ -50,6 +50,7 @@ struct alignas(64) ThreadData
     int minNmpPly = 0;
     bool isMainThread = true;
     uint64_t nodesPerMove[64][64];
+    Move killerMoves[MAXPLY + 1];
 };
 struct SearchLimitations
 {
