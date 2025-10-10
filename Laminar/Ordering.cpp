@@ -47,10 +47,6 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
 
         return mvvlvaValue + seeValue + histScore;
     }
-    else if (data.killerMoves[data.ply] == move)
-    {
-        return 150000;
-    }
     else
     {
         bool fromThreat = Get_bit(threat, move.From);

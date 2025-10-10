@@ -668,6 +668,10 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            if (move == data.killerMoves[currentPly])
+            {
+                lmrAdjustments -= 1024;
+            }
 
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
