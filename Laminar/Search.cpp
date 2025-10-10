@@ -624,7 +624,7 @@ inline int AlphaBeta(
             }
             else if (s_beta >= beta)
             {
-                return s_beta;
+                return s_score;
             }
             refresh_if_cross(move, board);
             MakeMove(board, move);
