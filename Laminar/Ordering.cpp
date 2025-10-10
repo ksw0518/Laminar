@@ -49,7 +49,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
     }
     else if (data.killerMoves[data.ply] == move)
     {
-        return 20000;
+        return 150000;
     }
     else
     {

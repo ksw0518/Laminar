@@ -373,7 +373,7 @@ inline int AlphaBeta(
     if (currentPly >= MAXPLY - 2)
     {
         // Reset killer moves for the next ply to make the killer move more local
-        data.killerMoves[data.ply + 1] = Move(0, 0, 0, 0);
+        data.killerMoves[currentPly + 1] = Move(0, 0, 0, 0);
     }
     int ttFlag = HFUPPER;
     bool ttHit = false;
