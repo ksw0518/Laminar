@@ -43,9 +43,13 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
 
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
-        int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 0 : -1000000;
+        int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 200000 : -1000000;
 
         return mvvlvaValue + seeValue + histScore;
+    }
+    else if (data.killerMoves[data.ply] == move)
+    {
+        return 20000;
     }
     else
     {
