@@ -619,12 +619,16 @@ inline int AlphaBeta(
             int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
             if (s_score < s_beta)
             {
-                extension++;
+                extension = 1;
                 //Double Extensions
                 //TT move is very singular, increase depth by 2
                 if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
                 {
-                    extension++;
+                    extension = 2;
+                }
+                if (!isPvNode && isQuiet && s_score <= s_beta - 100)
+                {
+                    extension = 3;
                 }
             }
             else if (s_beta >= beta)
