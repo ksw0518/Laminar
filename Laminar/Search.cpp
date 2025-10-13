@@ -416,14 +416,24 @@ inline int AlphaBeta(
         ttAdjustedEval = ttEntry.score;
     }
     data.searchStack[currentPly].staticEval = staticEval;
+    data.searchStack[currentPly].check = isInCheck;
 
     bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
-    if (canPrune && notMated) //do whole node pruining
+    if (canPrune && notMated)
     {
+        //hindsight extension
+        if (!root && data.searchStack[currentPly - 1].reduction >= 3 && !data.searchStack[currentPly - 1].check
+            && staticEval + data.searchStack[currentPly - 1].staticEval < 0)
+        {
+            depth++;
+        }
+
+        //do whole node pruining
+
         //RFP
         if (depth <= RFP_MAX_DEPTH)
         {
@@ -676,6 +686,7 @@ inline int AlphaBeta(
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
+        data.searchStack[currentPly].reduction = reduction;
         if (reduction < 0)
             reduction = 0;
         bool isReduced = reduction > 0;
