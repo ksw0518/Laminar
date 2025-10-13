@@ -43,6 +43,7 @@ void InitializeSearch(ThreadData& data)
 {
     memset(&data.histories, 0, sizeof(data.histories));
     memset(&data.killerMoves, 0, sizeof(data.killerMoves));
+    memset(&data.searchStack, 0, sizeof(data.searchStack));
 }
 void InitNNUE()
 {
@@ -722,6 +723,7 @@ inline int AlphaBeta(
         }
         UnmakeMove(board, move, captured_piece);
         data.ply--;
+        data.searchStack[currentPly].reduction = 0;
 
         board.enpassent = lastEp;
         board.castle = lastCastle;
