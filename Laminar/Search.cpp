@@ -206,7 +206,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     Move bestMove;
     uint8_t ttFlag = HFUPPER;
     GeneratePseudoLegalMoves(moveList, board, true);
-    SortNoisyMoves(moveList, board, data);
+
+    uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
+    SortNoisyMoves(moveList, board, data, oppThreats);
 
     int searchedMoves = 0;
 
@@ -487,6 +489,13 @@ inline int AlphaBeta(
             }
         }
     }
+    //small probcut
+    int probcutBeta = beta + 350;
+    if (!isSingularSearch && !isPvNode && ttHit && (ttBound == HFLOWER || ttBound == HFEXACT) && ttDepth >= depth - 4
+        && ttEntry.score >= probcutBeta && abs(ttEntry.score) < MATESCORE && abs(beta) < MATESCORE)
+    {
+        return probcutBeta;
+    }
     //Calculate all squares opponent is controlling
     uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
 
@@ -636,6 +645,11 @@ inline int AlphaBeta(
                 if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
                 {
                     extension++;
+                }
+                //Triple Extensions
+                if (!isPvNode && isQuiet && s_score <= s_beta - 100)
+                {
+                    extension = 3;
                 }
             }
             else if (s_beta >= beta)
@@ -788,7 +802,7 @@ inline int AlphaBeta(
 
                 int16_t captHistMalus =
                     std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
             else
             {
@@ -797,8 +811,8 @@ inline int AlphaBeta(
                 int16_t captHistMalus =
                     std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
-                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
-                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
+                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus, oppThreats);
+                MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board, oppThreats);
             }
 
             break;
@@ -843,7 +857,10 @@ inline int AlphaBeta(
     ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
     if (!isSingularSearch && !data.stopSearch.load())
     {
-        ttStore(ttEntry, board);
+        if (ttFlag == HFEXACT || board.zobristKey != ttEntry.zobristKey || depth + 4 > ttDepth)
+        {
+            ttStore(ttEntry, board);
+        }
     }
 
     return bestValue;
