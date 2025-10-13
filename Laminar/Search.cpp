@@ -432,7 +432,13 @@ inline int AlphaBeta(
         {
             depth++;
         }
-
+        // Hindsight reduction
+        if (!root && !isPvNode && !isInCheck && !isSingularSearch && depth >= 2
+            && data.searchStack[currentPly - 1].reduction >= 1 && !data.searchStack[currentPly - 1].check
+            && staticEval + data.searchStack[currentPly - 1].staticEval > 80)
+        {
+            depth--;
+        }
         //do whole node pruining
 
         //RFP
