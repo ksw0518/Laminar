@@ -15,6 +15,7 @@ struct SearchData
     int reduction = 0;
     bool check = false;
 };
+
 struct Histories
 {
     //[stm][from][to][from threat][to threat]
@@ -35,6 +36,7 @@ struct Histories
     //[piece][to][piece][to]
     int16_t contHist[12][64][12][64];
 };
+
 struct alignas(64) ThreadData
 {
     std::chrono::steady_clock::time_point clockStart;
@@ -54,6 +56,7 @@ struct alignas(64) ThreadData
     uint64_t nodesPerMove[64][64];
     Move killerMoves[MAXPLY + 1];
 };
+
 struct SearchLimitations
 {
     int64_t HardTimeLimit = -1;
@@ -73,6 +76,7 @@ std::pair<Move, int> IterativeDeepening(
     ThreadData& data,
     bool isBench = false
 );
+
 void Initialize_TT(int size);
 void InitializeLMRTable();
 void InitializeSearch(ThreadData& data);

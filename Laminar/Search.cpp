@@ -39,16 +39,19 @@ void InitializeLMRTable()
         }
     }
 }
+
 void InitializeSearch(ThreadData& data)
 {
     memset(&data.histories, 0, sizeof(data.histories));
     memset(&data.killerMoves, 0, sizeof(data.killerMoves));
     memset(&data.searchStack, 0, sizeof(data.searchStack));
 }
+
 void InitNNUE()
 {
     LoadNetwork(EVALFILE);
 }
+
 bool IsThreefold(std::vector<uint64_t>& history_table, int last_irreversible)
 {
     uint64_t lastmove = history_table[history_table.size() - 1];
@@ -71,6 +74,7 @@ bool IsThreefold(std::vector<uint64_t>& history_table, int last_irreversible)
     }
     return false;
 }
+
 bool isInsufficientMaterial(const Board& board)
 {
     int whiteBishops = count_bits(board.bitboards[B]);
@@ -114,6 +118,7 @@ bool isInsufficientMaterial(const Board& board)
     }
     return false;
 }
+
 void refresh_if_cross(Move& move, Board& board)
 {
     if (get_piece(move.Piece, White) == K) //king has moved
@@ -150,6 +155,7 @@ void refresh_if_cross(Move& move, Board& board)
         }
     }
 }
+
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
@@ -319,6 +325,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     return bestValue;
 }
+
 bool compareMoves(Move move1, Move16 move2)
 {
     return (move1.From == move2.from() && move1.To == move2.to() && move1.Type == move2.type());
@@ -894,6 +901,7 @@ inline int AlphaBeta(
 
     return bestValue;
 }
+
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
 {
     bestmove = data.pvTable[0][0];

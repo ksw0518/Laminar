@@ -14,18 +14,22 @@ bool IsMoveNoisy(Move& move)
 {
     return (move.Type & (captureFlag | promotionFlag)) != 0;
 }
+
 bool IsMoveQuiet(Move& move)
 {
     return !IsMoveCapture(move);
 }
+
 bool IsMoveCapture(Move& move)
 {
     return (move.Type & captureFlag) != 0;
 }
+
 bool IsEpCapture(Move& move)
 {
     return (move.Type & ep_capture) != 0;
 }
+
 int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threat)
 {
     //TT move
@@ -33,7 +37,6 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
     {
         return 900000000;
     }
-    //captures
     else if (IsMoveCapture(move))
     {
         int attacker = get_piece(move.Piece, White);
@@ -47,15 +50,12 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 200000 : -1000000;
 
-        //mvvlva, capthist score, SEE
         return mvvlvaValue + seeValue + histScore;
     }
-    //killer moves
     else if (data.killerMoves[data.ply] == move)
     {
         return 20000;
     }
-    //quiet moves
     else
     {
         bool fromThreat = Get_bit(threat, move.From);
@@ -71,9 +71,9 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
+
 int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
 {
-    //captures
     if (IsMoveCapture(move))
     {
         int attacker = get_piece(move.Piece, White);
@@ -87,7 +87,6 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, QS_SEE_ORDERING) ? 0 : -1000000;
 
-        //mvvlva, capthist score, SEE
         return mvvlvaValue + histScore + seeValue;
     }
     else
@@ -95,6 +94,7 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         return -90000;
     }
 }
+
 void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threats)
 {
     ScoredMove scored[256];
@@ -116,6 +116,7 @@ void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry&
         ml.moves[i] = scored[i].move;
     }
 }
+
 void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data)
 {
     ScoredMove scored[256];
