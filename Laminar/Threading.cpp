@@ -5,6 +5,9 @@
 std::vector<ThreadData*> allThreadDataPtrs = {};
 std::vector<std::unique_ptr<ThreadData>> persistentThreadData = {};
 
+//Lazy SMP
+//simply run multiple searches in helper threads, and share TT
+//to allow more cutoffs in the main thread
 void RunSearchInMultipleThreads(Board& board, int depth, SearchLimitations& searchLimits, int threadCount)
 {
     std::vector<std::thread> threads;

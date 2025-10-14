@@ -14,20 +14,25 @@ bool IsMoveNoisy(Move& move)
 {
     return (move.Type & (captureFlag | promotionFlag)) != 0;
 }
+
 bool IsMoveQuiet(Move& move)
 {
     return !IsMoveCapture(move);
 }
+
 bool IsMoveCapture(Move& move)
 {
     return (move.Type & captureFlag) != 0;
 }
+
 bool IsEpCapture(Move& move)
 {
     return (move.Type & ep_capture) != 0;
 }
+
 int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threat)
 {
+    //TT move
     if (board.zobristKey == entry.zobristKey && compareMoves(move, entry.bestMove))
     {
         return 900000000;
@@ -62,9 +67,11 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int historyScore = mainHistValue + contHistValue;
 
         //quiet move max value = 16384
+        //order quiets based on history scores
         return historyScore - MAX_HISTORY - MAX_CONTHIST;
     }
 }
+
 int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
 {
     if (IsMoveCapture(move))
@@ -87,6 +94,7 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         return -90000;
     }
 }
+
 void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threats)
 {
     ScoredMove scored[256];
@@ -108,6 +116,7 @@ void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry&
         ml.moves[i] = scored[i].move;
     }
 }
+
 void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data)
 {
     ScoredMove scored[256];

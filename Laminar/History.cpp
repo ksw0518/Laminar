@@ -19,11 +19,13 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
     int16_t& historyEntry = data.histories.mainHist[stm][from][to][fromThreat][toThreat];
     UpdateHistoryEntry(historyEntry, bonus);
 }
+
 void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
 {
     int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
     UpdateHistoryEntry(historyEntry, bonus);
 }
+
 void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus, uint64_t threat)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
@@ -37,6 +39,7 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
         }
     }
 }
+
 void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_move, int16_t malus, Board& board)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
@@ -50,6 +53,7 @@ void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_m
         }
     }
 }
+
 int16_t GetSingleContHistScore(Move& move, const int offset, ThreadData& data)
 {
     if (data.ply >= offset)
@@ -59,12 +63,14 @@ int16_t GetSingleContHistScore(Move& move, const int offset, ThreadData& data)
     }
     return 0;
 }
+
 int GetContHistScore(Move& move, ThreadData& data)
 {
     int onePlyContHist = GetSingleContHistScore(move, 1, data);
     int twoPlyContHist = GetSingleContHistScore(move, 2, data);
     return onePlyContHist + twoPlyContHist;
 }
+
 void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadData& data)
 {
     if (data.ply >= offset)
@@ -76,11 +82,13 @@ void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadD
         data.histories.contHist[prevMove.Piece][prevMove.To][move.Piece][move.To] += scaledBonus;
     }
 }
+
 void UpdateContHist(Move& move, const int bonus, ThreadData& data)
 {
     UpdateSingleContHist(move, bonus, 1, data);
     UpdateSingleContHist(move, bonus, 2, data);
 }
+
 void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
@@ -93,6 +101,7 @@ void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
         }
     }
 }
+
 void UpdatePawnCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
 {
     uint64_t pawnKey = board.pawnKey;
@@ -102,6 +111,7 @@ void UpdatePawnCorrHist(Board& board, const int depth, const int diff, ThreadDat
     pawnEntry = (pawnEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     pawnEntry = std::clamp<int16_t>(pawnEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
+
 void UpdateNonPawnCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
 {
     uint64_t whiteKey = board.whiteNonPawnKey;
@@ -120,6 +130,7 @@ void UpdateNonPawnCorrHist(Board& board, const int depth, const int diff, Thread
     blackEntry = (blackEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     blackEntry = std::clamp<int16_t>(blackEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
+
 void UpdateMinorCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
 {
     uint64_t minorKey = board.minorKey;
@@ -129,32 +140,38 @@ void UpdateMinorCorrHist(Board& board, const int depth, const int diff, ThreadDa
     minorEntry = (minorEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
     minorEntry = std::clamp<int16_t>(minorEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
+
 void UpdateCorrhists(Board& board, const int depth, const int diff, ThreadData& data)
 {
     UpdatePawnCorrHist(board, depth, diff, data);
     UpdateNonPawnCorrHist(board, depth, diff, data);
     UpdateMinorCorrHist(board, depth, diff, data);
 }
+
 int16_t GetPawnCorrHistValue(Board& board, ThreadData& data)
 {
     uint64_t pawnKey = board.pawnKey;
     return data.histories.pawnCorrHist[board.side][pawnKey % CORRHIST_SIZE];
 }
+
 int16_t GetWhiteNonPawnCorrHistValue(Board& board, ThreadData& data)
 {
     uint64_t whiteNPKey = board.whiteNonPawnKey;
     return data.histories.nonPawnCorrHist[White][board.side][whiteNPKey % CORRHIST_SIZE];
 }
+
 int16_t GetBlackNonPawnCorrHistValue(Board& board, ThreadData& data)
 {
     uint64_t blackNPKey = board.blackNonPawnKey;
     return data.histories.nonPawnCorrHist[Black][board.side][blackNPKey % CORRHIST_SIZE];
 }
+
 int16_t GetMinorCorrHistValue(Board& board, ThreadData& data)
 {
     uint64_t minorKey = board.minorKey;
     return data.histories.minorCorrHist[board.side][minorKey % CORRHIST_SIZE];
 }
+
 int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
 {
     int pawnEntry = GetPawnCorrHistValue(board, data);

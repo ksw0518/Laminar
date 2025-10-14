@@ -34,6 +34,7 @@ std::string trim(const std::string& str)
 
     return str.substr(start, end - start + 1);
 }
+
 std::string TryGetLabelledValue(
     const std::string& text,
     const std::string& label,
@@ -72,6 +73,7 @@ std::string TryGetLabelledValue(
 
     return defaultValue;
 }
+
 int64_t TryGetLabelledValueInt(
     const std::string& text,
     const std::string& label,
@@ -98,6 +100,7 @@ int64_t TryGetLabelledValueInt(
         return defaultValue;
     }
 }
+
 static void InitAll(ThreadData& data)
 {
     InitializeLeaper();
@@ -179,16 +182,19 @@ std::vector<std::string> splitStringBySpace(const std::string& str)
 
     return tokens;
 }
+
 int64_t CalculateHardLimit(int64_t time, int64_t incre)
 {
     return time / 2;
 }
+
 int64_t CalculateSoftLimit(int64_t time, int64_t incre)
 {
     return 0.6
          * (static_cast<float>(time) / static_cast<float>(20)
             + static_cast<float>(incre) * static_cast<float>(3) / static_cast<float>(4));
 }
+
 void PlayMoves(std::string& moves_string, Board& board)
 {
     if (moves_string != "") // move is not empty
@@ -269,6 +275,7 @@ void PlayMoves(std::string& moves_string, Board& board)
         }
     }
 }
+
 void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 {
     std::vector<std::string> Commands = splitStringBySpace(input);
@@ -518,6 +525,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         }
     }
 }
+
 int main(int argc, char* argv[])
 {
     ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap

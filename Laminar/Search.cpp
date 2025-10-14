@@ -39,16 +39,19 @@ void InitializeLMRTable()
         }
     }
 }
+
 void InitializeSearch(ThreadData& data)
 {
     memset(&data.histories, 0, sizeof(data.histories));
     memset(&data.killerMoves, 0, sizeof(data.killerMoves));
     memset(&data.searchStack, 0, sizeof(data.searchStack));
 }
+
 void InitNNUE()
 {
     LoadNetwork(EVALFILE);
 }
+
 bool IsThreefold(std::vector<uint64_t>& history_table, int last_irreversible)
 {
     uint64_t lastmove = history_table[history_table.size() - 1];
@@ -71,6 +74,7 @@ bool IsThreefold(std::vector<uint64_t>& history_table, int last_irreversible)
     }
     return false;
 }
+
 bool isInsufficientMaterial(const Board& board)
 {
     int whiteBishops = count_bits(board.bitboards[B]);
@@ -114,6 +118,7 @@ bool isInsufficientMaterial(const Board& board)
     }
     return false;
 }
+
 void refresh_if_cross(Move& move, Board& board)
 {
     if (get_piece(move.Piece, White) == K) //king has moved
@@ -150,8 +155,11 @@ void refresh_if_cross(Move& move, Board& board)
         }
     }
 }
+
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
+    //only search "noisy" moves (captures, promos) to only evaluate quiet positions
+
     auto now = std::chrono::steady_clock::now();
     int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
     if (data.stopSearch.load() || elapsedMS > data.SearchTime
@@ -192,10 +200,13 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     int score = -MAXSCORE;
     int bestValue = staticEval;
+    //if static eval is higher than beta, we can assume fail high
     if (bestValue >= beta)
     {
         return bestValue;
     }
+    //raise alpha if static eval is higher than alpha
+    //since the static eval is a good lower bound for a node
     if (bestValue > alpha)
     {
         alpha = bestValue;
@@ -214,9 +225,12 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
+
         if (!IsMoveNoisy(move))
             continue;
 
+        //skip moves that have bad static exchange evaluation score,
+        //since they are likely bad
         if (!SEE(board, move, QS_SEE_MARGIN))
         {
             continue;
@@ -293,6 +307,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             break;
         }
     }
+
+    //store TT with the depth of 0
+    //to use later for qs search or tt adjusted eval
     ttEntry.score = bestValue;
     ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
@@ -308,6 +325,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     return bestValue;
 }
+
 bool compareMoves(Move move1, Move16 move2)
 {
     return (move1.From == move2.from() && move1.To == move2.to() && move1.Type == move2.type());
@@ -362,18 +380,21 @@ inline int AlphaBeta(
     int bestValue = -MAXSCORE;
     bool isInCheck = is_in_check(board);
 
+    //increase depth if we're in check
     if (isInCheck)
     {
         depth++;
     }
     if (depth <= 0 || currentPly >= MAXPLY - 2)
     {
+        //return quiescence search score at the end of the tree
+        //to avoid horizon effect
         score = QuiescentSearch(board, data, alpha, beta);
         return score;
     }
     if (currentPly >= MAXPLY - 2)
     {
-        // Reset killer moves for the next ply to make the killer move more local
+        //Reset killer moves for the next ply to make the killer move more local
         data.killerMoves[currentPly + 1] = Move(0, 0, 0, 0);
     }
     int ttFlag = HFUPPER;
@@ -410,6 +431,8 @@ inline int AlphaBeta(
     int staticEval = AdjustEvalWithCorrHist(board, rawEval, data);
     int ttAdjustedEval = staticEval;
 
+    //if we have a transposition entry for current position, change static eval
+    //based on the tt score since it'll be more accurate
     if (!isSingularSearch && ttHit && !isInCheck
         && (ttBound == HFEXACT || (ttBound == HFLOWER && ttEntry.score >= staticEval)
             || (ttBound == HFUPPER && ttEntry.score <= staticEval)))
@@ -419,6 +442,7 @@ inline int AlphaBeta(
     data.searchStack[currentPly].staticEval = staticEval;
     data.searchStack[currentPly].check = isInCheck;
 
+    //is the current position better than the position of 2 plies before?
     bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
@@ -435,7 +459,8 @@ inline int AlphaBeta(
 
         //do whole node pruining
 
-        //RFP
+        //Reverse futility pruning
+        //if static eval is higher than beta with some margin, assume it'll fail high
         if (depth <= RFP_MAX_DEPTH)
         {
             int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
@@ -445,11 +470,12 @@ inline int AlphaBeta(
             }
         }
 
-        //NMP
+        //Null move pruning
         //The null move skips our turn without making move,
         //which allows opponent to make two moves in a row
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
+        //disable nmp in KP endgame, because of zugzwang
         if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + NMP_BETA_OFFSET && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
@@ -492,6 +518,8 @@ inline int AlphaBeta(
 
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
+
+    //order moves from best to worse for more cutoff
     SortMoves(moveList, board, data, ttEntry, oppThreats);
 
     MoveList searchedQuietMoves;
@@ -530,18 +558,25 @@ inline int AlphaBeta(
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
+            //Late move pruning
+            //skip moves that are "late"(moves later in the move list)
+            //because good moves are usually in the front
             if (searchedMoves >= lmpThreshold)
             {
                 skipQuiets = true;
                 continue;
             }
+
+            //History pruning
+            //skip moves that have bad history score
             int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
             if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
             {
                 continue;
             }
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
-            //if the Static Exchange Evaluation score is lower than certain margin, assume the move is very bad and skip the move
+            //if the Static Exchange Evaluation score is lower than certain margin,
+            //assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
             {
                 continue;
@@ -605,7 +640,8 @@ inline int AlphaBeta(
         int extension = 0;
 
         //Singular Extension
-        //If we have a TT move, we try to verify if it's the only good move. if the move is singular, search the move with increased depth
+        //If we have a TT move, we try to verify if it's the only good move.
+        //if the move is singular, search the move with increased depth
         if (ttHit && !root && depth >= 7 && compareMoves(move, ttEntry.bestMove) && !isSingularSearch
             && ttDepth >= depth - 3 && ttBound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
@@ -638,6 +674,9 @@ inline int AlphaBeta(
                     extension++;
                 }
             }
+            //Multicut
+            //excluded search failed high,
+            //we can assume current node will also fail high
             else if (s_beta >= beta)
             {
                 return s_beta;
@@ -647,6 +686,7 @@ inline int AlphaBeta(
             data.ply++;
         }
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
+
         if (doLmr)
         {
             reduction = lmrTable[depth][searchedMoves];
@@ -695,15 +735,21 @@ inline int AlphaBeta(
         int childDepth = depth + extension - 1;
 
         uint64_t nodesBeforeSearch = data.searchNodeCount;
+
+        //Late move reduction
+        //do reduced zero window search for late moves
+        //to prove they are worse than previously serached moves
         if (doLmr)
         {
             score = -AlphaBeta(board, data, childDepth - reduction, -alpha - 1, -alpha, true);
             if (score > alpha && isReduced)
             {
+                //do deeper research if the move is promising,
+                //and do shallower research if the move looks bad
                 bool doDeeper = score > bestValue + 60 + depth * childDepth;
                 bool doShallower = score < bestValue + childDepth;
-
                 childDepth += doDeeper - doShallower;
+
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
         }
@@ -763,14 +809,17 @@ inline int AlphaBeta(
                 data.pvLengths[data.ply] = data.pvLengths[data.ply + 1] + 1;
             }
         }
+        //beta cutoff
         if (alpha >= beta)
         {
             ttFlag = HFLOWER;
 
             if (isQuiet)
             {
+                //update killer moves for move ordering
                 data.killerMoves[currentPly] = move;
 
+                //update history scores
                 int16_t mainHistBonus =
                     std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
                 int16_t mainHistMalus =
@@ -792,6 +841,7 @@ inline int AlphaBeta(
             }
             else
             {
+                //update capture history scores
                 int16_t captHistBonus =
                     std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
                 int16_t captHistMalus =
@@ -816,7 +866,7 @@ inline int AlphaBeta(
             if (isInCheck)
             {
                 //checkmate
-                return -49000 + data.ply;
+                return -MATESCORE + data.ply;
             }
             else
             {
@@ -825,18 +875,21 @@ inline int AlphaBeta(
             }
         }
     }
+    //keep the best move for tt if we're in fail low node
     if (ttFlag == HFUPPER && ttHit)
     {
         bestMove.From = ttEntry.bestMove.from();
         bestMove.To = ttEntry.bestMove.to();
         bestMove.Type = ttEntry.bestMove.type();
     }
+    //update corrhist values based on the difference between static eval and search score
     if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
 
+    //store transposition table
     ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
     ttEntry.score = bestValue;
@@ -848,6 +901,7 @@ inline int AlphaBeta(
 
     return bestValue;
 }
+
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
 {
     bestmove = data.pvTable[0][0];
@@ -912,6 +966,9 @@ std::pair<Move, int> IterativeDeepening(
     bool mainThread = data.isMainThread;
     double nodesTmScale = 1.0;
 
+    //Iterative deepening
+    //gradually increase the search depth to search as deep as possible
+    //and allow more cutoffs
     for (data.currDepth = 1; data.currDepth <= depth; data.currDepth++)
     {
         memset(data.pvTable, 0, sizeof(data.pvTable));
@@ -992,6 +1049,8 @@ std::pair<Move, int> IterativeDeepening(
             static_cast<int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count());
         float second = (float)(elapsedMS + 1) / 1000;
 
+        //Node tm
+        //scale soft time bound based on the ratio of nodes spent for searching the best move
         if (data.currDepth >= 6 && searchLimits.SoftTimeLimit != NOLIMIT && searchLimits.HardTimeLimit != NOLIMIT)
         {
             nodesTmScale = (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 1;
