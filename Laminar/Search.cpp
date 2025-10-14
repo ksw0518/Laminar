@@ -435,7 +435,7 @@ inline int AlphaBeta(
         // Hindsight reduction
         if (!root && !isPvNode && !isInCheck && !isSingularSearch && depth >= 2
             && data.searchStack[currentPly - 1].reduction >= 1 && !data.searchStack[currentPly - 1].check
-            && staticEval + data.searchStack[currentPly - 1].staticEval > 80)
+            && staticEval + data.searchStack[currentPly - 1].staticEval > 130)
         {
             depth--;
         }
