@@ -723,6 +723,11 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            int futilityMargin = 160 + 80 * depth;
+            if (futilityMargin <= alpha && !isInCheck)
+            {
+                lmrAdjustments += 1024;
+            }
 
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
