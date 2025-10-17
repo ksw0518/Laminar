@@ -442,8 +442,24 @@ inline int AlphaBeta(
     data.searchStack[currentPly].staticEval = staticEval;
     data.searchStack[currentPly].check = isInCheck;
 
-    //is the current position better than the position of 2 plies before?
-    bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
+    //is the current position better than the position before?
+    bool improving;
+    if (isInCheck)
+    {
+        improving = false;
+    }
+    else if (currentPly >= 2 && !data.searchStack[currentPly - 2].check)
+    {
+        improving = staticEval > data.searchStack[currentPly - 2].staticEval;
+    }
+    else if (currentPly >= 4 && !data.searchStack[currentPly - 4].check)
+    {
+        improving = staticEval > data.searchStack[currentPly - 4].staticEval;
+    }
+    else
+    {
+        improving = false;
+    }
 
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
