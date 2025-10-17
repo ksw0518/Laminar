@@ -554,6 +554,14 @@ inline int AlphaBeta(
         int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistScore = GetContHistScore(move, data);
 
+        int captHistScore = 0;
+        if (IsMoveCapture(move))
+        {
+            int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        }
+
         int historyScore = mainHistScore + contHistScore;
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
@@ -575,6 +583,16 @@ inline int AlphaBeta(
                 continue;
             }
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
+
+            //do less SEE pruning if history score is good
+            if (isQuiet)
+            {
+                seeThreshold -= historyScore / 327;
+            }
+            else
+            {
+                seeThreshold -= captHistScore / 125;
+            }
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
