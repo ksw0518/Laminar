@@ -832,23 +832,23 @@ inline int AlphaBeta(
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
                 int16_t contHistBonus =
-                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * historyDepth);
+                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
                 int16_t contHistMalus =
-                    std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * historyDepth);
+                    std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
                 UpdateContHist(move, contHistBonus, data);
                 MalusContHist(data, searchedQuietMoves, move, contHistMalus);
 
                 int16_t captHistMalus =
-                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * historyDepth);
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
             }
             else
             {
                 //update capture history scores
                 int16_t captHistBonus =
-                    std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * historyDepth);
+                    std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
                 int16_t captHistMalus =
-                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * historyDepth);
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
                 UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
