@@ -589,10 +589,6 @@ inline int AlphaBeta(
             {
                 seeThreshold -= historyScore / 327;
             }
-            else
-            {
-                seeThreshold -= captHistScore / 125;
-            }
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
