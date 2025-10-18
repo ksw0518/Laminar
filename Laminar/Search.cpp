@@ -886,7 +886,7 @@ inline int AlphaBeta(
     if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
         && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
     {
-        UpdateCorrhists(board, depth, bestValue - staticEval, data);
+        UpdateCorrhists(board, depth + isPvNode, bestValue - staticEval, data);
     }
 
     //store transposition table
