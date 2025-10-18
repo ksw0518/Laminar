@@ -723,6 +723,10 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            if (isQuiet && !isInCheck && staticEval - 365 > beta)
+            {
+                lmrAdjustments += 1024;
+            }
 
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
