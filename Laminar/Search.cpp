@@ -448,6 +448,12 @@ inline int AlphaBeta(
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
+    int corrplexity = abs(staticEval - rawEval) > 100;
+    int specific_extension = 0;
+    if (corrplexity && ttAdjustedEval != staticEval)
+    {
+        specific_extension++;
+    }
     if (canPrune && notMated)
     {
         //hindsight extension
@@ -461,7 +467,7 @@ inline int AlphaBeta(
 
         //Reverse futility pruning
         //if static eval is higher than beta with some margin, assume it'll fail high
-        if (depth <= RFP_MAX_DEPTH)
+        if (depth + specific_extension <= RFP_MAX_DEPTH)
         {
             int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
             if (ttAdjustedEval - rfpMargin >= beta)
@@ -476,8 +482,8 @@ inline int AlphaBeta(
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
         //disable nmp in KP endgame, because of zugzwang
-        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + NMP_BETA_OFFSET && currentPly >= data.minNmpPly
-            && !IsOnlyKingPawn(board))
+        if (!isPvNode && depth >= 2 + specific_extension && !root && ttAdjustedEval >= beta + NMP_BETA_OFFSET
+            && currentPly >= data.minNmpPly && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
             uint64_t last_zobrist = board.zobristKey;
