@@ -445,14 +445,14 @@ inline int AlphaBeta(
     //is the current position better than the position of 2 plies before?
     bool improving = !isInCheck && currentPly >= 2 && staticEval > data.searchStack[currentPly - 2].staticEval;
 
-    bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
+    bool canPrune = !isInCheck && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
     if (canPrune && notMated)
     {
         //hindsight extension
-        if (!root && data.searchStack[currentPly - 1].reduction >= 3 && !data.searchStack[currentPly - 1].check
-            && staticEval + data.searchStack[currentPly - 1].staticEval < 0)
+        if (!isPvNode && !root && data.searchStack[currentPly - 1].reduction >= 3
+            && !data.searchStack[currentPly - 1].check && staticEval + data.searchStack[currentPly - 1].staticEval < 0)
         {
             depth++;
         }
@@ -463,7 +463,7 @@ inline int AlphaBeta(
         //if static eval is higher than beta with some margin, assume it'll fail high
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB) + (80 * isPvNode)) * depth + RFP_BASE;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
