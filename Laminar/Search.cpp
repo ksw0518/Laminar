@@ -569,7 +569,8 @@ inline int AlphaBeta(
 
             //History pruning
             //skip moves that have bad history score
-            int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
+            int historyPruningMargin = HISTORY_PRUNING_BASE - (HISTORY_PRUNING_MULTIPLIER + 300 * isPvNode) * depth;
+
             if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
             {
                 continue;
