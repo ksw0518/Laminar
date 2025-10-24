@@ -599,6 +599,7 @@ inline int AlphaBeta(
         bool isCapture = IsMoveCapture(move);
 
         refresh_if_cross(move, board);
+        bool isGoodCapture = SEE(board, move, 0) && isCapture;
         MakeMove(board, move);
 
         data.ply++;
@@ -720,6 +721,10 @@ inline int AlphaBeta(
                 lmrAdjustments -= 1024;
             }
             if (move == data.killerMoves[currentPly])
+            {
+                lmrAdjustments -= 1024;
+            }
+            if (isGoodCapture)
             {
                 lmrAdjustments -= 1024;
             }
