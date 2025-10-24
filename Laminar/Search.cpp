@@ -728,7 +728,6 @@ inline int AlphaBeta(
             {
                 lmrAdjustments += 1024;
             }
-
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
