@@ -49,8 +49,10 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 200000 : -1000000;
+        int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
+        int recaptureBonus = (move.To == prevMoveTarget) ? 100000 : 0;
 
-        return mvvlvaValue + seeValue + histScore;
+        return mvvlvaValue + seeValue + histScore + recaptureBonus;
     }
     else if (data.killerMoves[data.ply] == move)
     {
@@ -86,8 +88,10 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, QS_SEE_ORDERING) ? 0 : -1000000;
+        int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
+        int recaptureBonus = (move.To == prevMoveTarget) ? 200000 : 0;
 
-        return mvvlvaValue + histScore + seeValue;
+        return mvvlvaValue + histScore + seeValue + recaptureBonus;
     }
     else
     {
