@@ -599,7 +599,7 @@ inline int AlphaBeta(
         bool isCapture = IsMoveCapture(move);
 
         refresh_if_cross(move, board);
-        bool isGoodCapture = SEE(board, move, 0) && isCapture;
+        bool isBadQuiet = !SEE(board, move, 0) && isQuiet;
         MakeMove(board, move);
 
         data.ply++;
@@ -724,9 +724,9 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            if (isGoodCapture)
+            if (isBadQuiet)
             {
-                lmrAdjustments -= 1024;
+                lmrAdjustments += 1024;
             }
 
             lmrAdjustments /= 1024;
