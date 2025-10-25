@@ -463,7 +463,7 @@ inline int AlphaBeta(
         //if static eval is higher than beta with some margin, assume it'll fail high
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB) - (cutnode * 15)) * depth + RFP_BASE;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
