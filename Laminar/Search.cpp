@@ -554,6 +554,10 @@ inline int AlphaBeta(
         int mainHistScore = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistScore = GetContHistScore(move, data);
 
+        int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+        int coloredVictim = get_piece(victim, 1 - board.side);
+        int captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+
         int historyScore = mainHistScore + contHistScore;
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
@@ -698,6 +702,10 @@ inline int AlphaBeta(
             if (isQuiet)
             {
                 lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
+            }
+            else
+            {
+                lmrAdjustments -= std::clamp(captHistScore / 10240, -2, 2) * 1024;
             }
             if (isQuiet)
             {
