@@ -723,7 +723,7 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            if (ttHit && (ttEntry.bestMove.type() & captureFlag))
+            if (isQuiet && ttHit && (ttEntry.bestMove.type() & captureFlag))
             {
                 lmrAdjustments += 1024;
             }
