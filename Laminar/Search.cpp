@@ -725,7 +725,7 @@ inline int AlphaBeta(
                 lmrAdjustments -= 1024;
             }
             int threatPieces = count_bits(oppThreats & board.occupancies[1 - board.side]);
-            if (threatPieces >= 3)
+            if (threatPieces >= 5)
             {
                 lmrAdjustments -= 1024;
             }
