@@ -65,8 +65,9 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
 
         int mainHistValue = data.histories.mainHist[board.side][move.From][move.To][fromThreat][toThreat];
         int contHistValue = GetContHistScore(move, data);
+        int pawnHistValue = data.histories.pawnHist[board.side][move.Piece][move.To][board.pawnKey % 1024];
 
-        int historyScore = mainHistValue + contHistValue;
+        int historyScore = mainHistValue + contHistValue + pawnHistValue;
 
         //quiet move max value = 16384
         //order quiets based on history scores

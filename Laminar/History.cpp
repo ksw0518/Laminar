@@ -20,6 +20,26 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
     UpdateHistoryEntry(historyEntry, bonus);
 }
 
+void UpdatePawnHist(ThreadData& data, Board& board, Move& move, int16_t bonus)
+{
+    bool stm = move.Piece <= 5 ? White : Black;
+    int16_t& historyEntry = data.histories.pawnHist[stm][move.Piece][move.To][board.pawnKey % 1024];
+    UpdateHistoryEntry(historyEntry, bonus);
+}
+
+void MalusPawnHist(ThreadData& data, Board& board, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
+{
+    bool stm = bonus_move.Piece <= 5 ? White : Black;
+    for (int i = 0; i < searchedQuietMoves.count; ++i)
+    {
+        Move& searchedMove = searchedQuietMoves.moves[i];
+
+        if (searchedMove != bonus_move)
+        {
+            UpdatePawnHist(data, board, searchedMove, -malus);
+        }
+    }
+}
 void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
 {
     int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
