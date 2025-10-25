@@ -28,6 +28,7 @@ bool IsUCI = false;
 int lmrTable[MAXPLY][256];
 
 bool stopSearch = false;
+
 void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
@@ -720,6 +721,11 @@ inline int AlphaBeta(
                 lmrAdjustments -= 1024;
             }
             if (move == data.killerMoves[currentPly])
+            {
+                lmrAdjustments -= 1024;
+            }
+            int threatPieces = count_bits(oppThreats & board.occupancies[1 - board.side]);
+            if (threatPieces >= 3)
             {
                 lmrAdjustments -= 1024;
             }
