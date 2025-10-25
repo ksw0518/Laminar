@@ -222,6 +222,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int searchedMoves = 0;
 
     AccumulatorPair last_accumulator = board.accumulator;
+
+    int futilityValue = bestValue + 100;
+
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -235,6 +238,13 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         {
             continue;
         }
+
+        if (IsMoveCapture(move) && futilityValue <= alpha && !SEE(board, move, 1))
+        {
+            bestValue = std::max(bestValue, futilityValue);
+            continue;
+        }
+
         prefetchTT(zobristAfterMove(board, move));
         int lastEp = board.enpassent;
         uint8_t lastCastle = board.castle;
