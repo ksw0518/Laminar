@@ -723,6 +723,11 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            if (move.To == data.searchStack[currentPly - 1].move.To)
+            {
+                //more likely to fail high ig?
+                lmrAdjustments -= 1024;
+            }
 
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
