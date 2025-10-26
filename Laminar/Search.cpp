@@ -221,7 +221,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
     int searchedMoves = 0;
 
-    AccumulatorPair last_accumulator = board.accumulator;
+    data.searchStack[currentPly].last_accumulator = board.accumulator;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -261,7 +261,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
             board.castle = lastCastle;
             board.side = lastside;
             board.zobristKey = last_zobrist;
-            board.accumulator = last_accumulator;
+            board.accumulator = data.searchStack[currentPly].last_accumulator;
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
@@ -286,7 +286,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         board.castle = lastCastle;
         board.side = lastside;
         board.zobristKey = last_zobrist;
-        board.accumulator = last_accumulator;
+        board.accumulator = data.searchStack[currentPly].last_accumulator;
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
@@ -534,7 +534,7 @@ inline int AlphaBeta(
     int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
 
     bool skipQuiets = false;
-    AccumulatorPair last_accumulator = board.accumulator;
+    data.searchStack[currentPly].last_accumulator = board.accumulator;
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -611,7 +611,7 @@ inline int AlphaBeta(
             board.castle = lastCastle;
             board.side = lastside;
             board.zobristKey = last_zobrist;
-            board.accumulator = last_accumulator;
+            board.accumulator = data.searchStack[currentPly].last_accumulator;
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
@@ -650,7 +650,7 @@ inline int AlphaBeta(
             board.castle = lastCastle;
             board.side = lastside;
             board.zobristKey = last_zobrist;
-            board.accumulator = last_accumulator;
+            board.accumulator = data.searchStack[currentPly].last_accumulator;
             board.pawnKey = last_pawnKey;
             board.whiteNonPawnKey = last_white_np;
             board.blackNonPawnKey = last_black_np;
@@ -775,7 +775,7 @@ inline int AlphaBeta(
         board.castle = lastCastle;
         board.side = lastside;
         board.zobristKey = last_zobrist;
-        board.accumulator = last_accumulator;
+        board.accumulator = data.searchStack[currentPly].last_accumulator;
         board.pawnKey = last_pawnKey;
         board.whiteNonPawnKey = last_white_np;
         board.blackNonPawnKey = last_black_np;
@@ -979,6 +979,9 @@ std::pair<Move, int> IterativeDeepening(
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
+
+            AccumulatorPair zeroAccumulator{};
+            data.searchStack[i].last_accumulator = zeroAccumulator;
         }
         //ensure depth 1 search always finishes
         if (data.currDepth == 1)

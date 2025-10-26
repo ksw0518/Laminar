@@ -14,6 +14,7 @@ struct SearchData
     int staticEval = 0;
     int reduction = 0;
     bool check = false;
+    AccumulatorPair last_accumulator;
 };
 
 struct Histories
