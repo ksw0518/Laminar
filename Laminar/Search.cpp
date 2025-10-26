@@ -979,9 +979,6 @@ std::pair<Move, int> IterativeDeepening(
         for (int i = 0; i < MAXPLY; i++)
         {
             data.searchStack[i].move = Move(0, 0, 0, 0);
-
-            AccumulatorPair zeroAccumulator{};
-            data.searchStack[i].last_accumulator = zeroAccumulator;
         }
         //ensure depth 1 search always finishes
         if (data.currDepth == 1)
