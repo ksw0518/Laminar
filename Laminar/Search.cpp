@@ -531,7 +531,11 @@ inline int AlphaBeta(
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * depth * depth;
-    int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
+
+    int lmpBase = improving ? 95 : LMP_BASE;
+    int lmpMult = improving ? 188 : LMP_MULTIPLIER;
+
+    int lmpThreshold = (lmpBase + (lmpMult)*depth * depth) / 100;
 
     bool skipQuiets = false;
     AccumulatorPair last_accumulator = board.accumulator;
