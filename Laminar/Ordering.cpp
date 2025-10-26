@@ -71,7 +71,7 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
 
         //quiet move max value = 16384
         //order quiets based on history scores
-        return historyScore - MAX_HISTORY - MAX_CONTHIST;
+        return historyScore - 2 * MAX_HISTORY - MAX_CONTHIST;
     }
 }
 
