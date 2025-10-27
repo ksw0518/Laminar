@@ -22,8 +22,8 @@ struct Accumulator
 };
 struct AccumulatorPair
 {
-    Accumulator white;
-    Accumulator black;
+    Accumulator white{};
+    Accumulator black{};
 };
 extern Network EvalNetwork;
 

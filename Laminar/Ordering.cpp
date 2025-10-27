@@ -49,8 +49,13 @@ int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry&
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, PVS_SEE_ORDERING) ? 200000 : -1000000;
-        int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
-        int recaptureBonus = (move.To == prevMoveTarget) ? 100000 : 0;
+
+        int recaptureBonus = 0;
+        if (data.ply >= 1)
+        {
+            int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
+            recaptureBonus = (move.To == prevMoveTarget) ? 100000 : 0;
+        }
 
         return mvvlvaValue + seeValue + histScore + recaptureBonus;
     }
