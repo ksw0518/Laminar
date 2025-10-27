@@ -93,8 +93,12 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         int mvvlvaValue = victimValue * 100 - attackerValue;
         int histScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         int seeValue = SEE(board, move, QS_SEE_ORDERING) ? 0 : -1000000;
-        int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
-        int recaptureBonus = (move.To == prevMoveTarget) ? 200000 : 0;
+        int recaptureBonus = 0;
+        if (data.ply >= 1)
+        {
+            int prevMoveTarget = data.searchStack[data.ply - 1].move.To;
+            recaptureBonus = (move.To == prevMoveTarget) ? 100000 : 0;
+        }
 
         return mvvlvaValue + histScore + seeValue + recaptureBonus;
     }
