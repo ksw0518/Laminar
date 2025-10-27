@@ -599,6 +599,13 @@ inline int AlphaBeta(
         bool isCapture = IsMoveCapture(move);
 
         refresh_if_cross(move, board);
+
+        bool isBadQuiet = false;
+        if (depth > MIN_LMR_DEPTH && searchedMoves > 0 && isQuiet)
+        {
+            isBadQuiet = !SEE(board, move, 0);
+        }
+
         MakeMove(board, move);
 
         data.ply++;
@@ -722,6 +729,10 @@ inline int AlphaBeta(
             if (move == data.killerMoves[currentPly])
             {
                 lmrAdjustments -= 1024;
+            }
+            if (isQuiet && isBadQuiet)
+            {
+                lmrAdjustments += 1024;
             }
 
             lmrAdjustments /= 1024;
