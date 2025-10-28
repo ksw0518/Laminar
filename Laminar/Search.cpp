@@ -731,7 +731,7 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            if (abs(staticEval - materialValue * 1024 / 283) > 400)
+            if (abs(staticEval - materialValue * 1024 / 283) > 200)
             {
                 lmrAdjustments -= 1024;
             }
