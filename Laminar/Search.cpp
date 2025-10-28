@@ -537,7 +537,7 @@ inline int AlphaBeta(
     bool skipQuiets = false;
     data.searchStack[currentPly].last_accumulator = board.accumulator;
 
-    int materialValue = material_eval(board) * 2;
+    int materialValue = material_eval(board);
 
     for (int i = 0; i < moveList.count; ++i)
     {
@@ -731,7 +731,7 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            if (abs(staticEval - materialValue) > 400)
+            if (abs(staticEval - materialValue * 1024 / 283) > 400)
             {
                 lmrAdjustments -= 1024;
             }
