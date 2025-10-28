@@ -685,6 +685,10 @@ inline int AlphaBeta(
             {
                 extension = -1;
             }
+            else if (cutnode)
+            {
+                extension = -2;
+            }
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
