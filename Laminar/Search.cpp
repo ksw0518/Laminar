@@ -28,6 +28,7 @@ bool IsUCI = false;
 int lmrTable[MAXPLY][256];
 
 bool stopSearch = false;
+
 void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
@@ -535,6 +536,9 @@ inline int AlphaBeta(
 
     bool skipQuiets = false;
     data.searchStack[currentPly].last_accumulator = board.accumulator;
+
+    int materialValue = material_eval(board) * 2;
+
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -727,10 +731,14 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-
+            if (abs(staticEval - materialValue) > 400)
+            {
+                lmrAdjustments -= 1024;
+            }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
+
         data.searchStack[currentPly].reduction = reduction;
         if (reduction < 0)
             reduction = 0;
@@ -1088,7 +1096,6 @@ std::pair<Move, int> IterativeDeepening(
                 }
             }
         }
-
         if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load()
             || (searchLimits.HardNodeLimit != NOLIMIT && data.searchNodeCount > searchLimits.HardNodeLimit))
         {

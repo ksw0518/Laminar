@@ -160,7 +160,22 @@ void init_tables()
         }
     }
 }
-
+int material_eval(Board& board)
+{
+    int whiteBishop = count_bits(board.bitboards[B]) * 300;
+    int blackBishop = count_bits(board.bitboards[b]) * -300;
+    int whiteKnight = count_bits(board.bitboards[N]) * 300;
+    int blackKnight = count_bits(board.bitboards[n]) * -300;
+    int whiteRook = count_bits(board.bitboards[R]) * 500;
+    int blackRook = count_bits(board.bitboards[r]) * -500;
+    int whiteQueen = count_bits(board.bitboards[Q]) * 900;
+    int blackQueen = count_bits(board.bitboards[q]) * -900;
+    int whitePawn = count_bits(board.bitboards[P]) * 100;
+    int blackPawn = count_bits(board.bitboards[p]) * -100;
+    return (whiteBishop + blackBishop + whiteKnight + blackKnight + whiteRook + blackRook + whiteQueen + blackQueen
+            + whitePawn + blackPawn)
+         * (board.side == Black ? -1 : 1);
+}
 int material_phase(Board& board)
 {
     int knights = count_bits(board.bitboards[N] | board.bitboards[n]);
