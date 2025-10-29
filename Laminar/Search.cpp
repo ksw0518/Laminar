@@ -561,7 +561,7 @@ inline int AlphaBeta(
             //Late move pruning
             //skip moves that are "late"(moves later in the move list)
             //because good moves are usually in the front
-            if (searchedMoves >= lmpThreshold)
+            if (searchedMoves >= lmpThreshold / (2 - improving))
             {
                 skipQuiets = true;
                 continue;
