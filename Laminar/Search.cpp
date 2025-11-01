@@ -668,6 +668,21 @@ inline int AlphaBeta(
             int s_beta = ttEntry.score - depth * 2;
             int s_depth = (depth - 1) / 2;
             int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
+            if (s_score < s_beta - 20)
+            {
+                if (!(ttEntry.bestMove.type() & captureFlag)) //quiets
+                {
+                    int16_t mainHistBonus =
+                        std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+                    UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
+                }
+                else
+                {
+                    int16_t captHistBonus =
+                        std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
+                    UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
+                }
+            }
             if (s_score < s_beta)
             {
                 extension++;
