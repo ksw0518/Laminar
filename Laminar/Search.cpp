@@ -700,7 +700,7 @@ inline int AlphaBeta(
             {
                 return s_beta;
             }
-            else if (ttEntry.score >= beta)
+            else if (ttEntry.score >= beta || cutnode)
             {
                 extension = -1;
             }
