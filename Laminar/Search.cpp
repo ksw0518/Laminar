@@ -727,9 +727,9 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            if (isPvNode && abs(beta - alpha) > 40)
+            if (isPvNode && abs(beta - alpha) < 30)
             {
-                lmrAdjustments -= 1024;
+                lmrAdjustments += 1024;
             }
 
             lmrAdjustments /= 1024;
