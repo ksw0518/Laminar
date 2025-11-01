@@ -683,6 +683,22 @@ inline int AlphaBeta(
                     UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
                 }
             }
+            else if (s_score >= s_beta)
+            {
+                if (!(ttEntry.bestMove.type() & captureFlag)) //quiets
+                {
+                    int16_t mainHistMalus =
+                        std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
+                    UpdateMainHist(data, board.side, move.From, move.To, -mainHistMalus, oppThreats);
+                }
+                else
+                {
+                    int16_t captHistBonus =
+                        std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
+                    UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], -captHistBonus);
+                }
+            }
+
             if (s_score < s_beta)
             {
                 extension++;
