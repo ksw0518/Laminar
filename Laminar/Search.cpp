@@ -675,6 +675,10 @@ inline int AlphaBeta(
                     int16_t mainHistBonus =
                         std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
                     UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
+
+                    int16_t contHistBonus =
+                        std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+                    UpdateContHist(move, contHistBonus, data);
                 }
                 else
                 {
