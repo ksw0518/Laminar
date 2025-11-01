@@ -762,7 +762,6 @@ inline int AlphaBeta(
         int childDepth = depth + extension - 1;
 
         uint64_t nodesBeforeSearch = data.searchNodeCount;
-
         //Late move reduction
         //do reduced zero window search for late moves
         //to prove they are worse than previously serached moves
@@ -812,6 +811,7 @@ inline int AlphaBeta(
 
         board.history.pop_back();
 
+        int scoreBefore = bestValue;
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
         {
@@ -845,12 +845,16 @@ inline int AlphaBeta(
             {
                 //update killer moves for move ordering
                 data.killerMoves[currentPly] = move;
+                int deltaEval = score - scoreBefore;
+                int scale = 128 + std::clamp(deltaEval * 128 / 100, 128, 256);
 
                 //update history scores
-                int16_t mainHistBonus =
+                int mainHistBonus =
                     std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
                 int16_t mainHistMalus =
                     std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
+                mainHistBonus *= scale;
+                mainHistBonus /= 128;
 
                 UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
