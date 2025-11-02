@@ -530,8 +530,6 @@ inline int AlphaBeta(
 
     Move bestMove = Move(0, 0, 0, 0);
 
-    int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * depth;
-    int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * depth * depth;
     int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
 
     bool skipQuiets = false;
@@ -560,6 +558,11 @@ inline int AlphaBeta(
 
         int historyScore = mainHistScore + contHistScore;
 
+        int reduction = 0;
+        reduction = lmrTable[depth][searchedMoves + 1];
+        bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves + 1 > 1;
+
+        int lmrDepth = doLmr ? std::max(depth - reduction - 1, 0) : depth;
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             //Late move pruning
@@ -578,6 +581,8 @@ inline int AlphaBeta(
             {
                 continue;
             }
+            int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * lmrDepth;
+            int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * lmrDepth * lmrDepth;
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
@@ -640,7 +645,6 @@ inline int AlphaBeta(
         data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
 
-        int reduction = 0;
         int extension = 0;
 
         //Singular Extension
@@ -708,11 +712,9 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
-        bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
 
         if (doLmr)
         {
-            reduction = lmrTable[depth][searchedMoves];
             int lmrAdjustments = 0;
             if (!isPvNode && quietMoves >= 4)
             {
