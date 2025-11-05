@@ -923,7 +923,10 @@ inline int AlphaBeta(
     ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
     if (!isSingularSearch && !data.stopSearch.load())
     {
-        ttStore(ttEntry, board);
+        if (ttFlag == HFEXACT || ttEntry.zobristKey != board.zobristKey || depth + 4 > ttDepth)
+        {
+            ttStore(ttEntry, board);
+        }
     }
 
     return bestValue;
