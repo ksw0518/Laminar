@@ -841,6 +841,7 @@ inline int AlphaBeta(
         {
             ttFlag = HFLOWER;
 
+            int historyDepth = depth + 2 * isPvNode;
             if (isQuiet)
             {
                 //update killer moves for move ordering
@@ -848,31 +849,31 @@ inline int AlphaBeta(
 
                 //update history scores
                 int16_t mainHistBonus =
-                    std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+                    std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * historyDepth);
                 int16_t mainHistMalus =
-                    std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
+                    std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * historyDepth);
 
                 UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
                 int16_t contHistBonus =
-                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * historyDepth);
                 int16_t contHistMalus =
-                    std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
+                    std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * historyDepth);
                 UpdateContHist(move, contHistBonus, data);
                 MalusContHist(data, searchedQuietMoves, move, contHistMalus);
 
                 int16_t captHistMalus =
-                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * historyDepth);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
             }
             else
             {
                 //update capture history scores
                 int16_t captHistBonus =
-                    std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
+                    std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * historyDepth);
                 int16_t captHistMalus =
-                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
+                    std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * historyDepth);
 
                 UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
