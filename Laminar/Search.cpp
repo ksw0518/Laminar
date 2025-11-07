@@ -230,6 +230,12 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (!IsMoveNoisy(move))
             continue;
 
+        bool isCapture = IsMoveCapture(move);
+        bool isRecapture = isCapture && move.To == data.searchStack[currentPly - 1].move.To;
+        if (!isRecapture && i >= 2)
+        {
+            break;
+        }
         //skip moves that have bad static exchange evaluation score,
         //since they are likely bad
         if (!SEE(board, move, QS_SEE_MARGIN))
