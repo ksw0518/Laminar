@@ -581,7 +581,7 @@ inline int AlphaBeta(
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
             if (isQuiet)
             {
-                seeThreshold -= historyScore / 300;
+                seeThreshold -= historyScore / 400;
             }
 
             //if the Static Exchange Evaluation score is lower than certain margin,
