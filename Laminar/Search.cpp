@@ -579,6 +579,11 @@ inline int AlphaBeta(
                 continue;
             }
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
+            if (isQuiet)
+            {
+                seeThreshold -= historyScore / 300;
+            }
+
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
