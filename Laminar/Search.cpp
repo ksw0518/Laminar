@@ -851,16 +851,20 @@ inline int AlphaBeta(
                 data.killerMoves[currentPly] = move;
 
                 //update history scores
-                int16_t mainHistBonus =
-                    std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+                int16_t mainHistBonus = std::min(
+                    (int)MAINHIST_BONUS_MAX,
+                    MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth + isPvNode * 80
+                );
                 int16_t mainHistMalus =
                     std::min((int)MAINHIST_MALUS_MAX, MAINHIST_MALUS_BASE + MAINHIST_MALUS_MULT * depth);
 
                 UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
-                int16_t contHistBonus =
-                    std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
+                int16_t contHistBonus = std::min(
+                    (int)CONTHIST_BONUS_MAX,
+                    CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth + isPvNode * 80
+                );
                 int16_t contHistMalus =
                     std::min((int)CONTHIST_MALUS_MAX, CONTHIST_MALUS_BASE + CONTHIST_MALUS_MULT * depth);
                 UpdateContHist(move, contHistBonus, data);
