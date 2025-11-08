@@ -520,11 +520,14 @@ inline int AlphaBeta(
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
 
+    ScoredMove scored[256];
+
     //order moves from best to worse for more cutoff
-    SortMoves(moveList, board, data, ttEntry, oppThreats);
+    ScoreMoves(scored, moveList, board, data, ttEntry, oppThreats);
 
     MoveList searchedQuietMoves;
     MoveList searchedNoisyMoves;
+
     int searchedMoves = 0;
     int quietMoves = 0;
 
@@ -541,6 +544,7 @@ inline int AlphaBeta(
 
     for (int i = 0; i < moveList.count; ++i)
     {
+        ChooseNextMove(scored, moveList, i);
         Move& move = moveList.moves[i];
         if (move == excludedMove)
         {

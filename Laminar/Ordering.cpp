@@ -9,6 +9,7 @@
 #include "Transpositions.h"
 #include "Tuneables.h"
 #include <algorithm>
+#include <utility>
 
 bool IsMoveNoisy(Move& move)
 {
@@ -107,26 +108,38 @@ int QsearchGetMoveScore(Move& move, Board& board, ThreadData& data)
         return -90000;
     }
 }
-
-void SortMoves(MoveList& ml, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threats)
+void ChooseNextMove(ScoredMove* scored, MoveList& ml, int moveCount)
 {
-    ScoredMove scored[256];
+    int bestIndex = moveCount;
+    int bestScore = scored[moveCount].score;
+    for (int i = moveCount + 1; i < ml.count; i++)
+    {
+        if (scored[i].score > bestScore)
+        {
+            bestIndex = i;
+            bestScore = scored[i].score;
+        }
+    }
+    if (bestIndex != moveCount)
+    {
+        std::swap(scored[bestIndex], scored[moveCount]);
+        std::swap(ml.moves[bestIndex], ml.moves[moveCount]);
+    }
+}
 
+void ScoreMoves(
+    ScoredMove* scored,
+    MoveList& ml,
+    Board& board,
+    ThreadData& data,
+    TranspositionEntry& entry,
+    uint64_t threats
+)
+{
     for (int i = 0; i < ml.count; ++i)
     {
         scored[i].score = GetMoveScore(ml.moves[i], board, data, entry, threats);
         scored[i].move = ml.moves[i];
-    }
-
-    std::stable_sort(
-        scored,
-        scored + ml.count,
-        [](const ScoredMove& a, const ScoredMove& b) { return a.score > b.score; }
-    );
-
-    for (int i = 0; i < ml.count; ++i)
-    {
-        ml.moves[i] = scored[i].move;
     }
 }
 
