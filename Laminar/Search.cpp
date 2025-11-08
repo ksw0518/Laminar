@@ -704,6 +704,7 @@ inline int AlphaBeta(
             {
                 extension = -1;
             }
+            data.searchStack[currentPly].extension = extension;
             refresh_if_cross(move, board);
             MakeMove(board, move);
             data.ply++;
@@ -750,6 +751,7 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            lmrAdjustments += data.searchStack[currentPly].extension * 512;
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
