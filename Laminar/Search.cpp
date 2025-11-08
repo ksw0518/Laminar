@@ -470,7 +470,14 @@ inline int AlphaBeta(
                 return (ttAdjustedEval + beta) / 2;
             }
         }
-
+        if (depth <= 3 && ttAdjustedEval + 200 * depth <= alpha)
+        {
+            int razor_score = QuiescentSearch(board, data, alpha, alpha + 1);
+            if (razor_score <= alpha)
+            {
+                return razor_score;
+            }
+        }
         //Null move pruning
         //The null move skips our turn without making move,
         //which allows opponent to make two moves in a row
