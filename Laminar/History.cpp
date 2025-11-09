@@ -141,11 +141,26 @@ void UpdateMinorCorrHist(Board& board, const int depth, const int diff, ThreadDa
     minorEntry = std::clamp<int16_t>(minorEntry, -CORRHIST_MAX, CORRHIST_MAX);
 }
 
+void UpdateCounterCorrHist(Board& board, const int depth, const int diff, ThreadData& data)
+{
+    if (data.ply == 0)
+        return;
+    int ply = data.ply;
+    int16_t& counterEntry =
+        data.histories.counterMoveCorrHist[data.searchStack[ply - 1].move.Piece][data.searchStack[ply - 1].move.To];
+    const int scaledDiff = diff * CORRHIST_GRAIN;
+    const int newWeight = std::min(depth + 1, 16);
+    counterEntry =
+        (counterEntry * (CORRHIST_WEIGHT_SCALE - newWeight) + scaledDiff * newWeight) / CORRHIST_WEIGHT_SCALE;
+    counterEntry = std::clamp<int16_t>(counterEntry, -CORRHIST_MAX, CORRHIST_MAX);
+}
+
 void UpdateCorrhists(Board& board, const int depth, const int diff, ThreadData& data)
 {
     UpdatePawnCorrHist(board, depth, diff, data);
     UpdateNonPawnCorrHist(board, depth, diff, data);
     UpdateMinorCorrHist(board, depth, diff, data);
+    UpdateCounterCorrHist(board, depth, diff, data);
 }
 
 int16_t GetPawnCorrHistValue(Board& board, ThreadData& data)
@@ -171,6 +186,12 @@ int16_t GetMinorCorrHistValue(Board& board, ThreadData& data)
     uint64_t minorKey = board.minorKey;
     return data.histories.minorCorrHist[board.side][minorKey % CORRHIST_SIZE];
 }
+int16_t GetCounterCorrHistValue(Board& board, ThreadData& data)
+{
+    return data.ply == 0 ? 0
+                         : data.histories.counterMoveCorrHist[data.searchStack[data.ply - 1].move.Piece]
+                                                             [data.searchStack[data.ply - 1].move.Piece];
+}
 
 int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
 {
@@ -178,6 +199,7 @@ int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
     int whiteNPEntry = GetWhiteNonPawnCorrHistValue(board, data);
     int blackNPEntry = GetBlackNonPawnCorrHistValue(board, data);
     int minorEntry = GetMinorCorrHistValue(board, data);
+    int counterEntry = GetCounterCorrHistValue(board, data);
 
     int mate_found = MATESCORE - MAXPLY;
 
@@ -186,6 +208,7 @@ int AdjustEvalWithCorrHist(Board& board, const int rawEval, ThreadData& data)
     adjust += pawnEntry * PAWN_CORRHIST_MULTIPLIER;
     adjust += (whiteNPEntry + blackNPEntry) * NONPAWN_CORRHIST_MULTIPLIER;
     adjust += (minorEntry)*MINOR_CORRHIST_MULTIPLIER;
+    adjust += (counterEntry) * 150;
     adjust /= 128;
 
     return std::clamp(rawEval + adjust / CORRHIST_GRAIN, -mate_found + 1, mate_found - 1);
