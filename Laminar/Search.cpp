@@ -613,6 +613,7 @@ inline int AlphaBeta(
 
         bool isCapture = IsMoveCapture(move);
 
+        bool isBadQuiet = isQuiet && !SEE(board, move, 0);
         refresh_if_cross(move, board);
         MakeMove(board, move);
 
@@ -760,6 +761,10 @@ inline int AlphaBeta(
             if (abs(staticEval - materialValue * 1024 / 283) > 550)
             {
                 lmrAdjustments -= 1024;
+            }
+            if (isBadQuiet)
+            {
+                lmrAdjustments += 1024;
             }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
