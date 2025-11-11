@@ -558,6 +558,8 @@ inline int AlphaBeta(
             continue;
         }
         bool isQuiet = !IsMoveCapture(move);
+        bool isCapture = IsMoveCapture(move);
+
         if (skipQuiets && isQuiet)
         {
             continue;
@@ -570,7 +572,17 @@ inline int AlphaBeta(
         int contHistScore = GetContHistScore(move, data);
 
         int historyScore = mainHistScore + contHistScore;
+        int captHistScore = 0;
+        if (isCapture)
+        {
+            int victim = board.mailbox[move.To];
+            if (IsEpCapture(move))
+            {
+                victim = board.side == White ? p : P;
+            }
 
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][victim];
+        }
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             //Late move pruning
@@ -594,6 +606,10 @@ inline int AlphaBeta(
             {
                 seeThreshold -= historyScore / 400;
             }
+            if (isCapture)
+            {
+                seeThreshold -= captHistScore / 100;
+            }
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
             if (!SEE(board, move, seeThreshold))
@@ -614,8 +630,6 @@ inline int AlphaBeta(
         uint64_t last_minor = board.minorKey;
         uint64_t last_irreversible = board.lastIrreversiblePly;
         uint64_t last_halfmove = board.halfmove;
-
-        bool isCapture = IsMoveCapture(move);
 
         refresh_if_cross(move, board);
         MakeMove(board, move);

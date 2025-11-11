@@ -28,7 +28,7 @@ bool IsMoveCapture(Move& move)
 
 bool IsEpCapture(Move& move)
 {
-    return (move.Type & ep_capture) != 0;
+    return (move.Type == ep_capture);
 }
 
 int GetMoveScore(Move& move, Board& board, ThreadData& data, TranspositionEntry& entry, uint64_t threat)

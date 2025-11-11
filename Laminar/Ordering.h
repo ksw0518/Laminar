@@ -12,6 +12,8 @@ void ChooseNextMove(ScoredMove* scored, MoveList& ml, int moveCount);
 bool IsMoveCapture(Move& move);
 bool IsMoveQuiet(Move& move);
 bool IsMoveNoisy(Move& move);
+bool IsEpCapture(Move& move);
+
 void ScoreMoves(
     ScoredMove* scored,
     MoveList& ml,
