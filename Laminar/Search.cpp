@@ -558,6 +558,8 @@ inline int AlphaBeta(
             continue;
         }
         bool isQuiet = !IsMoveCapture(move);
+        bool isCapture = IsMoveCapture(move);
+
         if (skipQuiets && isQuiet)
         {
             continue;
@@ -571,6 +573,17 @@ inline int AlphaBeta(
 
         int historyScore = mainHistScore + contHistScore;
 
+        int captHistScore = 0;
+        if (isCapture)
+        {
+            int victim = board.mailbox[move.To];
+            if (IsEpCapture(move))
+            {
+                victim = board.side == White ? p : P;
+            }
+
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][victim];
+        }
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             //Late move pruning
@@ -614,8 +627,6 @@ inline int AlphaBeta(
         uint64_t last_minor = board.minorKey;
         uint64_t last_irreversible = board.lastIrreversiblePly;
         uint64_t last_halfmove = board.halfmove;
-
-        bool isCapture = IsMoveCapture(move);
 
         refresh_if_cross(move, board);
         MakeMove(board, move);
@@ -736,6 +747,10 @@ inline int AlphaBeta(
             if (isQuiet)
             {
                 lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
+            }
+            else
+            {
+                lmrAdjustments -= std::clamp(captHistScore / 10000, -2, 2) * 1024;
             }
             if (isQuiet)
             {
