@@ -549,6 +549,7 @@ inline int AlphaBeta(
 
     int materialValue = material_eval(board);
 
+    bool isDext = false;
     for (int i = 0; i < moveList.count; ++i)
     {
         ChooseNextMove(scored, moveList, i);
@@ -705,6 +706,7 @@ inline int AlphaBeta(
                 //TT move is very singular, increase depth by 2
                 if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
                 {
+                    isDext = true;
                     extension++;
                 }
             }
@@ -764,6 +766,10 @@ inline int AlphaBeta(
             if (abs(staticEval - materialValue * 1024 / 283) > 550)
             {
                 lmrAdjustments -= 1024;
+            }
+            if (isDext)
+            {
+                lmrAdjustments += 1024;
             }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
