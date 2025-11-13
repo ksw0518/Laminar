@@ -20,5 +20,5 @@ void ScoreMoves(
     TranspositionEntry& entry,
     uint64_t threats
 );
-void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data);
+void SortNoisyMoves(MoveList& ml, Board& board, ThreadData& data, uint64_t threats);
 
