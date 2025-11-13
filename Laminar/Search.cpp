@@ -765,6 +765,11 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            int threatCount = count_bits(oppThreats);
+            if (threatCount <= 2 && isQuiet)
+            {
+                lmrAdjustments += 1024;
+            }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
