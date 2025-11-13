@@ -765,8 +765,9 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
-            int threatCount = count_bits(oppThreats);
-            if (threatCount <= 2 && isQuiet)
+            //threats that attack our side
+            int threatCount = count_bits(oppThreats) & board.occupancies[1 - board.side];
+            if (threatCount <= 1 && isQuiet)
             {
                 lmrAdjustments += 1024;
             }
