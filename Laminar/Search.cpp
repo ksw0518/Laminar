@@ -23,6 +23,7 @@
 #include "Threading.h"
 
 #define NULLMOVE Move(0, 0, 0, 0)
+#define NULLMOVE16 Move16(0, 0, 0)
 
 bool IsUCI = false;
 int lmrTable[MAXPLY][256];
@@ -518,6 +519,91 @@ inline int AlphaBeta(
                 {
                     return score;
                 }
+            }
+        }
+    }
+
+    int probcutBeta = beta + 200;
+    int probcutDepth = std::max(depth - 3, 1);
+    if (!isSingularSearch && depth >= 7 && notMated
+        && (ttEntry.bestMove.data == 0 || (ttEntry.bestMove.type() & captureFlag))
+        && !(ttHit && ttDepth >= probcutDepth && ttEntry.score < probcutBeta))
+    {
+        MoveList noisyList;
+        GeneratePseudoLegalMoves(noisyList, board, true);
+        SortNoisyMoves(noisyList, board, data);
+        int seeThreshold = (probcutBeta - staticEval) * 15 / 16;
+        for (int i = 0; i < noisyList.count; i++)
+        {
+            Move move = noisyList.moves[i];
+            if (!SEE(board, move, seeThreshold))
+            {
+                continue;
+            }
+            prefetchTT(zobristAfterMove(board, move));
+
+            int lastEp = board.enpassent;
+            uint8_t lastCastle = board.castle;
+            bool lastside = board.side;
+            int captured_piece = board.mailbox[move.To];
+            uint64_t last_zobrist = board.zobristKey;
+            uint64_t last_pawnKey = board.pawnKey;
+            uint64_t last_white_np = board.whiteNonPawnKey;
+            uint64_t last_black_np = board.blackNonPawnKey;
+            uint64_t last_minor = board.minorKey;
+            uint64_t last_irreversible = board.lastIrreversiblePly;
+            uint64_t last_halfmove = board.halfmove;
+
+            bool isCapture = IsMoveCapture(move);
+            data.ply++;
+
+            refresh_if_cross(move, board);
+            MakeMove(board, move);
+            if (!isLegal(move, board))
+            {
+                UnmakeMove(board, move, captured_piece);
+
+                board.enpassent = lastEp;
+                board.castle = lastCastle;
+                board.side = lastside;
+                board.zobristKey = last_zobrist;
+                board.accumulator = data.searchStack[currentPly].last_accumulator;
+                board.pawnKey = last_pawnKey;
+                board.whiteNonPawnKey = last_white_np;
+                board.blackNonPawnKey = last_black_np;
+                board.minorKey = last_minor;
+                board.lastIrreversiblePly = last_irreversible;
+                board.halfmove = last_halfmove;
+                board.history.pop_back();
+
+                data.ply--;
+                continue;
+            }
+            data.searchNodeCount++;
+            int score = -QuiescentSearch(board, data, -probcutBeta, -probcutBeta + 1);
+            if (score >= probcutBeta)
+            {
+                score = -AlphaBeta(board, data, probcutDepth - 1, -probcutBeta, -probcutBeta + 1, !cutnode);
+            }
+            UnmakeMove(board, move, captured_piece);
+
+            board.enpassent = lastEp;
+            board.castle = lastCastle;
+            board.side = lastside;
+            board.zobristKey = last_zobrist;
+            board.accumulator = data.searchStack[currentPly].last_accumulator;
+            board.pawnKey = last_pawnKey;
+            board.whiteNonPawnKey = last_white_np;
+            board.blackNonPawnKey = last_black_np;
+            board.minorKey = last_minor;
+            board.lastIrreversiblePly = last_irreversible;
+            board.halfmove = last_halfmove;
+            board.history.pop_back();
+
+            data.ply--;
+            if (score >= probcutBeta)
+            {
+                return score;
             }
         }
     }
