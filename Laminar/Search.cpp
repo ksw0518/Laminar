@@ -522,8 +522,7 @@ inline int AlphaBeta(
             }
         }
     }
-
-    int probcutBeta = beta + 200;
+    int probcutBeta = beta + 300;
     int probcutDepth = std::max(depth - 3, 1);
     if (!isSingularSearch && depth >= 7 && notMated
         && (ttEntry.bestMove.data == 0 || (ttEntry.bestMove.type() & captureFlag))
@@ -532,7 +531,7 @@ inline int AlphaBeta(
         MoveList noisyList;
         GeneratePseudoLegalMoves(noisyList, board, true);
         SortNoisyMoves(noisyList, board, data);
-        int seeThreshold = (probcutBeta - staticEval) * 15 / 16;
+        int seeThreshold = 100;
         for (int i = 0; i < noisyList.count; i++)
         {
             Move move = noisyList.moves[i];
@@ -554,7 +553,6 @@ inline int AlphaBeta(
             uint64_t last_irreversible = board.lastIrreversiblePly;
             uint64_t last_halfmove = board.halfmove;
 
-            bool isCapture = IsMoveCapture(move);
             data.ply++;
 
             refresh_if_cross(move, board);
@@ -602,11 +600,20 @@ inline int AlphaBeta(
 
             data.ply--;
             if (score >= probcutBeta)
-            {
+            { //store transposition table
+                ttEntry.bestMove = Move16(move.From, move.To, move.Type);
+                ttEntry.zobristKey = board.zobristKey;
+                ttEntry.score = score;
+                ttEntry.packedInfo = packData(depth, HFLOWER, ttPv);
+                if (!data.stopSearch.load())
+                {
+                    ttStore(ttEntry, board);
+                }
                 return score;
             }
         }
     }
+
     //Calculate all squares opponent is controlling
     uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
 
