@@ -526,7 +526,7 @@ inline int AlphaBeta(
     int probcutDepth = std::max(depth - 3, 1);
     if (!isSingularSearch && depth >= 7 && notMated
         && (ttEntry.bestMove.data == 0 || (ttEntry.bestMove.type() & captureFlag))
-        && !(ttHit && ttDepth >= probcutDepth && ttEntry.score < probcutBeta))
+        && !(ttHit && ttDepth >= probcutDepth && ttEntry.score < probcutBeta) && !isInCheck)
     {
         MoveList noisyList;
         GeneratePseudoLegalMoves(noisyList, board, true);
