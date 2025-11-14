@@ -403,6 +403,9 @@ inline int AlphaBeta(
 
     int ttBound = unpackBound(ttEntry.packedInfo);
     int ttDepth = unpackDepth(ttEntry.packedInfo);
+    bool noTTMove = ttEntry.bestMove.data == 0;
+    bool ttNoisy = (ttEntry.bestMove.type() & captureFlag);
+
     if (ttEntry.zobristKey == board.zobristKey && ttBound != HFNONE)
     {
         ttHit = true;
@@ -515,6 +518,63 @@ inline int AlphaBeta(
                 {
                     return score;
                 }
+            }
+        }
+    }
+    int probcutBeta = beta + 200;
+    int probcutDepth = std::max(depth - 3, 1);
+    if (!isSingularSearch && depth >= 7 && abs(beta) < MATESCORE - MAXPLY && (noTTMove || ttNoisy)
+        && !(ttHit && ttDepth >= probcutDepth && ttEntry.score < probcutBeta) && !isInCheck)
+    {
+        MoveList noisyList;
+        GeneratePseudoLegalMoves(noisyList, board, true);
+        SortNoisyMoves(noisyList, board, data);
+        const int seeThreshold = (probcutBeta - staticEval) * 15 / 16;
+        CopyMake info{};
+        for (int i = 0; i < noisyList.count; i++)
+        {
+            Move move = noisyList.moves[i];
+            if (!SEE(board, move, seeThreshold))
+            {
+                continue;
+            }
+            prefetchTT(zobristAfterMove(board, move));
+            SaveCopyMakeInfo(board, move, info);
+            refresh_if_cross(move, board);
+            MakeMove(board, move);
+            data.ply++;
+
+            if (!isLegal(move, board))
+            {
+                UnmakeMove(board, move, info.captured_piece);
+                ApplyCopyMake(board, info, data, currentPly);
+                board.history.pop_back();
+                data.ply--;
+
+                continue;
+            }
+            data.searchNodeCount++;
+            int score = -QuiescentSearch(board, data, -probcutBeta, -probcutBeta + 1);
+            if (score >= probcutBeta)
+            {
+                score = -AlphaBeta(board, data, probcutDepth - 1, -probcutBeta, -probcutBeta + 1, !cutnode);
+            }
+            UnmakeMove(board, move, info.captured_piece);
+            ApplyCopyMake(board, info, data, currentPly);
+            board.history.pop_back();
+            data.ply--;
+            if (score >= probcutBeta)
+            {
+                //store transposition table
+                ttEntry.bestMove = Move16(move.From, move.To, move.Type);
+                ttEntry.zobristKey = board.zobristKey;
+                ttEntry.score = score;
+                ttEntry.packedInfo = packData(depth, HFLOWER, ttPv);
+                if (!data.stopSearch.load())
+                {
+                    ttStore(ttEntry, board);
+                }
+                return score;
             }
         }
     }
