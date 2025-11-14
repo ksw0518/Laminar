@@ -120,7 +120,7 @@ bool isInsufficientMaterial(const Board& board)
     return false;
 }
 
-void refresh_if_cross(Move& move, Board& board)
+inline void refresh_if_cross(Move& move, Board& board)
 {
     if (get_piece(move.Piece, White) == K) //king has moved
     {
@@ -156,7 +156,34 @@ void refresh_if_cross(Move& move, Board& board)
         }
     }
 }
-
+inline void SaveCopyMakeInfo(Board& board, Move& move, CopyMake& info)
+{
+    info.lastEp = board.enpassent;
+    info.lastCastle = board.castle;
+    info.lastside = board.side;
+    info.captured_piece = board.mailbox[move.To];
+    info.last_pawnKey = board.pawnKey;
+    info.last_white_np = board.whiteNonPawnKey;
+    info.last_black_np = board.blackNonPawnKey;
+    info.last_minor = board.minorKey;
+    info.last_irreversible = board.lastIrreversiblePly;
+    info.last_halfmove = board.halfmove;
+    info.last_zobrist = board.zobristKey;
+}
+inline void ApplyCopyMake(Board& board, CopyMake& info, ThreadData& data, int ply)
+{
+    board.enpassent = info.lastEp;
+    board.castle = info.lastCastle;
+    board.side = info.lastside;
+    board.zobristKey = info.last_zobrist;
+    board.accumulator = data.searchStack[ply].last_accumulator;
+    board.pawnKey = info.last_pawnKey;
+    board.whiteNonPawnKey = info.last_white_np;
+    board.blackNonPawnKey = info.last_black_np;
+    board.minorKey = info.last_minor;
+    board.lastIrreversiblePly = info.last_irreversible;
+    board.halfmove = info.last_halfmove;
+}
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
@@ -223,6 +250,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     int searchedMoves = 0;
 
     data.searchStack[currentPly].last_accumulator = board.accumulator;
+
+    CopyMake undoInfo{};
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -236,19 +265,9 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         {
             continue;
         }
-        prefetchTT(zobristAfterMove(board, move));
-        int lastEp = board.enpassent;
-        uint8_t lastCastle = board.castle;
-        bool lastside = board.side;
-        int captured_piece = board.mailbox[move.To];
-        uint64_t last_zobrist = board.zobristKey;
-        uint64_t last_pawnKey = board.pawnKey;
-        uint64_t last_white_np = board.whiteNonPawnKey;
-        uint64_t last_black_np = board.blackNonPawnKey;
-        uint64_t last_minor = board.minorKey;
-        int last_irreversible = board.lastIrreversiblePly;
-        int last_halfmove = board.halfmove;
 
+        prefetchTT(zobristAfterMove(board, move));
+        SaveCopyMakeInfo(board, move, undoInfo);
         refresh_if_cross(move, board);
         MakeMove(board, move);
 
@@ -256,23 +275,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 
         if (!isLegal(move, board))
         {
-            UnmakeMove(board, move, captured_piece);
-
-            board.enpassent = lastEp;
-            board.castle = lastCastle;
-            board.side = lastside;
-            board.zobristKey = last_zobrist;
-            board.accumulator = data.searchStack[currentPly].last_accumulator;
-            board.pawnKey = last_pawnKey;
-            board.whiteNonPawnKey = last_white_np;
-            board.blackNonPawnKey = last_black_np;
-            board.minorKey = last_minor;
-            board.lastIrreversiblePly = last_irreversible;
-            board.halfmove = last_halfmove;
-
+            UnmakeMove(board, move, undoInfo.captured_piece);
+            ApplyCopyMake(board, undoInfo, data, currentPly);
             board.history.pop_back();
-
             data.ply--;
+
             continue;
         }
         searchedMoves++;
@@ -280,21 +287,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         data.searchStack[currentPly].move = move;
 
         score = -QuiescentSearch(board, data, -beta, -alpha);
-        UnmakeMove(board, move, captured_piece);
-        data.ply--;
 
-        board.enpassent = lastEp;
-        board.castle = lastCastle;
-        board.side = lastside;
-        board.zobristKey = last_zobrist;
-        board.accumulator = data.searchStack[currentPly].last_accumulator;
-        board.pawnKey = last_pawnKey;
-        board.whiteNonPawnKey = last_white_np;
-        board.blackNonPawnKey = last_black_np;
-        board.lastIrreversiblePly = last_irreversible;
-        board.halfmove = last_halfmove;
-
+        UnmakeMove(board, move, undoInfo.captured_piece);
+        ApplyCopyMake(board, undoInfo, data, currentPly);
         board.history.pop_back();
+        data.ply--;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
@@ -549,6 +546,7 @@ inline int AlphaBeta(
 
     int materialValue = material_eval(board);
 
+    CopyMake undoInfo{};
     for (int i = 0; i < moveList.count; ++i)
     {
         ChooseNextMove(scored, moveList, i);
@@ -601,22 +599,10 @@ inline int AlphaBeta(
                 continue;
             }
         }
-        prefetchTT(zobristAfterMove(board, move));
-
-        int lastEp = board.enpassent;
-        uint8_t lastCastle = board.castle;
-        bool lastside = board.side;
-        int captured_piece = board.mailbox[move.To];
-        uint64_t last_zobrist = board.zobristKey;
-        uint64_t last_pawnKey = board.pawnKey;
-        uint64_t last_white_np = board.whiteNonPawnKey;
-        uint64_t last_black_np = board.blackNonPawnKey;
-        uint64_t last_minor = board.minorKey;
-        uint64_t last_irreversible = board.lastIrreversiblePly;
-        uint64_t last_halfmove = board.halfmove;
-
         bool isCapture = IsMoveCapture(move);
 
+        prefetchTT(zobristAfterMove(board, move));
+        SaveCopyMakeInfo(board, move, undoInfo);
         refresh_if_cross(move, board);
         MakeMove(board, move);
 
@@ -624,22 +610,11 @@ inline int AlphaBeta(
 
         if (!isLegal(move, board))
         {
-            UnmakeMove(board, move, captured_piece);
-
-            board.enpassent = lastEp;
-            board.castle = lastCastle;
-            board.side = lastside;
-            board.zobristKey = last_zobrist;
-            board.accumulator = data.searchStack[currentPly].last_accumulator;
-            board.pawnKey = last_pawnKey;
-            board.whiteNonPawnKey = last_white_np;
-            board.blackNonPawnKey = last_black_np;
-            board.minorKey = last_minor;
-            board.lastIrreversiblePly = last_irreversible;
-            board.halfmove = last_halfmove;
+            UnmakeMove(board, move, undoInfo.captured_piece);
+            ApplyCopyMake(board, undoInfo, data, currentPly);
             board.history.pop_back();
-
             data.ply--;
+
             continue;
         }
         if (isCapture)
@@ -664,20 +639,9 @@ inline int AlphaBeta(
         if (ttHit && !root && depth >= 7 && compareMoves(move, ttEntry.bestMove) && !isSingularSearch
             && ttDepth >= depth - 3 && ttBound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
-            UnmakeMove(board, move, captured_piece);
-            board.enpassent = lastEp;
-            board.castle = lastCastle;
-            board.side = lastside;
-            board.zobristKey = last_zobrist;
-            board.accumulator = data.searchStack[currentPly].last_accumulator;
-            board.pawnKey = last_pawnKey;
-            board.whiteNonPawnKey = last_white_np;
-            board.blackNonPawnKey = last_black_np;
-            board.minorKey = last_minor;
-            board.lastIrreversiblePly = last_irreversible;
+            UnmakeMove(board, move, undoInfo.captured_piece);
+            ApplyCopyMake(board, undoInfo, data, currentPly);
             board.history.pop_back();
-            board.halfmove = last_halfmove;
-
             data.ply--;
 
             int s_beta = ttEntry.score - depth * 2;
@@ -809,23 +773,10 @@ inline int AlphaBeta(
         {
             data.nodesPerMove[move.From][move.To] += nodesSpent;
         }
-        UnmakeMove(board, move, captured_piece);
-        data.ply--;
-        data.searchStack[currentPly].reduction = 0;
-
-        board.enpassent = lastEp;
-        board.castle = lastCastle;
-        board.side = lastside;
-        board.zobristKey = last_zobrist;
-        board.accumulator = data.searchStack[currentPly].last_accumulator;
-        board.pawnKey = last_pawnKey;
-        board.whiteNonPawnKey = last_white_np;
-        board.blackNonPawnKey = last_black_np;
-        board.minorKey = last_minor;
-        board.lastIrreversiblePly = last_irreversible;
-        board.halfmove = last_halfmove;
-
+        UnmakeMove(board, move, undoInfo.captured_piece);
+        ApplyCopyMake(board, undoInfo, data, currentPly);
         board.history.pop_back();
+        data.ply--;
 
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
