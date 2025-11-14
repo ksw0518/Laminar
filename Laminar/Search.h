@@ -69,7 +69,20 @@ struct SearchLimitations
     {
     }
 };
-
+struct CopyMake
+{
+    int lastEp;
+    uint8_t lastCastle;
+    bool lastside;
+    int captured_piece;
+    uint64_t last_zobrist;
+    uint64_t last_pawnKey;
+    uint64_t last_white_np;
+    uint64_t last_black_np;
+    uint64_t last_minor;
+    uint64_t last_irreversible;
+    uint64_t last_halfmove;
+};
 std::pair<Move, int> IterativeDeepening(
     Board& board,
     int depth,
