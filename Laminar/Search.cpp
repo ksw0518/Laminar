@@ -821,6 +821,9 @@ inline int AlphaBeta(
                 UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 MalusMainHist(data, searchedQuietMoves, move, mainHistMalus, oppThreats);
 
+                UpdatePawnHist(data, board, move, mainHistBonus);
+                MalusPawnHist(data, board, searchedQuietMoves, move, mainHistMalus);
+
                 int16_t contHistBonus =
                     std::min((int)CONTHIST_BONUS_MAX, CONTHIST_BONUS_BASE + CONTHIST_BONUS_MULT * depth);
                 int16_t contHistMalus =

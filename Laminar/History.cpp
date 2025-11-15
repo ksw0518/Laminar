@@ -11,7 +11,24 @@ void UpdateHistoryEntry(int16_t& entry, int16_t bonus)
     int clampedBonus = std::clamp<int16_t>(bonus, -MAX_HISTORY, MAX_HISTORY);
     entry += clampedBonus - entry * abs(clampedBonus) / MAX_HISTORY;
 }
+void UpdatePawnHist(ThreadData& data, Board& board, Move& move, int16_t bonus)
+{
+    bool stm = move.Piece <= 5 ? White : Black;
+    int16_t& historyEntry = data.histories.pawnHist[move.Piece][move.To][board.pawnKey % 1024];
+    UpdateHistoryEntry(historyEntry, bonus);
+}
+void MalusPawnHist(ThreadData& data, Board& board, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
+{
+    for (int i = 0; i < searchedQuietMoves.count; ++i)
+    {
+        Move& searchedMove = searchedQuietMoves.moves[i];
 
+        if (searchedMove != bonus_move)
+        {
+            UpdatePawnHist(data, board, searchedMove, -malus);
+        }
+    }
+}
 void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus, uint64_t threat)
 {
     bool fromThreat = Get_bit(threat, from);
@@ -19,13 +36,6 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
     int16_t& historyEntry = data.histories.mainHist[stm][from][to][fromThreat][toThreat];
     UpdateHistoryEntry(historyEntry, bonus);
 }
-
-void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
-{
-    int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
-    UpdateHistoryEntry(historyEntry, bonus);
-}
-
 void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus, uint64_t threat)
 {
     bool stm = bonus_move.Piece <= 5 ? White : Black;
@@ -40,6 +50,11 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
     }
 }
 
+void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
+{
+    int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
+    UpdateHistoryEntry(historyEntry, bonus);
+}
 void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_move, int16_t malus, Board& board)
 {
     for (int i = 0; i < searchedNoisyMoves.count; ++i)

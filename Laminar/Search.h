@@ -36,6 +36,9 @@ struct Histories
 
     //[piece][to][piece][to]
     int16_t contHist[12][64][12][64];
+
+    //[piece][to][pawnKey]
+    int16_t pawnHist[12][64][1024];
 };
 
 struct alignas(64) ThreadData
