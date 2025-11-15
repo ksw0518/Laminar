@@ -1003,7 +1003,8 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load())
+            if (data.currDepth != 1 && (searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit)
+                || data.stopSearch.load())
             {
                 if (mainThread)
                 {
@@ -1083,7 +1084,8 @@ std::pair<Move, int> IterativeDeepening(
                 }
             }
         }
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load()
+        if (data.currDepth != 1 && (searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit)
+            || data.stopSearch.load()
             || (searchLimits.HardNodeLimit != NOLIMIT && data.searchNodeCount > searchLimits.HardNodeLimit))
         {
             if (mainThread)
@@ -1095,7 +1097,9 @@ std::pair<Move, int> IterativeDeepening(
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
+        if (data.currDepth != 1
+                && (searchLimits.SoftTimeLimit != NOLIMIT
+                    && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
             || data.stopSearch.load())
         {
             if (mainThread)
