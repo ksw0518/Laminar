@@ -425,7 +425,7 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             int64_t hard_bound;
             int64_t soft_bound;
 
-            int64_t time = mainBoard.side == White ? wtime : btime - 70;
+            int64_t time = (mainBoard.side == White ? wtime : btime) - 100;
             int64_t incre = mainBoard.side == White ? winc : binc;
 
             hard_bound = CalculateHardLimit(time, incre);
