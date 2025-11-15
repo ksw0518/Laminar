@@ -481,7 +481,7 @@ inline int AlphaBeta(
         //if a null move returns a score>= beta, we assume the current position is too strong
         //so prune the rest of the moves
         //disable nmp in KP endgame, because of zugzwang
-        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + NMP_BETA_OFFSET && currentPly >= data.minNmpPly
+        if (!isPvNode && depth >= 2 && !root && ttAdjustedEval >= beta + 140 - 7 * depth && currentPly >= data.minNmpPly
             && !IsOnlyKingPawn(board))
         {
             int lastEp = board.enpassent;
