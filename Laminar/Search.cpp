@@ -539,7 +539,7 @@ inline int AlphaBeta(
 
     int quietSEEMargin = PVS_QUIET_BASE - PVS_QUIET_MULT * depth;
     int noisySEEMargin = PVS_NOISY_BASE - PVS_NOISY_MULT * depth * depth;
-    int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) / 100;
+    int lmpThreshold = (LMP_BASE + (LMP_MULTIPLIER)*depth * depth) * (improving + 1) / 100;
 
     bool skipQuiets = false;
     data.searchStack[currentPly].last_accumulator = board.accumulator;
