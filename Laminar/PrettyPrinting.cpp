@@ -64,7 +64,6 @@ void resetColor()
 }
 void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int64_t nodes)
 {
-    Move Bestmove = data.pvTable[0][0];
     std::cout << color::white;
     std::cout << std::right;
     std::cout << color::bright_blue << std::setw(3) << data.currDepth;

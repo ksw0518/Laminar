@@ -40,22 +40,22 @@ struct Histories
 
 struct alignas(64) ThreadData
 {
+    SearchData searchStack[MAXPLY];
     std::chrono::steady_clock::time_point clockStart;
-    int ply = 0;
     int64_t searchNodeCount = 0;
     int64_t SearchTime = -1;
     int64_t hardNodeBound = -1;
-    int currDepth = 0;
-    std::atomic<bool> stopSearch{false};
-    int selDepth = 0;
-    SearchData searchStack[MAXPLY];
-    int pvLengths[MAXPLY + 1] = {};
-    Move pvTable[MAXPLY + 1][MAXPLY + 1];
-    Histories histories;
-    int minNmpPly = 0;
-    bool isMainThread = true;
     uint64_t nodesPerMove[64][64];
+    int ply = 0;
+    int currDepth = 0;
+    int selDepth = 0;
+    int minNmpPly = 0;
+    int pvLengths[MAXPLY + 1] = {};
+    Histories histories;
+    std::atomic<bool> stopSearch{false};
+    bool isMainThread = true;
     Move killerMoves[MAXPLY + 1];
+    Move pvTable[MAXPLY + 1][MAXPLY + 1];
 };
 
 struct SearchLimitations

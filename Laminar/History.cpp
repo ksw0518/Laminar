@@ -42,7 +42,6 @@ void MalusMainHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_m
 
 void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_move, int16_t malus, Board& board)
 {
-    bool stm = bonus_move.Piece <= 5 ? White : Black;
     for (int i = 0; i < searchedNoisyMoves.count; ++i)
     {
         Move& searchedMove = searchedNoisyMoves.moves[i];
@@ -91,7 +90,6 @@ void UpdateContHist(Move& move, const int bonus, ThreadData& data)
 
 void MalusContHist(ThreadData& data, MoveList& searchedQuietMoves, Move& bonus_move, int16_t malus)
 {
-    bool stm = bonus_move.Piece <= 5 ? White : Black;
     for (int i = 0; i < searchedQuietMoves.count; ++i)
     {
         Move& searchedMove = searchedQuietMoves.moves[i];

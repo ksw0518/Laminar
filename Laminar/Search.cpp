@@ -1059,7 +1059,6 @@ std::pair<Move, int> IterativeDeepening(
         {
             if (data.isMainThread)
             {
-                float nps = data.searchNodeCount / second;
                 int64_t combinedNodeCount = 0;
                 for (auto ptr : allThreadDataPtrs)
                 {
