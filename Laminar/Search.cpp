@@ -458,6 +458,7 @@ inline int AlphaBeta(
     bool canPrune = !isInCheck && !isPvNode && !isSingularSearch;
     bool notMated = beta >= -MATESCORE + MAXPLY;
 
+    int prevHistory = data.searchStack[currentPly].historyScore;
     if (canPrune && notMated)
     {
         //hindsight extension
@@ -473,7 +474,8 @@ inline int AlphaBeta(
         //if static eval is higher than beta with some margin, assume it'll fail high
         if (depth <= RFP_MAX_DEPTH)
         {
-            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE;
+            //if prev history score is low, the node is more likely to fail high
+            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE + prevHistory / 2500;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
@@ -745,6 +747,7 @@ inline int AlphaBeta(
             reduction += lmrAdjustments;
         }
 
+        data.searchStack[currentPly + 1].historyScore = historyScore;
         data.searchStack[currentPly].reduction = reduction;
         if (reduction < 0)
             reduction = 0;

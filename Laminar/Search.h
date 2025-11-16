@@ -13,6 +13,7 @@ struct SearchData
     Move move;
     int staticEval = 0;
     int reduction = 0;
+    int historyScore = 0;
     bool check = false;
     AccumulatorPair last_accumulator;
 };
