@@ -187,14 +187,19 @@ inline void ApplyCopyMake(Board& board, CopyMake& info, ThreadData& data, int pl
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
-
-    auto now = std::chrono::steady_clock::now();
-    int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load() || elapsedMS > data.SearchTime
-        || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+    if (data.stopSearch.load())
     {
-        data.stopSearch.store(true);
         return 0;
+    }
+    if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
+    {
+        auto now = std::chrono::steady_clock::now();
+        int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
+        if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
+        }
     }
     bool isPvNode = beta - alpha > 1;
 
@@ -342,14 +347,21 @@ inline int AlphaBeta(
     data.pvLengths[data.ply] = 0;
 
     bool isSingularSearch = excludedMove != NULLMOVE;
-    auto now = std::chrono::steady_clock::now();
-    int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-    if (data.stopSearch.load() || elapsedMS > data.SearchTime
-        || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+    if (data.stopSearch.load())
     {
-        data.stopSearch.store(true);
         return 0;
     }
+    if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
+    {
+        auto now = std::chrono::steady_clock::now();
+        int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
+        if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
+        }
+    }
+
     bool isPvNode = beta - alpha > 1;
     int currentPly = data.ply;
 
@@ -996,7 +1008,8 @@ std::pair<Move, int> IterativeDeepening(
             int64_t MS = static_cast<int64_t>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(end - data.clockStart).count()
             );
-            if ((searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit) || data.stopSearch.load())
+            if (data.currDepth != 1 && (searchLimits.HardTimeLimit != NOLIMIT && MS > searchLimits.HardTimeLimit)
+                || data.stopSearch.load())
             {
                 if (mainThread)
                 {
@@ -1076,7 +1089,8 @@ std::pair<Move, int> IterativeDeepening(
                 }
             }
         }
-        if ((searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit) || data.stopSearch.load()
+        if (data.currDepth != 1 && (searchLimits.HardTimeLimit != NOLIMIT && elapsedMS > searchLimits.HardTimeLimit)
+            || data.stopSearch.load()
             || (searchLimits.HardNodeLimit != NOLIMIT && data.searchNodeCount > searchLimits.HardNodeLimit))
         {
             if (mainThread)
@@ -1088,7 +1102,9 @@ std::pair<Move, int> IterativeDeepening(
             }
             break;
         }
-        if ((searchLimits.SoftTimeLimit != NOLIMIT && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
+        if (data.currDepth != 1
+                && (searchLimits.SoftTimeLimit != NOLIMIT
+                    && elapsedMS > (double)searchLimits.SoftTimeLimit * nodesTmScale)
             || data.stopSearch.load())
         {
             if (mainThread)
