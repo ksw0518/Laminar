@@ -189,7 +189,6 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
     if (data.stopSearch.load())
     {
-        data.stopSearch.store(true);
         return 0;
     }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
@@ -198,6 +197,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
         if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
+            data.stopSearch.store(true);
             return 0;
         }
     }
@@ -349,7 +349,6 @@ inline int AlphaBeta(
     bool isSingularSearch = excludedMove != NULLMOVE;
     if (data.stopSearch.load())
     {
-        data.stopSearch.store(true);
         return 0;
     }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
@@ -358,6 +357,7 @@ inline int AlphaBeta(
         int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
         if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
+            data.stopSearch.store(true);
             return 0;
         }
     }
