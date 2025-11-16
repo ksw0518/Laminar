@@ -187,16 +187,18 @@ inline void ApplyCopyMake(Board& board, CopyMake& info, ThreadData& data, int pl
 inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
 {
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
-
+    if (data.stopSearch.load())
+    {
+        data.stopSearch.store(true);
+        return alpha;
+    }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
     {
         auto now = std::chrono::steady_clock::now();
         int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-        if (data.stopSearch.load() || elapsedMS > data.SearchTime
-            || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
-            data.stopSearch.store(true);
-            return 0;
+            return alpha;
         }
     }
     bool isPvNode = beta - alpha > 1;
@@ -345,15 +347,18 @@ inline int AlphaBeta(
     data.pvLengths[data.ply] = 0;
 
     bool isSingularSearch = excludedMove != NULLMOVE;
+    if (data.stopSearch.load())
+    {
+        data.stopSearch.store(true);
+        return alpha;
+    }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
     {
         auto now = std::chrono::steady_clock::now();
         int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(now - data.clockStart).count();
-        if ((data.stopSearch.load() || elapsedMS > data.SearchTime
-             || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount)))
+        if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
-            data.stopSearch.store(true);
-            return 0;
+            return alpha;
         }
     }
 
