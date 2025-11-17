@@ -76,7 +76,7 @@ void UpdateSingleContHist(Move& move, const int bonus, const int offset, ThreadD
     {
         Move prevMove = data.searchStack[data.ply - offset].move;
         int clampedBonus = std::clamp(bonus, -MAX_CONTHIST, MAX_CONTHIST);
-        int scaledBonus = clampedBonus - GetContHistScore(move, data) * abs(clampedBonus) / MAX_CONTHIST;
+        int scaledBonus = clampedBonus - (GetContHistScore(move, data) / 2) * abs(clampedBonus) / MAX_CONTHIST;
 
         data.histories.contHist[prevMove.Piece][prevMove.To][move.Piece][move.To] += scaledBonus;
     }
