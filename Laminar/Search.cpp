@@ -741,6 +741,10 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= 1024;
             }
+            if (ttPv && ttHit && ttEntry.score <= alpha)
+            {
+                lmrAdjustments += 1024;
+            }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
