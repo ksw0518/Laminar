@@ -475,7 +475,7 @@ inline int AlphaBeta(
         if (depth <= RFP_MAX_DEPTH)
         {
             //if prev history score is low, the node is more likely to fail high
-            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE + prevHistory / 2500;
+            int rfpMargin = (RFP_MULTIPLIER - (improving * RFP_IMPROVING_SUB)) * depth + RFP_BASE + prevHistory / 1500;
             if (ttAdjustedEval - rfpMargin >= beta)
             {
                 return (ttAdjustedEval + beta) / 2;
