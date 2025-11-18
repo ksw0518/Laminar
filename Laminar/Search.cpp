@@ -532,7 +532,7 @@ inline int AlphaBeta(
     }
     //Calculate all squares opponent is controlling
     uint64_t oppThreats = GetAttackedSquares(1 - board.side, board, board.occupancies[Both]);
-
+    data.searchStack[currentPly].threat = oppThreats;
     MoveList moveList;
     GeneratePseudoLegalMoves(moveList, board);
 
@@ -879,6 +879,21 @@ inline int AlphaBeta(
                 return 0;
             }
         }
+    }
+    //if the node failed low, give bonus to previous move
+    if (!root && bestMove == NULLMOVE && !IsMoveNoisy(data.searchStack[currentPly - 1].move)
+        && data.searchStack[currentPly - 1].move != NULLMOVE)
+    {
+        uint64_t prevThreat = data.searchStack[currentPly - 1].threat;
+        int16_t mainHistBonus = std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+        UpdateMainHist(
+            data,
+            1 - board.side,
+            data.searchStack[currentPly - 1].move.From,
+            data.searchStack[currentPly - 1].move.To,
+            mainHistBonus,
+            prevThreat
+        );
     }
     //keep the best move for tt if we're in fail low node
     if (ttFlag == HFUPPER && ttHit)

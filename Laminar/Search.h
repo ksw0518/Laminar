@@ -14,6 +14,7 @@ struct SearchData
     int staticEval = 0;
     int reduction = 0;
     bool check = false;
+    uint64_t threat = 0;
     AccumulatorPair last_accumulator;
 };
 
