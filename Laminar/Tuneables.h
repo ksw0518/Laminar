@@ -26,12 +26,20 @@ extern Tuneable MAINHIST_MALUS_MULT;
 extern Tuneable MAINHIST_MALUS_BASE;
 extern Tuneable MAINHIST_MALUS_MAX;
 
+extern Tuneable SE_MAINHIST_BONUS_BASE;
+extern Tuneable SE_MAINHIST_BONUS_MULT;
+extern Tuneable SE_MAINHIST_BONUS_MAX;
+
 extern Tuneable CAPTHIST_BONUS_BASE;
 extern Tuneable CAPTHIST_BONUS_MULT;
 extern Tuneable CAPTHIST_BONUS_MAX;
 extern Tuneable CAPTHIST_MALUS_BASE;
 extern Tuneable CAPTHIST_MALUS_MULT;
 extern Tuneable CAPTHIST_MALUS_MAX;
+
+extern Tuneable SE_CAPTHIST_BONUS_BASE;
+extern Tuneable SE_CAPTHIST_BONUS_MULT;
+extern Tuneable SE_CAPTHIST_BONUS_MAX;
 
 extern Tuneable CONTHIST_BONUS_BASE;
 extern Tuneable CONTHIST_BONUS_MULT;
@@ -43,6 +51,9 @@ extern Tuneable CONTHIST_MALUS_MAX;
 extern Tuneable RFP_MULTIPLIER;
 extern Tuneable RFP_BASE;
 extern Tuneable RFP_IMPROVING_SUB;
+
+extern Tuneable RAZORING_MULTIPLIER;
+extern Tuneable RAZORING_BASE;
 
 extern Tuneable ASP_WINDOW_INITIAL;
 extern Tuneable LMR_DIVISOR;
@@ -59,6 +70,7 @@ extern Tuneable PVS_QUIET_BASE;
 extern Tuneable PVS_QUIET_MULT;
 extern Tuneable PVS_NOISY_BASE;
 extern Tuneable PVS_NOISY_MULT;
+extern Tuneable PVS_SEE_HISTORY_DIV;
 
 extern Tuneable PAWN_CORRHIST_MULTIPLIER;
 extern Tuneable NONPAWN_CORRHIST_MULTIPLIER;
@@ -77,8 +89,16 @@ extern Tuneable QUIET_LMR_ADD;
 extern Tuneable CUTNODE_LMR_ADD;
 extern Tuneable TTPV_LMR_SUB;
 extern Tuneable IMPROVING_LMR_SUB;
+extern Tuneable CORRPLEXITY_LMR_SUB;
+extern Tuneable KILLER_LMR_SUB;
+extern Tuneable EVALPLEXITY_LMR_SUB;
+
+extern Tuneable DODEEPER_MULTIPLIER;
 
 extern Tuneable HIST_LMR_DIV;
+extern Tuneable CORRPLEXITY_LMR_THRESHOLD;
+extern Tuneable EVALPLEXITY_LMR_THRESHOLD;
+extern Tuneable EVALPLEXITY_LMR_SCALE;
 
 extern Tuneable NMP_BETA_OFFSET;
 extern Tuneable NMP_EVAL_DIVISOR;
