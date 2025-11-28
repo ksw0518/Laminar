@@ -292,10 +292,8 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         std::cout << "\n";
         std::cout << "option name Threads type spin default 1 min 1 max 1024\n";
         std::cout << "option name Hash type spin default 12 min 1 max 4096\n";
-        std::cout << "uciok"
-                  << "\n";
 
-        /*  for (int i = 0; i < AllTuneablesCount; i++)
+        /*     for (int i = 0; i < AllTuneablesCount; i++)
         {
             std::cout << "option name " << AllTuneables[i]->name;
             std::cout << " type spin";
@@ -304,6 +302,8 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             std::cout << " max " << AllTuneables[i]->maxValue;
             std::cout << "\n";
         }*/
+        std::cout << "uciok"
+                  << "\n";
         IsUCI = true;
     }
     else if (mainCommand == "spsa")

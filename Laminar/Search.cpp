@@ -479,7 +479,7 @@ inline int AlphaBeta(
                 return (ttAdjustedEval + beta) / 2;
             }
         }
-        if (depth <= 3 && ttAdjustedEval + 200 * depth <= alpha)
+        if (depth <= 3 && ttAdjustedEval + RAZORING_MULTIPLIER * depth + RAZORING_BASE <= alpha)
         {
             int razor_score = QuiescentSearch(board, data, alpha, alpha + 1);
             if (razor_score <= alpha)
@@ -602,7 +602,7 @@ inline int AlphaBeta(
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
             if (isQuiet)
             {
-                seeThreshold -= historyScore / 400;
+                seeThreshold -= historyScore / PVS_SEE_HISTORY_DIV;
             }
             //if the Static Exchange Evaluation score is lower than certain margin,
             //assume the move is very bad and skip the move
@@ -664,13 +664,13 @@ inline int AlphaBeta(
                 if (!(ttEntry.bestMove.type() & captureFlag)) //quiets
                 {
                     int16_t mainHistBonus =
-                        std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+                        std::min((int)SE_MAINHIST_BONUS_MAX, SE_MAINHIST_BONUS_BASE + SE_MAINHIST_BONUS_MULT * depth);
                     UpdateMainHist(data, board.side, move.From, move.To, mainHistBonus, oppThreats);
                 }
                 else
                 {
                     int16_t captHistBonus =
-                        std::min((int)CAPTHIST_BONUS_MAX, CAPTHIST_BONUS_BASE + CAPTHIST_BONUS_MULT * depth);
+                        std::min((int)SE_CAPTHIST_BONUS_MAX, SE_CAPTHIST_BONUS_BASE + SE_CAPTHIST_BONUS_MULT * depth);
                     UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
                 }
             }
@@ -729,17 +729,17 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= IMPROVING_LMR_SUB;
             }
-            if (abs(rawEval - staticEval) > 100)
+            if (abs(rawEval - staticEval) > CORRPLEXITY_LMR_THRESHOLD)
             {
-                lmrAdjustments -= 1024;
+                lmrAdjustments -= CORRPLEXITY_LMR_SUB;
             }
             if (move == data.killerMoves[currentPly])
             {
-                lmrAdjustments -= 1024;
+                lmrAdjustments -= KILLER_LMR_SUB;
             }
-            if (abs(staticEval - materialValue * 1024 / 283) > 550)
+            if (abs(staticEval - materialValue * 1024 / EVALPLEXITY_LMR_SCALE) > EVALPLEXITY_LMR_THRESHOLD)
             {
-                lmrAdjustments -= 1024;
+                lmrAdjustments -= EVALPLEXITY_LMR_SUB;
             }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
@@ -764,7 +764,7 @@ inline int AlphaBeta(
             {
                 //do deeper research if the move is promising,
                 //and do shallower research if the move looks bad
-                bool doDeeper = score > bestValue + 60 + depth * childDepth;
+                bool doDeeper = score > bestValue + DODEEPER_MULTIPLIER + depth * childDepth;
                 bool doShallower = score < bestValue + childDepth;
                 childDepth += doDeeper - doShallower;
 
