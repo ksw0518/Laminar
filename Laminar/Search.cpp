@@ -37,6 +37,7 @@ void InitializeLMRTable()
         {
             lmrTable[depth][move] = std::floor(
                 ((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100)) * 1024.0f
+                + 50
             );
         }
     }
