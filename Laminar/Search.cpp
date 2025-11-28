@@ -35,8 +35,9 @@ void InitializeLMRTable()
     {
         for (int move = 1; move < 256; move++)
         {
-            lmrTable[depth][move] =
-                std::floor((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100));
+            lmrTable[depth][move] = std::floor(
+                ((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100)) * 1024.0f
+            );
         }
     }
 }
@@ -741,8 +742,8 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
             }
-            lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
+            reduction /= 1024;
         }
 
         data.searchStack[currentPly].reduction = reduction;
