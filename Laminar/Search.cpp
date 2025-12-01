@@ -699,7 +699,7 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
-        bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1;
+        bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1 && !(isPvNode && isCapture);
 
         if (doLmr)
         {
