@@ -591,7 +591,12 @@ inline int AlphaBeta(
                 skipQuiets = true;
                 continue;
             }
-
+            int futility = staticEval + 150 * depth + 100;
+            if (!isInCheck && isQuiet && depth <= 8 && std::abs(alpha) < 2000 && futility <= alpha)
+            {
+                skipQuiets = true;
+                continue;
+            }
             //History pruning
             //skip moves that have bad history score
             int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
