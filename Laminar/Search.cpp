@@ -750,6 +750,13 @@ inline int AlphaBeta(
             reduction = 0;
         bool isReduced = reduction > 0;
 
+        //so you don't fall to qs
+        int maxReduction = depth - 2;
+        if (maxReduction < 0)
+            maxReduction = 0;
+
+        reduction = std::min(reduction, maxReduction);
+
         int childDepth = depth + extension - 1;
 
         uint64_t nodesBeforeSearch = data.searchNodeCount;
