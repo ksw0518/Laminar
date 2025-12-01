@@ -746,7 +746,7 @@ inline int AlphaBeta(
         }
 
         data.searchStack[currentPly].reduction = reduction;
-        if (reduction < 0)
+        if (!isPvNode && reduction < 0)
             reduction = 0;
         bool isReduced = reduction > 0;
 
