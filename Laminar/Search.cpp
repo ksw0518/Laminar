@@ -679,7 +679,7 @@ inline int AlphaBeta(
                 extension++;
                 //Double Extensions
                 //TT move is very singular, increase depth by 2
-                if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
+                if (!isPvNode && s_score <= s_beta - (DEXT_MARGIN - historyScore / 3000))
                 {
                     extension++;
                 }
