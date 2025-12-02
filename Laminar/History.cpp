@@ -48,7 +48,13 @@ void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_m
 
         if (searchedMove != bonus_move)
         {
-            UpdateCaptHist(data, searchedMove.Piece, searchedMove.To, board.mailbox[searchedMove.To], -malus);
+            UpdateCaptHist(
+                data,
+                searchedMove.Piece,
+                searchedMove.To,
+                board.mailbox[searchedMove.To],
+                -(malus - 32 * i)
+            );
         }
     }
 }
