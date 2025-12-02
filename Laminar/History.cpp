@@ -12,6 +12,11 @@ void UpdateHistoryEntry(int16_t& entry, int16_t bonus)
     entry += clampedBonus - entry * abs(clampedBonus) / MAX_HISTORY;
 }
 
+void UpdateSEHist(ThreadData& data, int piece, int to, int16_t bonus)
+{
+    int16_t& historyEntry = data.histories.seHist[piece][to];
+    UpdateHistoryEntry(historyEntry, bonus);
+}
 void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus, uint64_t threat)
 {
     bool fromThreat = Get_bit(threat, from);

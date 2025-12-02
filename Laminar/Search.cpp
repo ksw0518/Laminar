@@ -644,6 +644,7 @@ inline int AlphaBeta(
 
         int reduction = 0;
         int extension = 0;
+        bool isSE = false;
 
         //Singular Extension
         //If we have a TT move, we try to verify if it's the only good move.
@@ -651,12 +652,14 @@ inline int AlphaBeta(
         if (ttHit && !root && depth >= 7 && compareMoves(move, ttEntry.bestMove) && !isSingularSearch
             && ttDepth >= depth - 3 && ttBound != HFUPPER && std::abs(ttEntry.score) < MATESCORE - MAXPLY)
         {
+            int seHistScore = data.histories.seHist[move.Piece][move.To];
+
             UnmakeMove(board, move, undoInfo.captured_piece);
             ApplyCopyMake(board, undoInfo, data, currentPly);
             board.history.pop_back();
             data.ply--;
 
-            int s_beta = ttEntry.score - depth * 2;
+            int s_beta = ttEntry.score - depth * 2 + seHistScore / 820;
             int s_depth = (depth - 1) / 2;
             int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
             if (s_score < s_beta - 20)
@@ -699,6 +702,7 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
+        isSE = (extension > 0);
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1 && !(isPvNode && isCapture);
 
         if (doLmr)
@@ -824,7 +828,12 @@ inline int AlphaBeta(
         if (alpha >= beta)
         {
             ttFlag = HFLOWER;
-
+            if (isSE)
+            {
+                int16_t seHistBonus =
+                    std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth) / 5;
+                UpdateSEHist(data, move.Piece, move.To, seHistBonus);
+            }
             if (isQuiet)
             {
                 //update killer moves for move ordering
@@ -863,6 +872,13 @@ inline int AlphaBeta(
             }
 
             break;
+        }
+        //se move didn't fail high
+        if (isSE)
+        {
+            int16_t seHistMalus =
+                3 * std::min((int)MAINHIST_BONUS_MAX, MAINHIST_BONUS_BASE + MAINHIST_BONUS_MULT * depth);
+            UpdateSEHist(data, move.Piece, move.To, -seHistMalus);
         }
     }
     if (searchedMoves == 0)
@@ -912,7 +928,38 @@ inline int AlphaBeta(
 
     return bestValue;
 }
+void printTopSEHistory(const int16_t seHist[12][64])
+{
+    struct Entry
+    {
+        int piece;
+        int to;
+        int16_t score;
+    };
 
+    std::vector<Entry> entries;
+    entries.reserve(12 * 64);
+
+    // Collect all moves
+    for (int piece = 0; piece < 12; piece++)
+    {
+        for (int to = 0; to < 64; to++)
+        {
+            entries.push_back({piece, to, seHist[piece][to]});
+        }
+    }
+
+    // Sort descending by score
+    std::sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) { return a.score > b.score; });
+
+    // Print top 10
+    for (int i = 0; i < 20; i++)
+    {
+        const auto& e = entries[i];
+        std::cout << "piece : " << getCharFromPiece(e.piece) << "  to : " << CoordinatesToChessNotation(e.to)
+                  << "  score : " << e.score << "\n";
+    }
+}
 void print_UCI(Move& bestmove, int score, int64_t elapsedMS, float nps, ThreadData& data, uint64_t nodes)
 {
     bestmove = data.pvTable[0][0];
