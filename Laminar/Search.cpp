@@ -559,6 +559,7 @@ inline int AlphaBeta(
     int materialValue = material_eval(board);
 
     CopyMake undoInfo{};
+    bool isSE = false;
     for (int i = 0; i < moveList.count; ++i)
     {
         ChooseNextMove(scored, moveList, i);
@@ -699,6 +700,8 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
+        if (extension > 0)
+            isSE = true;
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1 && !(isPvNode && isCapture);
 
         if (doLmr)
@@ -740,6 +743,10 @@ inline int AlphaBeta(
             if (abs(staticEval - materialValue * 1024 / EVALPLEXITY_LMR_SCALE) > EVALPLEXITY_LMR_THRESHOLD)
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
+            }
+            if (isSE)
+            {
+                lmrAdjustments += 1024;
             }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
