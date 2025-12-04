@@ -109,8 +109,6 @@ void printPretty(int score, int64_t elapsedMS, float nps, ThreadData& data, int6
 
         printMove(data.pvTable[0][count]);
         std::cout << " ";
-        if (count > 15)
-            break;
     }
 
     std::cout << "\n" << std::flush;
