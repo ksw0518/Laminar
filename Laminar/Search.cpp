@@ -423,7 +423,7 @@ inline int AlphaBeta(
         bool UpperCutoff = (ttBound == HFUPPER && ttEntry.score <= alpha);
         bool DoTTCutoff = ExactCutoff || LowerCutoff || UpperCutoff;
 
-        if (!isSingularSearch && !isPvNode && !root && ttDepth >= depth && DoTTCutoff)
+        if (!isSingularSearch && !isPvNode && !root && ttDepth >= depth - (ttEntry.score <= beta) && DoTTCutoff)
         {
             return ttEntry.score;
         }
