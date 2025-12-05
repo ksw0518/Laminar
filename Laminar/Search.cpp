@@ -683,6 +683,10 @@ inline int AlphaBeta(
                 {
                     extension++;
                 }
+                if (s_score <= s_beta - 40)
+                {
+                    extension++;
+                }
             }
             //Multicut
             //excluded search failed high,
