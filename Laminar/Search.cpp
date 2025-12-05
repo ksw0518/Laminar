@@ -693,11 +693,11 @@ inline int AlphaBeta(
             }
             else if (cutnode)
             {
-                extension = -2;
+                extension = -3;
             }
             else if (ttEntry.score >= beta)
             {
-                extension = -1;
+                extension = -2;
             }
             refresh_if_cross(move, board);
             MakeMove(board, move);
