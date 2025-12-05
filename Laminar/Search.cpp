@@ -691,6 +691,10 @@ inline int AlphaBeta(
             {
                 return s_beta;
             }
+            else if (cutnode)
+            {
+                extension = -2;
+            }
             else if (ttEntry.score >= beta)
             {
                 extension = -1;
