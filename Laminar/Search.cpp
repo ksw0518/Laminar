@@ -777,6 +777,7 @@ inline int AlphaBeta(
                 bool doDeeper = score > bestValue + DODEEPER_MULTIPLIER + depth * childDepth;
                 bool doShallower = score < bestValue + childDepth;
                 childDepth += doDeeper - doShallower;
+                childDepth -= historyScore / 16384;
 
                 score = -AlphaBeta(board, data, childDepth, -alpha - 1, -alpha, !cutnode);
             }
