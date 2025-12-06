@@ -581,10 +581,15 @@ inline int AlphaBeta(
 
         int historyScore = mainHistScore + contHistScore;
 
-        int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
-        int coloredVictim = get_piece(victim, 1 - board.side);
+        int captHistScore = 0;
+        if (IsMoveCapture(move))
 
-        int captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        {
+            int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        }
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
