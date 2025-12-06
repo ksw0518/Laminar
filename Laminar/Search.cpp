@@ -750,7 +750,17 @@ inline int AlphaBeta(
         }
 
         data.searchStack[currentPly].reduction = reduction;
-        if (reduction < 0)
+        if (isPvNode)
+        {
+            reduction = std::clamp(reduction, 0, depth - 2);
+        }
+        else
+        {
+            reduction = std::clamp(reduction, 1, depth - 2);
+        }
+        bool isReduced = reduction > 0;
+
+        /*       if (reduction < 0)
             reduction = 0;
         bool isReduced = reduction > 0;
 
@@ -758,7 +768,7 @@ inline int AlphaBeta(
         if (maxReduction < 0)
             maxReduction = 0;
 
-        reduction = std::min(reduction, maxReduction);
+        reduction = std::min(reduction, maxReduction);*/
 
         int childDepth = depth + extension - 1;
 
