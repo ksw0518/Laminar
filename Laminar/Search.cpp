@@ -559,6 +559,8 @@ inline int AlphaBeta(
     int materialValue = material_eval(board);
 
     CopyMake undoInfo{};
+    data.searchStack[currentPly + 1].failHigh = 0;
+
     for (int i = 0; i < moveList.count; ++i)
     {
         ChooseNextMove(scored, moveList, i);
@@ -745,6 +747,10 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
             }
+            if (data.searchStack[currentPly + 1].failHigh > 2)
+            {
+                reduction += 1024;
+            }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
@@ -827,6 +833,7 @@ inline int AlphaBeta(
         //beta cutoff
         if (alpha >= beta)
         {
+            data.searchStack[currentPly].failHigh++;
             ttFlag = HFLOWER;
 
             if (isQuiet)
