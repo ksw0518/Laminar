@@ -903,7 +903,10 @@ inline int AlphaBeta(
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
-
+    if (bestValue >= beta && abs(bestValue) < MATESCORE - MAXPLY && abs(alpha) < MATESCORE - MAXPLY)
+    {
+        bestValue = (bestValue * depth + beta) / (depth + 1);
+    }
     //store transposition table
     ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
