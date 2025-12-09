@@ -703,6 +703,7 @@ inline int AlphaBeta(
             MakeMove(board, move);
             data.ply++;
         }
+        cutnode |= extension < 0;
         bool doLmr = depth > MIN_LMR_DEPTH && searchedMoves > 1 + root * 2 && !(isPvNode && isCapture);
 
         if (doLmr)
