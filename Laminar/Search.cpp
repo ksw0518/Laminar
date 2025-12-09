@@ -257,6 +257,8 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     data.searchStack[currentPly].last_accumulator = board.accumulator;
 
     CopyMake undoInfo{};
+    int futilityValue = bestValue + 100;
+
     for (int i = 0; i < moveList.count; ++i)
     {
         Move& move = moveList.moves[i];
@@ -264,6 +266,11 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (!IsMoveNoisy(move))
             continue;
 
+        if (IsMoveCapture(move) && futilityValue <= alpha && !SEE(board, move, 1))
+        {
+            bestValue = std::max(bestValue, futilityValue);
+            continue;
+        }
         //skip moves that have bad static exchange evaluation score,
         //since they are likely bad
         if (!SEE(board, move, QS_SEE_MARGIN))
