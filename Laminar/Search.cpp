@@ -692,12 +692,12 @@ inline int AlphaBeta(
                 if (isQuiet)
                 {
                     //subtract 20k to keep the avg around 0
-                    dextAdjustment += std::clamp((historyScore - 20000) / 1500, -15, 15);
+                    dextAdjustment += std::clamp((historyScore - 20000) / 1000, -20, 20);
                 }
                 else
                 {
                     //subtract 2k to keep the avg around 0
-                    dextAdjustment += std::clamp((historyScore - 2000) / 700, -15, 15);
+                    dextAdjustment += std::clamp((historyScore - 2000) / 500, -20, 20);
                 }
                 //Double Extensions
                 //TT move is very singular, increase depth by 2
