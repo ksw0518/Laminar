@@ -745,6 +745,11 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
             }
+            if (staticEval + 164 + 82 * depth <= alpha && !isInCheck)
+            {
+                lmrAdjustments += 1024;
+            }
+
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
         }
