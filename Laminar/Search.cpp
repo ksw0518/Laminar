@@ -723,7 +723,7 @@ inline int AlphaBeta(
             }
             if (cutnode)
             {
-                lmrAdjustments += CUTNODE_LMR_ADD;
+                lmrAdjustments += 2048;
             }
             if (ttPv)
             {
