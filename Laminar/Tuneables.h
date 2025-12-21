@@ -85,7 +85,6 @@ extern Tuneable HISTORY_PRUNING_MULTIPLIER;
 extern Tuneable HISTORY_PRUNING_BASE;
 
 extern Tuneable PV_LMR_ADD;
-extern Tuneable QUIET_LMR_ADD;
 extern Tuneable CUTNODE_LMR_ADD;
 extern Tuneable TTPV_LMR_SUB;
 extern Tuneable IMPROVING_LMR_SUB;
