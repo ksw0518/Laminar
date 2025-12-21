@@ -25,7 +25,7 @@
 #define NULLMOVE Move(0, 0, 0, 0)
 
 bool IsUCI = false;
-int lmrTable[MAXPLY][256];
+int lmrTable[MAXPLY][256][2];
 
 bool stopSearch = false;
 
@@ -33,10 +33,16 @@ void InitializeLMRTable()
 {
     for (int depth = 1; depth < MAXPLY; depth++)
     {
+        double logDepth = log((double)depth);
         for (int move = 1; move < 256; move++)
         {
-            lmrTable[depth][move] =
-                std::floor((float)LMR_OFFSET / (float)100 + log(move) * log(depth) / ((float)LMR_DIVISOR / (float)100));
+            double logMove = log((double)move);
+
+            //not quiet
+            lmrTable[depth][move][0] =
+                CAPT_LMR_OFFSET + (int)(logDepth * logMove * 1024.0 * 1024.0 / CAPT_LMR_DIVISOR + 0.5);
+            //quiet
+            lmrTable[depth][move][1] = LMR_OFFSET + (int)(logDepth * logMove * 1024.0 * 1024.0 / LMR_DIVISOR + 0.5);
         }
     }
 }
@@ -707,7 +713,7 @@ inline int AlphaBeta(
 
         if (doLmr)
         {
-            reduction = lmrTable[depth][searchedMoves];
+            reduction = lmrTable[depth][searchedMoves][isQuiet];
             int lmrAdjustments = 0;
             if (!isPvNode && quietMoves >= 4)
             {
@@ -716,10 +722,6 @@ inline int AlphaBeta(
             if (isQuiet)
             {
                 lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
-            }
-            if (isQuiet)
-            {
-                lmrAdjustments += QUIET_LMR_ADD;
             }
             if (cutnode)
             {
@@ -745,8 +747,8 @@ inline int AlphaBeta(
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
             }
-            lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
+            reduction /= 1024;
         }
 
         data.searchStack[currentPly].reduction = reduction;

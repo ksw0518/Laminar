@@ -37,8 +37,11 @@ Tuneable RAZORING_MULTIPLIER = Tuneable("RAZORING_MULTIPLIER", 196, 150, 350, 15
 Tuneable RAZORING_BASE = Tuneable("RAZORING_BASE", -2, -50, 50, 5);
 
 Tuneable ASP_WINDOW_INITIAL = Tuneable("ASP_WINDOW_INITIAL", 20, 5, 70, 5);
-Tuneable LMR_DIVISOR = Tuneable("LMR_DIVISOR", 239, 100, 400, 7);
-Tuneable LMR_OFFSET = Tuneable("LMR_OFFSET", 77, 30, 130, 3);
+Tuneable LMR_DIVISOR = Tuneable("LMR_DIVISOR", 2447, 1024, 4096, 70);
+Tuneable CAPT_LMR_DIVISOR = Tuneable("CAPT_LMR_DIVISOR", 2447, 1024, 4096, 70);
+
+Tuneable LMR_OFFSET = Tuneable("LMR_OFFSET", 1812, 1024, 2000, 40);
+Tuneable CAPT_LMR_OFFSET = Tuneable("CAPT_LMR_OFFSET", 788, 307, 1331, 30);
 
 Tuneable SEE_PAWN_VAL = Tuneable("SEE_PAWN_VAL", 100, 60, 150, 3);
 Tuneable SEE_KNIGHT_VAL = Tuneable("SEE_KNIGHT_VAL", 280, 200, 400, 5);
@@ -188,6 +191,9 @@ Tuneable* AllTuneables[] = {
     &SCALING_BASE,
 
     &QS_SEE_ORDERING,
-    &PVS_SEE_ORDERING
+    &PVS_SEE_ORDERING,
+
+    &CAPT_LMR_DIVISOR,
+    &CAPT_LMR_OFFSET
 };
 int AllTuneablesCount = sizeof(AllTuneables) / sizeof(AllTuneables[0]);

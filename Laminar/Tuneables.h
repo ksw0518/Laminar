@@ -112,6 +112,10 @@ extern Tuneable SCALING_BASE;
 extern Tuneable QS_SEE_ORDERING;
 extern Tuneable PVS_SEE_ORDERING;
 
+extern Tuneable CAPT_LMR_DIVISOR;
+
+extern Tuneable CAPT_LMR_OFFSET;
+
 constexpr int ASP_WINDOW_MAX = 300;
 constexpr int MAX_HISTORY = 16384;
 constexpr int MAX_CONTHIST = 16384;
