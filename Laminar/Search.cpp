@@ -580,6 +580,18 @@ inline int AlphaBeta(
         int contHistScore = GetContHistScore(move, data);
 
         int historyScore = mainHistScore + contHistScore;
+        int captHistScore = 0;
+        if (!isQuiet)
+
+        {
+            int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        }
+
+        data.searchStack[currentPly].historyScore = isQuiet ? historyScore : captHistScore;
+        data.searchStack[currentPly].isCapture = !isQuiet;
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
@@ -744,6 +756,14 @@ inline int AlphaBeta(
             if (abs(staticEval - materialValue * 1024 / EVALPLEXITY_LMR_SCALE) > EVALPLEXITY_LMR_THRESHOLD)
             {
                 lmrAdjustments -= EVALPLEXITY_LMR_SUB;
+            }
+            if (currentPly >= 1)
+            {
+                int prevHistory = data.searchStack[currentPly - 1].historyScore;
+                if (!data.searchStack[currentPly - 1].isCapture)
+                {
+                    lmrAdjustments -= std::clamp(prevHistory / 25000, -1, 1) * 1024;
+                }
             }
             lmrAdjustments /= 1024;
             reduction += lmrAdjustments;
