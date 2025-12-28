@@ -715,7 +715,7 @@ inline int AlphaBeta(
             }
             if (isQuiet)
             {
-                lmrAdjustments -= std::clamp(historyScore / HIST_LMR_DIV, -2, 2) * 1024;
+                lmrAdjustments -= std::clamp(((int)historyScore * 1024) / HIST_LMR_DIV, -2048, 2048);
             }
             if (isQuiet)
             {
