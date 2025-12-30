@@ -800,6 +800,10 @@ inline int AlphaBeta(
         board.history.pop_back();
         data.ply--;
 
+        if (data.stopSearch.load())
+        {
+            break;
+        }
         bestValue = std::max(score, bestValue);
         if (bestValue > alpha)
         {
@@ -899,7 +903,8 @@ inline int AlphaBeta(
     }
     //update corrhist values based on the difference between static eval and search score
     if (!isSingularSearch && !isInCheck && (bestMove == Move(0, 0, 0, 0) || IsMoveQuiet(bestMove))
-        && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval))
+        && !(ttFlag == HFLOWER && bestValue <= staticEval) && !(ttFlag == HFUPPER && bestValue >= staticEval)
+        && !data.stopSearch.load())
     {
         UpdateCorrhists(board, depth, bestValue - staticEval, data);
     }
