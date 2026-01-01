@@ -507,9 +507,6 @@ void ProcessUCI(std::string input)
 
 int main(int argc, char* argv[])
 {
-    ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
-    ThreadData& data = *heapAllocated;
-
     InitAll();
     for (auto& worker : threadPool)
     {
@@ -525,7 +522,9 @@ int main(int argc, char* argv[])
     {
         IsUCI = true;
         ProcessUCI(argv[1]);
-        delete heapAllocated;
+        stopCurrentSearch();
+        destroyWorkers();
+        exit(0);
         return 0;
     }
     IsUCI = false;
