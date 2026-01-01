@@ -1023,9 +1023,9 @@ std::pair<Move, int> IterativeDeepening(
             {
                 if (mainThread)
                 {
-                    for (auto ptr : allThreadDataPtrs)
+                    for (auto& worker : threadPool)
                     {
-                        ptr->stopSearch.store(true);
+                        worker->data.stopSearch.store(true);
                     }
                 }
                 break;
@@ -1083,9 +1083,9 @@ std::pair<Move, int> IterativeDeepening(
             if (data.isMainThread)
             {
                 int64_t combinedNodeCount = 0;
-                for (auto ptr : allThreadDataPtrs)
+                for (auto& worker : threadPool)
                 {
-                    combinedNodeCount += ptr->searchNodeCount;
+                    combinedNodeCount += worker->data.searchNodeCount;
                 }
                 float combinedNps = combinedNodeCount / second;
 
@@ -1105,9 +1105,9 @@ std::pair<Move, int> IterativeDeepening(
         {
             if (mainThread)
             {
-                for (auto ptr : allThreadDataPtrs)
+                for (auto& worker : threadPool)
                 {
-                    ptr->stopSearch.store(true);
+                    worker->data.stopSearch.store(true);
                 }
             }
             break;
@@ -1119,9 +1119,9 @@ std::pair<Move, int> IterativeDeepening(
         {
             if (mainThread)
             {
-                for (auto ptr : allThreadDataPtrs)
+                for (auto& worker : threadPool)
                 {
-                    ptr->stopSearch.store(true);
+                    worker->data.stopSearch.store(true);
                 }
             }
             break;
