@@ -73,3 +73,5 @@ void ttStore(TranspositionEntry& ttEntry, Board& board);
 int get_hashfull();
 
 void prefetchTT(uint64_t zobrist);
+int adjustMateStore(int score, int ply);
+int adjustMateProbe(int score, int ply);
