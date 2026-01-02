@@ -425,7 +425,7 @@ inline int AlphaBeta(
 
         if (!isSingularSearch && !isPvNode && !root && ttDepth >= depth && DoTTCutoff)
         {
-            return ttEntry.score;
+            return adjustMateProbe(ttEntry.score, currentPly);
         }
     }
     //Internal Iterative Reduction
@@ -873,7 +873,6 @@ inline int AlphaBeta(
     {
         if (isSingularSearch)
         {
-            //checkmate
             return alpha;
         }
         else
@@ -907,7 +906,7 @@ inline int AlphaBeta(
     //store transposition table
     ttEntry.bestMove = Move16(bestMove.From, bestMove.To, bestMove.Type);
     ttEntry.zobristKey = board.zobristKey;
-    ttEntry.score = bestValue;
+    ttEntry.score = adjustMateStore(bestValue, data.ply);
     ttEntry.packedInfo = packData(depth, ttFlag, ttPv);
     if (!isSingularSearch && !data.stopSearch.load())
     {

@@ -1,4 +1,5 @@
 #include "Transpositions.h"
+#include "Const.h"
 #include <cstdint>
 #include <stddef.h>
 
@@ -50,7 +51,37 @@ int get_hashfull()
     }
     return entryCount;
 }
-
+int adjustMateStore(int score, int ply)
+{
+    //modify mate scores for TT
+    if (score >= MATESCORE - MAXPLY)
+    {
+        return score + ply;
+    }
+    else if (score <= -(MATESCORE - MAXPLY))
+    {
+        return score - ply;
+    }
+    else
+    {
+        return score;
+    }
+}
+int adjustMateProbe(int score, int ply)
+{
+    if (score >= MATESCORE - MAXPLY)
+    {
+        return score - ply;
+    }
+    else if (score <= -(MATESCORE - MAXPLY))
+    {
+        return score + ply;
+    }
+    else
+    {
+        return score;
+    }
+}
 void prefetchTT(uint64_t zobrist)
 {
     __builtin_prefetch(&TranspositionTable[zobrist % TTSize]);
