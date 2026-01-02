@@ -102,7 +102,7 @@ int64_t TryGetLabelledValueInt(
     }
 }
 
-static void InitAll(ThreadData& data)
+static void InitAll()
 {
     InitializeLeaper();
     init_sliders_attacks(1);
@@ -110,10 +110,8 @@ static void InitAll(ThreadData& data)
     init_tables();
     init_random_keys();
     InitializeLMRTable();
-    InitializeSearch(data);
     InitNNUE();
 }
-
 uint64_t Perft(Board& board, int depth, int perftDepth)
 {
     if (depth == 0)
@@ -277,7 +275,7 @@ void PlayMoves(std::string& moves_string, Board& board)
     }
 }
 
-void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
+void ProcessUCI(std::string input)
 {
     std::vector<std::string> Commands = splitStringBySpace(input);
     std::string mainCommand = Commands[0];
@@ -323,20 +321,13 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
     }
     else if (mainCommand == "ucinewgame")
     {
+        stopCurrentSearch();
         ClearTT();
-        InitAll(data);
-        persistentThreadData.clear();
-        persistentThreadData.reserve(threadCount);
-        for (int i = 0; i < threadCount; i++)
+        InitAll();
+        for (auto& worker : threadPool)
         {
-            persistentThreadData.push_back(std::make_unique<ThreadData>());
-            InitializeSearch(*persistentThreadData[i]);
-        }
-        allThreadDataPtrs.clear();
-        allThreadDataPtrs.reserve(threadCount);
-        for (int i = 0; i < threadCount; i++)
-        {
-            allThreadDataPtrs.push_back(persistentThreadData[i].get());
+            std::lock_guard<std::mutex> lock(worker->mtx);
+            InitializeSearch(worker->data);
         }
     }
     else if (mainCommand == "isready")
@@ -356,23 +347,9 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         if (option == "Threads")
         {
             threadCount = value;
-
-            if ((int)persistentThreadData.size() != threadCount)
-            {
-                persistentThreadData.clear();
-                persistentThreadData.reserve(threadCount);
-                for (int i = 0; i < threadCount; i++)
-                {
-                    persistentThreadData.push_back(std::make_unique<ThreadData>());
-                    InitializeSearch(*persistentThreadData[i]);
-                }
-                allThreadDataPtrs.clear();
-                allThreadDataPtrs.reserve(threadCount);
-                for (int i = 0; i < threadCount; i++)
-                {
-                    allThreadDataPtrs.push_back(persistentThreadData[i].get());
-                }
-            }
+            stopCurrentSearch();
+            destroyWorkers();
+            startWorkers(threadCount);
         }
         else
         {
@@ -385,19 +362,21 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
             }
         }
     }
+    else if (mainCommand == "stop")
+    {
+        stopCurrentSearch();
+    }
     else if (mainCommand == "quit")
     {
-        delete data_heap;
+        stopCurrentSearch();
+        destroyWorkers();
         exit(0);
     }
     if (mainCommand == "go")
     {
         SearchLimitations searchLimits = SearchLimitations();
         int depth = MAXPLY;
-        /*  if (Commands[1] == "gigachad")
-        {
-           
-        }*/
+
         if (Commands.size() == 1 || Commands[1] == "infinite")
         {
             //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
@@ -442,25 +421,24 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
         {
             searchLimits.HardNodeLimit = TryGetLabelledValueInt(input, "nodes", go_commands);
         }
-        RunSearchInMultipleThreads(mainBoard, depth, searchLimits, threadCount);
+        startSearch(mainBoard, searchLimits, depth);
+    }
+    else if (mainCommand == "perft")
+    {
+        int perftDepth = stoi(Commands[2]);
+        auto start = std::chrono::high_resolution_clock::now();
 
-        if (Commands[1] == "perft")
-        {
-            int perftDepth = stoi(Commands[2]);
-            auto start = std::chrono::high_resolution_clock::now();
+        uint64_t nodes = Perft(mainBoard, perftDepth, perftDepth);
+        auto end = std::chrono::high_resolution_clock::now();
 
-            uint64_t nodes = Perft(mainBoard, perftDepth, perftDepth);
-            auto end = std::chrono::high_resolution_clock::now();
+        int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
-            int64_t elapsedMS = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        float second = (float)(elapsedMS) / 1000;
 
-            float second = (float)(elapsedMS) / 1000;
+        uint64_t nps = nodes / second + 1;
 
-            uint64_t nps = nodes / second + 1;
-
-            std::cout << "nodes: " << (nodes) << " nps:" << std::fixed << std::setprecision(0) << nps;
-            std::cout << "\n";
-        }
+        std::cout << "nodes: " << (nodes) << " nps:" << std::fixed << std::setprecision(0) << nps;
+        std::cout << "\n";
     }
     else if (mainCommand == "position")
     {
@@ -529,31 +507,24 @@ void ProcessUCI(std::string input, ThreadData& data, ThreadData* data_heap)
 
 int main(int argc, char* argv[])
 {
-    ThreadData* heapAllocated = new ThreadData(); // Allocate safely on heap
-    ThreadData& data = *heapAllocated;
-
-    InitAll(data);
+    InitAll();
+    for (auto& worker : threadPool)
+    {
+        std::lock_guard<std::mutex> lock(worker->mtx);
+        InitializeSearch(worker->data);
+    }
     parse_fen(STARTPOS, mainBoard);
     Initialize_TT(32); //set initial TT size as 32mb
     threadCount = 1;
-    persistentThreadData.clear();
-    persistentThreadData.reserve(threadCount);
-    for (int i = 0; i < threadCount; i++)
-    {
-        persistentThreadData.push_back(std::make_unique<ThreadData>());
-        InitializeSearch(*persistentThreadData[i]);
-    }
-    allThreadDataPtrs.clear();
-    allThreadDataPtrs.reserve(threadCount);
-    for (int i = 0; i < threadCount; i++)
-    {
-        allThreadDataPtrs.push_back(persistentThreadData[i].get());
-    }
+    startWorkers(threadCount);
+
     if (argc > 1)
     {
         IsUCI = true;
-        ProcessUCI(argv[1], data, heapAllocated);
-        delete heapAllocated;
+        ProcessUCI(argv[1]);
+        stopCurrentSearch();
+        destroyWorkers();
+        exit(0);
         return 0;
     }
     IsUCI = false;
@@ -564,7 +535,7 @@ int main(int argc, char* argv[])
         std::getline(std::cin, input);
         if (input != "")
         {
-            ProcessUCI(input, data, heapAllocated);
+            ProcessUCI(input);
         }
     }
     return 0;
