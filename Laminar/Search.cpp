@@ -586,7 +586,7 @@ inline int AlphaBeta(
             //Late move pruning
             //skip moves that are "late"(moves later in the move list)
             //because good moves are usually in the front
-            if (searchedMoves >= lmpThreshold + (depth >= 3 ? std::clamp(historyScore / 16384, -2, 2) : 0))
+            if (searchedMoves >= lmpThreshold + std::clamp(historyScore / 16384, -2, 2))
             {
                 skipQuiets = true;
                 continue;
