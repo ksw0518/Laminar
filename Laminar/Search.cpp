@@ -599,6 +599,7 @@ inline int AlphaBeta(
             {
                 continue;
             }
+
             int seeThreshold = isQuiet ? quietSEEMargin : noisySEEMargin;
             if (isQuiet)
             {
