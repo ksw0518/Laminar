@@ -656,7 +656,7 @@ inline int AlphaBeta(
             board.history.pop_back();
             data.ply--;
 
-            int s_beta = ttEntry.score - depth * 2;
+            int s_beta = ttEntry.score - depth * 2 - (ttPv && !isPvNode) * 4;
             int s_depth = (depth - 1) / 2;
             int s_score = AlphaBeta(board, data, s_depth, s_beta - 1, s_beta, cutnode, move);
             if (s_score < s_beta - 20)
