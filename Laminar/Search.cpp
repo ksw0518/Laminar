@@ -275,7 +275,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         }
         //skip moves that have bad static exchange evaluation score,
         //since they are likely bad
-        if (!SEE(board, move, QS_SEE_MARGIN - captHistScore / 64))
+        if (!SEE(board, move, QS_SEE_MARGIN - captHistScore / 128))
         {
             continue;
         }
