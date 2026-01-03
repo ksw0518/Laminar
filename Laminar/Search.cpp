@@ -264,9 +264,18 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (!IsMoveNoisy(move))
             continue;
 
+        bool isCapture = IsMoveCapture(move);
+        int captHistScore = 0;
+        if (isCapture)
+        {
+            int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        }
         //skip moves that have bad static exchange evaluation score,
         //since they are likely bad
-        if (!SEE(board, move, QS_SEE_MARGIN))
+        if (!SEE(board, move, QS_SEE_MARGIN - captHistScore / 64))
         {
             continue;
         }
