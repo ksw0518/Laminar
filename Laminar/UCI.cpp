@@ -377,50 +377,8 @@ void ProcessUCI(std::string input)
         SearchLimitations searchLimits = SearchLimitations();
         int depth = MAXPLY;
 
-        if (Commands.size() == 1 || Commands[1] == "infinite")
-        {
-            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
-        }
-        else if (Commands[1] == "depth")
-        {
-            depth = std::stoi(Commands[2]);
-            // IterativeDeepening(mainBoard, depth, searchLimits, data);
-        }
-        else if (Commands[1] == "movetime")
-        {
-            int64_t movetime = std::stoll(Commands[2]);
-            searchLimits.HardTimeLimit = movetime;
-            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
-        }
-        else if (Commands[1] == "wtime" || Commands[1] == "btime")
-        {
-            int depth = (int)TryGetLabelledValueInt(input, "depth", go_commands);
-            int64_t wtime = TryGetLabelledValueInt(input, "wtime", go_commands);
-            int64_t btime = TryGetLabelledValueInt(input, "btime", go_commands);
-            int64_t winc = TryGetLabelledValueInt(input, "winc", go_commands);
-            int64_t binc = TryGetLabelledValueInt(input, "binc", go_commands);
-            int64_t nodes = TryGetLabelledValueInt(input, "nodes", go_commands);
+        searchLimits.HardNodeLimit = 2000;
 
-            int64_t hard_bound;
-            int64_t soft_bound;
-
-            int64_t time = std::max<int64_t>((mainBoard.side == White ? wtime : btime) - 50, 0);
-            int64_t incre = mainBoard.side == White ? winc : binc;
-
-            hard_bound = CalculateHardLimit(time, incre);
-            soft_bound = CalculateSoftLimit(time, incre);
-
-            searchLimits.HardTimeLimit = hard_bound;
-
-            searchLimits.SoftTimeLimit = soft_bound;
-            searchLimits.HardNodeLimit = nodes;
-
-            //IterativeDeepening(mainBoard, MAXPLY, searchLimits, data);
-        }
-        else if (Commands[1] == "nodes")
-        {
-            searchLimits.HardNodeLimit = TryGetLabelledValueInt(input, "nodes", go_commands);
-        }
         startSearch(mainBoard, searchLimits, depth);
     }
     else if (mainCommand == "perft")
