@@ -290,9 +290,15 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         searchedMoves++;
         data.searchNodeCount++;
         data.searchStack[currentPly].move = move;
-
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            break;
+        }
         score = -QuiescentSearch(board, data, -beta, -alpha);
-
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            break;
+        }
         UnmakeMove(board, move, undoInfo.captured_piece);
         ApplyCopyMake(board, undoInfo, data, currentPly);
         board.history.pop_back();
@@ -361,7 +367,11 @@ inline int AlphaBeta(
             return 0;
         }
     }
-
+    if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+    {
+        data.stopSearch.store(true);
+        return 0;
+    }
     bool isPvNode = beta - alpha > 1;
     int currentPly = data.ply;
 
@@ -399,7 +409,17 @@ inline int AlphaBeta(
     {
         //return quiescence search score at the end of the tree
         //to avoid horizon effect
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
+        }
         score = QuiescentSearch(board, data, alpha, beta);
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
+        }
         return score;
     }
     if (currentPly >= MAXPLY - 2)
@@ -765,7 +785,11 @@ inline int AlphaBeta(
         int childDepth = depth + extension - 1;
 
         uint64_t nodesBeforeSearch = data.searchNodeCount;
-
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
+        }
         //Late move reduction
         //do reduced zero window search for late moves
         //to prove they are worse than previously serached moves
@@ -790,6 +814,11 @@ inline int AlphaBeta(
         if (isPvNode && (searchedMoves == 1 || score > alpha))
         {
             score = -AlphaBeta(board, data, childDepth, -beta, -alpha, false);
+        }
+        if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+        {
+            data.stopSearch.store(true);
+            return 0;
         }
         uint64_t nodesAfterSearch = data.searchNodeCount;
         uint64_t nodesSpent = nodesAfterSearch - nodesBeforeSearch;
@@ -1034,9 +1063,15 @@ std::pair<Move, int> IterativeDeepening(
                 }
                 break;
             }
-
+            if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+            {
+                break;
+            }
             score = AlphaBeta(board, data, std::max(aspWindowDepth, 1), adjustedAlpha, adjustedBeta);
-
+            if (data.stopSearch.load() || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
+            {
+                break;
+            }
             delta += delta;
             if (score <= adjustedAlpha)
             {

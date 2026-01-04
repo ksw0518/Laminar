@@ -24,6 +24,7 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
 void UpdateCaptHist(ThreadData& data, int attacker, int to, int victim, int16_t bonus)
 {
     assert(attacker <= 11 && attacker >= 0);
+    assert(victim <= 11 && victim >= 0);
     int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
     UpdateHistoryEntry(historyEntry, bonus);
 }
