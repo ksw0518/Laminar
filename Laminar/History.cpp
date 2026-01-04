@@ -21,7 +21,7 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
     UpdateHistoryEntry(historyEntry, bonus);
 }
 
-void UpdateCaptHist(ThreadData& data, bool attacker, int to, int victim, int16_t bonus)
+void UpdateCaptHist(ThreadData& data, int attacker, int to, int victim, int16_t bonus)
 {
     int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
     UpdateHistoryEntry(historyEntry, bonus);
