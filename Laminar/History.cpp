@@ -3,10 +3,10 @@
 #include "Search.h"
 #include "Tuneables.h"
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
-
 void UpdateHistoryEntry(int16_t& entry, int16_t bonus)
 {
     int clampedBonus = std::clamp<int16_t>(bonus, -MAX_HISTORY, MAX_HISTORY);
@@ -23,6 +23,7 @@ void UpdateMainHist(ThreadData& data, bool stm, int from, int to, int16_t bonus,
 
 void UpdateCaptHist(ThreadData& data, int attacker, int to, int victim, int16_t bonus)
 {
+    assert(attacker <= 11 && attacker >= 0);
     int16_t& historyEntry = data.histories.captureHistory[attacker][to][victim];
     UpdateHistoryEntry(historyEntry, bonus);
 }

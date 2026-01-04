@@ -53,34 +53,11 @@ int get_hashfull()
 }
 int adjustMateStore(int score, int ply)
 {
-    //modify mate scores for TT
-    if (score >= MATESCORE - MAXPLY)
-    {
-        return score + ply;
-    }
-    else if (score <= -(MATESCORE - MAXPLY))
-    {
-        return score - ply;
-    }
-    else
-    {
-        return score;
-    }
+    return score;
 }
 int adjustMateProbe(int score, int ply)
 {
-    if (score >= MATESCORE - MAXPLY)
-    {
-        return score - ply;
-    }
-    else if (score <= -(MATESCORE - MAXPLY))
-    {
-        return score + ply;
-    }
-    else
-    {
-        return score;
-    }
+    return score;
 }
 void prefetchTT(uint64_t zobrist)
 {
