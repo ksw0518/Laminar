@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 
 void UpdateHistoryEntry(int16_t& entry, int16_t bonus)
 {
@@ -48,7 +49,9 @@ void MalusCaptHist(ThreadData& data, MoveList& searchedNoisyMoves, Move& bonus_m
 
         if (searchedMove != bonus_move)
         {
-            UpdateCaptHist(data, searchedMove.Piece, searchedMove.To, board.mailbox[searchedMove.To], -malus);
+            int victim = (searchedMove.Type == ep_capture) ? P : get_piece(board.mailbox[searchedMove.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+            UpdateCaptHist(data, searchedMove.Piece, searchedMove.To, coloredVictim, -malus);
         }
     }
 }

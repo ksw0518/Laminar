@@ -669,9 +669,11 @@ inline int AlphaBeta(
                 }
                 else
                 {
+                    int victim = (move.Type == ep_capture) ? P : get_piece(board.mailbox[move.To], White);
+                    int coloredVictim = get_piece(victim, 1 - board.side);
                     int16_t captHistBonus =
                         std::min((int)SE_CAPTHIST_BONUS_MAX, SE_CAPTHIST_BONUS_BASE + SE_CAPTHIST_BONUS_MULT * depth);
-                    UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
+                    UpdateCaptHist(data, move.Piece, move.To, coloredVictim, captHistBonus);
                 }
             }
             if (s_score < s_beta)
@@ -862,7 +864,10 @@ inline int AlphaBeta(
                 int16_t captHistMalus =
                     std::min((int)CAPTHIST_MALUS_MAX, CAPTHIST_MALUS_BASE + CAPTHIST_MALUS_MULT * depth);
 
-                UpdateCaptHist(data, move.Piece, move.To, board.mailbox[move.To], captHistBonus);
+                int victim = (move.Type == ep_capture) ? P : get_piece(board.mailbox[move.To], White);
+                int coloredVictim = get_piece(victim, 1 - board.side);
+
+                UpdateCaptHist(data, move.Piece, move.To, coloredVictim, captHistBonus);
                 MalusCaptHist(data, searchedNoisyMoves, move, captHistMalus, board);
             }
 
