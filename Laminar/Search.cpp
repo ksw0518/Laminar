@@ -728,7 +728,7 @@ inline int AlphaBeta(
             }
             else
             {
-                lmrAdjustments -= std::clamp(((int)captHistScore * 1024) / 6000, -2048, 2048);
+                lmrAdjustments -= std::clamp(((int)captHistScore * 1024) / 10000, -2048, 2048);
             }
             if (isQuiet)
             {
