@@ -189,7 +189,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
     //only search "noisy" moves (captures, promos) to only evaluate quiet positions
     if (data.stopSearch.load())
     {
-        return 0;
+        return MAXSCORE;
     }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
     {
@@ -198,7 +198,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
             data.stopSearch.store(true);
-            return 0;
+            return MAXSCORE;
         }
     }
     bool isPvNode = beta - alpha > 1;
@@ -349,7 +349,7 @@ inline int AlphaBeta(
     bool isSingularSearch = excludedMove != NULLMOVE;
     if (data.stopSearch.load())
     {
-        return 0;
+        return MAXSCORE;
     }
     if (data.ply != 0 && data.searchNodeCount % 1024 == 0)
     {
@@ -358,7 +358,7 @@ inline int AlphaBeta(
         if (elapsedMS > data.SearchTime || (data.hardNodeBound != -1 && data.hardNodeBound <= data.searchNodeCount))
         {
             data.stopSearch.store(true);
-            return 0;
+            return MAXSCORE;
         }
     }
 
@@ -1076,9 +1076,12 @@ std::pair<Move, int> IterativeDeepening(
             nodesTmScale = (1.5 - ((double)data.nodesPerMove[bestmove.From][bestmove.To] / data.searchNodeCount)) * 1;
         }
 
-        if (!data.stopSearch.load())
+        if (data.pvTable[0][0] != NULLMOVE)
         {
             bestmove = data.pvTable[0][0];
+        }
+        if (!data.stopSearch.load())
+        {
             bestScore = score;
         }
 
