@@ -580,6 +580,15 @@ inline int AlphaBeta(
         int contHistScore = GetContHistScore(move, data);
 
         int historyScore = mainHistScore + contHistScore;
+        int captHistScore = 0;
+        if (IsMoveCapture(move))
+
+        {
+            int victim = IsEpCapture(move) ? P : get_piece(board.mailbox[move.To], White);
+            int coloredVictim = get_piece(victim, 1 - board.side);
+
+            captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
+        }
 
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
@@ -679,9 +688,20 @@ inline int AlphaBeta(
             if (s_score < s_beta)
             {
                 extension++;
+                int dextAdjustment = 0;
+                if (isQuiet)
+                {
+                    //subtract 20k to keep the avg around 0
+                    dextAdjustment += std::clamp((historyScore - 20000) / 1500, -15, 15);
+                }
+                else
+                {
+                    //subtract 2k to keep the avg around 0
+                    dextAdjustment += std::clamp((historyScore - 5000) / 700, -15, 15);
+                }
                 //Double Extensions
                 //TT move is very singular, increase depth by 2
-                if (!isPvNode && s_score <= s_beta - DEXT_MARGIN)
+                if (!isPvNode && s_score <= s_beta - (DEXT_MARGIN - dextAdjustment))
                 {
                     extension++;
                 }
