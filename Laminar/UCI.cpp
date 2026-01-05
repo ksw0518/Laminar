@@ -374,6 +374,8 @@ void ProcessUCI(std::string input)
     }
     if (mainCommand == "go")
     {
+        stopCurrentSearch();
+
         SearchLimitations searchLimits = SearchLimitations();
         int depth = MAXPLY;
 
