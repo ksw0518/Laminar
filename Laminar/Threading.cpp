@@ -17,11 +17,11 @@ void workerLoop(Worker* worker)
         //stop if exit is true
         if (worker->exit.load())
         {
-            worker->data.stopSearch.store(true);
+            worker->data.stopSearch.store(true, std::memory_order_release);
             return;
         }
 
-        worker->data.stopSearch.store(false);
+        worker->data.stopSearch.store(false, std::memory_order_release);
         worker->data.isMainThread = (worker->id == 0);
 
         Board localBoard = worker->board;
@@ -34,7 +34,8 @@ void workerLoop(Worker* worker)
         IterativeDeepening(localBoard, depth, limits, worker->data, false);
 
         lock.lock();
-        worker->searching.store(false);
+        worker->searching.store(false, std::memory_order_release);
+        worker->cv.notify_one();
     }
 }
 void startWorkers(int threadCount)
@@ -93,6 +94,11 @@ void stopCurrentSearch()
 {
     for (auto& worker : threadPool)
         worker->data.stopSearch.store(true, std::memory_order_release);
+    for (auto& w : threadPool)
+    {
+        std::unique_lock<std::mutex> lk(w->mtx);
+        w->cv.wait(lk, [&] { return !w->searching.load(std::memory_order_acquire); });
+    }
 }
 
 //Lazy SMP
