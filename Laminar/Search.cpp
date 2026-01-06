@@ -595,7 +595,8 @@ inline int AlphaBeta(
             //History pruning
             //skip moves that have bad history score
             int historyPruningMargin = HISTORY_PRUNING_BASE - HISTORY_PRUNING_MULTIPLIER * depth;
-            if (quietMoves > 1 && depth <= 5 && historyScore < historyPruningMargin)
+            if (move != data.killerMoves[currentPly] && quietMoves > 1 && depth <= 5
+                && historyScore < historyPruningMargin)
             {
                 continue;
             }
