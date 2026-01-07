@@ -588,6 +588,7 @@ inline int AlphaBeta(
 
             captHistScore = data.histories.captureHistory[move.Piece][move.To][coloredVictim];
         }
+
         if (isNotMated && searchedMoves >= 1 && !root) //do moveloop pruning
         {
             //Late move pruning
