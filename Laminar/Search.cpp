@@ -307,6 +307,7 @@ inline int QuiescentSearch(Board& board, ThreadData& data, int alpha, int beta)
         if (alpha >= beta)
         {
             ttFlag = HFLOWER;
+            bestValue = (alpha + beta) / 2;
             break;
         }
     }
