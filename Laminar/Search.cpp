@@ -996,6 +996,7 @@ std::pair<Move, int> IterativeDeepening(
     }
     bool mainThread = data.isMainThread;
     double nodesTmScale = 1.0;
+    memset(data.nodesPerMove, 0, sizeof(data.nodesPerMove));
 
     //Iterative deepening
     //gradually increase the search depth to search as deep as possible
@@ -1004,7 +1005,6 @@ std::pair<Move, int> IterativeDeepening(
     {
         memset(data.pvTable, 0, sizeof(data.pvTable));
         memset(data.pvLengths, 0, sizeof(data.pvLengths));
-        memset(data.nodesPerMove, 0, sizeof(data.nodesPerMove));
         data.ply = 0;
         data.selDepth = 0;
         for (int i = 0; i < MAXPLY; i++)
